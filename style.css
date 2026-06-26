@@ -58,6 +58,7 @@ body {
     justify-content: space-between;
     align-items: center;
     position: relative;
+    overflow: hidden;
 }
 
 /* Header */
@@ -142,7 +143,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 6px;
     position: relative; /* Added for absolute children alignment */
 }
 
@@ -200,7 +201,7 @@ body {
     box-shadow: var(--panel-glow);
     backdrop-filter: blur(15px);
     -webkit-backdrop-filter: blur(15px);
-    margin-bottom: 10px;
+    margin-bottom: 0;
 }
 
 .block-dock {
@@ -927,45 +928,38 @@ body.theme-retro .modal-close-btn:hover {
     content: '';
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
-    border: 0px solid #ff007f;
     border-radius: 20px;
     pointer-events: none;
     z-index: 99;
     box-shadow: inset 0 0 0px rgba(255, 0, 127, 0);
-    transition: box-shadow 0.3s ease, border-width 0.3s ease;
+    transition: box-shadow 0.3s ease;
 }
 
 body.fever-active .game-container::after {
-    border-width: 4px;
-    box-shadow: inset 0 0 25px rgba(255, 0, 127, 0.8), 0 0 20px rgba(255, 0, 127, 0.6);
+    box-shadow: inset 0 0 25px rgba(255, 0, 127, 0.8), 0 0 20px rgba(255, 0, 127, 0.6), inset 0 0 0 4px #ff007f;
     animation: fever-border-glow 1.5s infinite alternate;
 }
 
 @keyframes fever-border-glow {
     0% {
-        border-color: #ff00ff;
-        box-shadow: inset 0 0 15px rgba(255, 0, 255, 0.6), 0 0 10px rgba(255, 0, 255, 0.4);
+        box-shadow: inset 0 0 15px rgba(255, 0, 255, 0.6), 0 0 10px rgba(255, 0, 255, 0.4), inset 0 0 0 4px #ff00ff;
     }
     100% {
-        border-color: #ff007f;
-        box-shadow: inset 0 0 35px rgba(255, 0, 127, 0.9), 0 0 25px rgba(255, 0, 127, 0.7);
+        box-shadow: inset 0 0 35px rgba(255, 0, 127, 0.9), 0 0 25px rgba(255, 0, 127, 0.7), inset 0 0 0 4px #ff007f;
     }
 }
 
 body.theme-retro.fever-active .game-container::after {
-    border-color: #00ff00;
-    box-shadow: inset 0 0 20px rgba(0, 255, 0, 0.8);
+    box-shadow: inset 0 0 20px rgba(0, 255, 0, 0.8), inset 0 0 0 4px #00ff00;
     animation: fever-border-glow-retro 1.5s infinite alternate;
 }
 
 @keyframes fever-border-glow-retro {
     0% {
-        border-color: #00aa00;
-        box-shadow: inset 0 0 10px rgba(0, 170, 0, 0.6);
+        box-shadow: inset 0 0 10px rgba(0, 170, 0, 0.6), inset 0 0 0 4px #00aa00;
     }
     100% {
-        border-color: #00ff00;
-        box-shadow: inset 0 0 30px rgba(0, 255, 0, 0.9);
+        box-shadow: inset 0 0 30px rgba(0, 255, 0, 0.9), inset 0 0 0 4px #00ff00;
     }
 }
 
@@ -976,10 +970,11 @@ body.theme-retro.fever-active .game-container::after {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 6px;
-    margin: -10px auto 10px auto;
+    gap: 4px;
+    margin: -6px auto 4px auto;
     transition: opacity 0.3s ease;
     z-index: 10;
+    flex-shrink: 0;
 }
 
 .fever-banner.hidden {
@@ -1203,4 +1198,64 @@ body.theme-retro .complete-reward {
     color: #ffffff;
     text-shadow: none;
     font-family: Courier New, monospace;
+}
+
+/* Joker Buttons Styling */
+.joker-controls {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    width: 100%;
+    margin-top: 4px;
+    margin-bottom: 2px;
+}
+
+.joker-button {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--panel-border);
+    border-radius: 12px;
+    color: var(--text-primary);
+    padding: 10px 18px;
+    font-size: 13.5px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: var(--panel-glow);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    transition: transform 0.2s ease, background 0.2s ease, opacity 0.2s ease;
+}
+
+.joker-button:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.12);
+    transform: scale(1.05);
+}
+
+.joker-button:active:not(:disabled) {
+    transform: scale(0.95);
+}
+
+.joker-button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.joker-btn-icon {
+    font-size: 16px;
+}
+
+/* Retro theme overrides for Joker controls */
+body.theme-retro .joker-button {
+    border: 2px solid #00ff00;
+    border-radius: 0;
+    background: #000;
+    box-shadow: none;
+    color: #00ff00;
+    font-family: Courier New, monospace;
+}
+body.theme-retro .joker-button:disabled {
+    border-color: #004400;
+    color: #004400;
 }

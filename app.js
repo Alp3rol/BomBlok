@@ -46,7 +46,11 @@ const state = {
     selectedBlockIndex: null, // Track selected block for click-to-place
     isFeverActive: false,
     feverTimeLeft: 0,
-    feverIntervalId: null
+    feverIntervalId: null,
+    jokers: parseInt(localStorage.getItem('bomblok_jokers'), 10) || 0,
+    previousState: null,
+    undoUsedThisGame: false,
+    rerollUsedThisGame: false
 };
 
 // DOM Elements
