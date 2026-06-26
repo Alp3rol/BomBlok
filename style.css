@@ -1032,3 +1032,175 @@ body.theme-retro .fever-bar-fill {
     background: #00ff00;
     box-shadow: none;
 }
+
+/* Mission Panel Styling */
+.mission-panel {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--panel-border);
+    border-radius: 12px;
+    padding: 10px 16px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 12px;
+    box-shadow: var(--panel-glow);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.mission-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.mission-badge {
+    font-size: 9px;
+    font-weight: 800;
+    color: #ffffff;
+    background: linear-gradient(135deg, #7f00ff, #ff007f);
+    padding: 3px 8px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.mission-desc {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.mission-progress-bg {
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.mission-progress-fill {
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(90deg, #00d2d3, #00ffcc);
+    box-shadow: 0 0 8px rgba(0, 255, 204, 0.5);
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Retro theme overrides for Mission Panel */
+body.theme-retro .mission-panel {
+    border: 2px solid #00ff00;
+    border-radius: 0;
+    background: #000;
+    box-shadow: none;
+}
+
+body.theme-retro .mission-badge {
+    background: #00ff00;
+    color: #000;
+    border-radius: 0;
+}
+
+body.theme-retro .mission-desc {
+    color: #00ff00;
+    font-family: Courier New, monospace;
+}
+
+body.theme-retro .mission-progress-bg {
+    border: 1px solid #00ff00;
+    background: #000;
+    border-radius: 0;
+}
+
+body.theme-retro .mission-progress-fill {
+    background: #00ff00;
+    box-shadow: none;
+    border-radius: 0;
+}
+
+/* Mission Complete Overlay */
+.mission-complete-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1100;
+    transition: opacity 0.3s ease;
+}
+
+.mission-complete-overlay.hidden {
+    display: none;
+    opacity: 0;
+}
+
+.mission-complete-card {
+    background: var(--panel-bg);
+    border: 2px solid #ff007f;
+    box-shadow: 0 0 30px rgba(255, 0, 127, 0.5), var(--panel-glow);
+    border-radius: 20px;
+    padding: 35px;
+    text-align: center;
+    max-width: 320px;
+    width: 85%;
+    box-sizing: border-box;
+    animation: mission-complete-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes mission-complete-pop {
+    0% { transform: scale(0.7); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.complete-icon {
+    font-size: 50px;
+    margin-bottom: 15px;
+    animation: bounce-reward 1s infinite alternate;
+}
+
+@keyframes bounce-reward {
+    from { transform: translateY(0); }
+    to { transform: translateY(-10px); }
+}
+
+.complete-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: #ffffff;
+    margin-bottom: 8px;
+    letter-spacing: 1.5px;
+}
+
+.complete-reward {
+    font-size: 15px;
+    font-weight: 700;
+    color: #00ffcc;
+    text-shadow: 0 0 10px rgba(0, 255, 204, 0.4);
+    letter-spacing: 1px;
+}
+
+/* Retro theme overrides for Mission Complete */
+body.theme-retro .mission-complete-card {
+    border: 3px solid #00ff00;
+    background: #000;
+    border-radius: 0;
+    box-shadow: none;
+}
+body.theme-retro .complete-title {
+    color: #00ff00;
+    font-family: Courier New, monospace;
+}
+body.theme-retro .complete-reward {
+    color: #ffffff;
+    text-shadow: none;
+    font-family: Courier New, monospace;
+}

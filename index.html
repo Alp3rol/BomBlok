@@ -33,6 +33,10 @@
                 <span id="rotation-rights" class="score-value">3</span>
             </div>
             <div class="score-card">
+                <span class="score-label">JOKER</span>
+                <span id="joker-count" class="score-value">0</span>
+            </div>
+            <div class="score-card">
                 <span class="score-label">SKOR</span>
                 <span id="current-score" class="score-value">0</span>
             </div>
@@ -41,6 +45,17 @@
                 <span id="best-score" class="score-value">0</span>
             </div>
         </section>
+
+        <!-- Current Mission Panel -->
+        <div id="mission-panel" class="mission-panel">
+            <div class="mission-header">
+                <span class="mission-badge">AKTİF GÖREV</span>
+                <span id="mission-desc" class="mission-desc">Yükleniyor...</span>
+            </div>
+            <div class="mission-progress-bg">
+                <div id="mission-progress-fill" class="mission-progress-fill" style="width: 0%;"></div>
+            </div>
+        </div>
 
         <!-- Fever Mode Banner -->
         <div id="fever-banner" class="fever-banner hidden">
@@ -77,6 +92,15 @@
                 <h3 id="final-score">0</h3>
             </div>
             <button id="restart-btn" class="restart-button">Yeniden Başla</button>
+        </div>
+    </div>
+
+    <!-- Mission Complete Screen -->
+    <div id="mission-complete-overlay" class="mission-complete-overlay hidden">
+        <div class="mission-complete-card">
+            <div class="complete-icon">🏆</div>
+            <h2 class="complete-title">GÖREV TAMAMLANDI!</h2>
+            <p class="complete-reward">+1 JOKER KAZANDIN</p>
         </div>
     </div>
 

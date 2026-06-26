@@ -378,6 +378,31 @@ const AudioFX = {
         });
     },
 
+    playMissionComplete() {
+        this.play((ctx) => {
+            const now = ctx.currentTime;
+            // Rising major arpeggio (C4 -> E4 -> G4 -> C5 -> E5 -> G5)
+            const notes = [261.63, 329.63, 392.00, 523.25, 659.25, 783.99]; 
+            const duration = 0.15;
+
+            notes.forEach((freq, idx) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+
+                gain.gain.setValueAtTime(0.08, now + idx * 0.08);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + duration);
+
+                osc.start(now + idx * 0.08);
+                osc.stop(now + idx * 0.08 + duration);
+            });
+        });
+    },
+
     bgMusicInterval: null,
     bgMusicStep: 0,
     bgMusicTempo: 500, // ms per beat
@@ -1012,6 +1037,7 @@ function tryPlaceSelectedBlock(gridR, gridC) {
             shapeScore *= 2;
         }
         state.score += shapeScore;
+        updateMissionProgress('points', shapeScore);
         updateScoreUI();
 
         const blockEl = blockDock.querySelector(`.block-shape[data-slot-index="${state.selectedBlockIndex}"]`);
@@ -1188,6 +1214,7 @@ function onPointerUp(e) {
             shapeScore *= 2;
         }
         state.score += shapeScore;
+        updateMissionProgress('points', shapeScore);
         updateScoreUI();
 
         // Clear block from dock
@@ -1252,6 +1279,84 @@ function onPointerUp(e) {
         offsetR: null,
         offsetC: null
     };
+}
+
+// --- GÖREV / HEDEF SİSTEMİ (MISSION SYSTEM) ---
+const MISSION_POOL = [
+    { type: 'lines', text: 'Satır/Sütun Temizle', target: 8, icon: '💥' },
+    { type: 'ice', text: 'Buz Kır', target: 6, icon: '🧊' },
+    { type: 'bombs', text: 'Bomba Patlat', target: 3, icon: '💣' },
+    { type: 'points', text: 'Puan Topla', target: 400, icon: '💎' }
+];
+
+function initMission() {
+    const randomMissionTemplate = MISSION_POOL[Math.floor(Math.random() * MISSION_POOL.length)];
+    state.currentMission = {
+        type: randomMissionTemplate.type,
+        text: randomMissionTemplate.text,
+        target: randomMissionTemplate.target,
+        icon: randomMissionTemplate.icon,
+        current: 0,
+        completed: false
+    };
+    updateMissionUI();
+}
+
+function updateMissionProgress(type, amount = 1) {
+    if (!state.currentMission || state.currentMission.completed || state.isGameOver) return;
+
+    if (state.currentMission.type === type) {
+        state.currentMission.current += amount;
+        if (state.currentMission.current >= state.currentMission.target) {
+            state.currentMission.current = state.currentMission.target;
+            completeMission();
+        }
+        updateMissionUI();
+    }
+}
+
+function updateMissionUI() {
+    const missionDescEl = document.getElementById('mission-desc');
+    const missionProgressFillEl = document.getElementById('mission-progress-fill');
+    const jokerCountEl = document.getElementById('joker-count');
+
+    if (jokerCountEl) {
+        jokerCountEl.textContent = state.jokers;
+    }
+
+    if (!state.currentMission) return;
+
+    if (missionDescEl) {
+        missionDescEl.textContent = `${state.currentMission.icon} ${state.currentMission.text}: ${state.currentMission.current}/${state.currentMission.target}`;
+    }
+
+    if (missionProgressFillEl) {
+        const percentage = (state.currentMission.current / state.currentMission.target) * 100;
+        missionProgressFillEl.style.width = `${percentage}%`;
+    }
+}
+
+function completeMission() {
+    state.currentMission.completed = true;
+    state.jokers++;
+    localStorage.setItem('bomblok_jokers', state.jokers);
+
+    // Play victory chime
+    AudioFX.playMissionComplete();
+
+    // Show completion overlay
+    const overlay = document.getElementById('mission-complete-overlay');
+    if (overlay) {
+        overlay.classList.remove('hidden');
+    }
+
+    // Hide after 2s and start a new mission
+    setTimeout(() => {
+        if (overlay) {
+            overlay.classList.add('hidden');
+        }
+        initMission();
+    }, 2000);
 }
 
 // --- FEVER MODE MECHANICS ---
@@ -1420,6 +1525,9 @@ function checkAndClearLines() {
         // Increment consecutive combo multiplier
         state.comboCount++;
 
+        // Track lines cleared mission progress
+        updateMissionProgress('lines', linesCleared);
+
         const cellsToClear = [];
 
         // Collect coordinates and current colors of cells in full rows/columns
@@ -1473,6 +1581,9 @@ function checkAndClearLines() {
                 const bombC = bomb.c;
                 hasBombExploded = true;
 
+                // Track bomb explosion mission progress
+                updateMissionProgress('bombs', 1);
+
                 // Explode a 3x3 area
                 for (let dr = -1; dr <= 1; dr++) {
                     for (let dc = -1; dc <= 1; dc++) {
@@ -1491,6 +1602,7 @@ function checkAndClearLines() {
                                     // Melt/break ice block
                                     state.grid[nr][nc] = 0;
                                     spawnParticles(nr, nc, 'cyan');
+                                    updateMissionProgress('ice', 1); // Track ice broken by bomb
                                     const cellEl = gridBoard.querySelector(`.grid-cell[data-row="${nr}"][data-col="${nc}"]`);
                                     if (cellEl) {
                                         cellEl.className = 'grid-cell blasting';
@@ -1529,6 +1641,7 @@ function checkAndClearLines() {
                     if (isAdjacentRow || isAdjacentCol) {
                         state.grid[r][c] = 0;
                         spawnParticles(r, c, 'cyan');
+                        updateMissionProgress('ice', 1); // Track ice broken by adjacent clear
                         const cellEl = gridBoard.querySelector(`.grid-cell[data-row="${r}"][data-col="${c}"]`);
                         if (cellEl) {
                             cellEl.className = 'grid-cell blasting';
@@ -1584,6 +1697,7 @@ function checkAndClearLines() {
         }
 
         state.score += pointsAwarded;
+        updateMissionProgress('points', pointsAwarded); // Track points gathered mission progress
         updateScoreUI();
 
         if (state.score > state.bestScore) {
@@ -1719,6 +1833,7 @@ function resetGame() {
     state.rotationRights = 3; // Reset rotation rights!
     state.isGameOver = false;
     deactivateFeverMode();
+    initMission();
     deselectBlock(); // Reset block selection state
     gameOverScreen.classList.add('hidden');
     spawnIceBlocks(); // Spawn ice blocks on reset
@@ -1797,4 +1912,5 @@ spawnIceBlocks(); // Spawn initial ice blocks
 initGrid();
 resizeCanvas(); // Align canvas size to grid
 generateDockBlocks();
+initMission(); // Initialize first mission!
 console.log('BomBlok Initialized: Game Fully Functional!');
