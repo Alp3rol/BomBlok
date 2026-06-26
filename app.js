@@ -43,7 +43,10 @@ const state = {
     isGameOver: false,
     comboCount: 0, // Track consecutive clears!
     rotationRights: 3, // Rotation rights per game!
-    selectedBlockIndex: null // Track selected block for click-to-place
+    selectedBlockIndex: null, // Track selected block for click-to-place
+    isFeverActive: false,
+    feverTimeLeft: 0,
+    feverIntervalId: null
 };
 
 // DOM Elements
@@ -60,6 +63,8 @@ const helpBtn = document.getElementById('help-btn');
 const helpModal = document.getElementById('help-modal');
 const helpCloseBtn = document.getElementById('help-close-btn');
 const modalStartBtn = document.getElementById('modal-start-btn');
+const feverBanner = document.getElementById('fever-banner');
+const feverBarFill = document.getElementById('fever-bar-fill');
 
 // --- THEME MANAGER ---
 const ThemeManager = {
@@ -107,6 +112,11 @@ const AudioFX = {
         this.muted = !this.muted;
         localStorage.setItem('block_blast_muted', this.muted);
         this.updateButtonUI();
+        if (this.muted) {
+            this.stopBgMusic();
+        } else {
+            this.startBgMusic();
+        }
         return this.muted;
     },
 
@@ -366,11 +376,75 @@ const AudioFX = {
             osc.start(now);
             osc.stop(now + 0.12);
         });
+    },
+
+    bgMusicInterval: null,
+    bgMusicStep: 0,
+    bgMusicTempo: 500, // ms per beat
+
+    startBgMusic() {
+        if (this.muted) return;
+        if (this.bgMusicInterval) return;
+        this.init();
+        if (!this.ctx) return;
+
+        this.bgMusicStep = 0;
+        this.bgMusicInterval = setInterval(() => {
+            this.playBeat();
+        }, this.bgMusicTempo);
+    },
+
+    stopBgMusic() {
+        if (this.bgMusicInterval) {
+            clearInterval(this.bgMusicInterval);
+            this.bgMusicInterval = null;
+        }
+    },
+
+    setBgMusicTempo(tempo) {
+        if (this.bgMusicTempo === tempo) return;
+        this.bgMusicTempo = tempo;
+        if (this.bgMusicInterval) {
+            this.stopBgMusic();
+            this.startBgMusic();
+        }
+    },
+
+    playBeat() {
+        this.play((ctx) => {
+            const now = ctx.currentTime;
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+
+            // Rhythmic low synth beat
+            osc.type = 'triangle';
+            
+            // Simple retro bass melody: C2, E2, G2, A2
+            const notes = [65.41, 82.41, 98.00, 110.00]; 
+            const note = notes[this.bgMusicStep % notes.length];
+            this.bgMusicStep++;
+
+            const isFeverActive = state && state.isFeverActive;
+            const frequency = isFeverActive ? note * 1.5 : note;
+
+            osc.frequency.setValueAtTime(frequency, now);
+
+            gain.gain.setValueAtTime(isFeverActive ? 0.04 : 0.02, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+
+            osc.start(now);
+            osc.stop(now + 0.15);
+        });
     }
 };
 
 // Warm up Web Audio API on first user interaction
-window.addEventListener('pointerdown', () => AudioFX.init(), { once: true });
+window.addEventListener('pointerdown', () => {
+    AudioFX.init();
+    AudioFX.startBgMusic();
+}, { once: true });
 if (soundBtn) {
     soundBtn.addEventListener('click', () => {
         AudioFX.toggleMute();
@@ -933,7 +1007,11 @@ function tryPlaceSelectedBlock(gridR, gridC) {
             }
         });
 
-        state.score += proposedCells.length;
+        let shapeScore = proposedCells.length;
+        if (state.isFeverActive) {
+            shapeScore *= 2;
+        }
+        state.score += shapeScore;
         updateScoreUI();
 
         const blockEl = blockDock.querySelector(`.block-shape[data-slot-index="${state.selectedBlockIndex}"]`);
@@ -1105,7 +1183,11 @@ function onPointerUp(e) {
         });
 
         // Add score (1 point per filled cell)
-        state.score += targetCells.length;
+        let shapeScore = targetCells.length;
+        if (state.isFeverActive) {
+            shapeScore *= 2;
+        }
+        state.score += shapeScore;
         updateScoreUI();
 
         // Clear block from dock
@@ -1170,6 +1252,56 @@ function onPointerUp(e) {
         offsetR: null,
         offsetC: null
     };
+}
+
+// --- FEVER MODE MECHANICS ---
+function activateFeverMode() {
+    state.isFeverActive = true;
+    state.feverTimeLeft = 10.0; // 10 seconds
+
+    document.body.classList.add('fever-active');
+    if (feverBanner) {
+        feverBanner.classList.remove('hidden');
+    }
+
+    // Accelerate background music
+    AudioFX.setBgMusicTempo(300);
+
+    if (state.feverIntervalId) {
+        clearInterval(state.feverIntervalId);
+    }
+
+    if (feverBarFill) {
+        feverBarFill.style.width = '100%';
+    }
+
+    state.feverIntervalId = setInterval(() => {
+        state.feverTimeLeft -= 0.1;
+        if (state.feverTimeLeft <= 0) {
+            deactivateFeverMode();
+        } else {
+            if (feverBarFill) {
+                feverBarFill.style.width = `${(state.feverTimeLeft / 10.0) * 100}%`;
+            }
+        }
+    }, 100);
+}
+
+function deactivateFeverMode() {
+    state.isFeverActive = false;
+    state.feverTimeLeft = 0;
+    if (state.feverIntervalId) {
+        clearInterval(state.feverIntervalId);
+        state.feverIntervalId = null;
+    }
+
+    document.body.classList.remove('fever-active');
+    if (feverBanner) {
+        feverBanner.classList.add('hidden');
+    }
+
+    // Reset background music tempo
+    AudioFX.setBgMusicTempo(500);
 }
 
 // --- SCREEN SHAKE EFFECT ---
@@ -1288,16 +1420,6 @@ function checkAndClearLines() {
         // Increment consecutive combo multiplier
         state.comboCount++;
 
-        // Play clear sound (special powerup sound for cross-clear, regular chime for others)
-        if (isCrossClear) {
-            AudioFX.playCrossClear();
-        } else {
-            AudioFX.playClear(state.comboCount);
-        }
-
-        // Show floating combo text popups with multiplier and cross-clear state
-        showComboPopup(linesCleared, state.comboCount, isCrossClear);
-
         const cellsToClear = [];
 
         // Collect coordinates and current colors of cells in full rows/columns
@@ -1311,10 +1433,25 @@ function checkAndClearLines() {
 
         // Check if a bomb was part of the initial clearing
         const hasBombInClearing = cellsToClear.some(cell => typeof cell.color === 'string' && cell.color.endsWith('-bomb'));
-        const isFever = state.comboCount >= 5;
+
+        // Fever Mode trigger: 3 consecutive clears (combos) or bomb in clearing
+        const triggeredFeverNow = (state.comboCount >= 3 || hasBombInClearing);
+        if (triggeredFeverNow) {
+            activateFeverMode();
+        }
+
+        // Play clear sound (special powerup sound for cross-clear, regular chime for others)
+        if (isCrossClear) {
+            AudioFX.playCrossClear();
+        } else {
+            AudioFX.playClear(state.comboCount);
+        }
+
+        // Show floating combo text popups with multiplier and cross-clear state
+        showComboPopup(linesCleared, state.comboCount, isCrossClear);
 
         // Trigger screen shake based on combo/lines cleared intensity, bomb, or Fever Mode
-        if (linesCleared >= 3 || isCrossClear || state.comboCount >= 3 || hasBombInClearing || isFever) {
+        if (linesCleared >= 3 || isCrossClear || state.comboCount >= 3 || hasBombInClearing || state.isFeverActive) {
             triggerScreenShake('heavy');
         } else {
             triggerScreenShake('mild');
@@ -1379,6 +1516,7 @@ function checkAndClearLines() {
         if (hasBombExploded) {
             AudioFX.playBomb();
             triggerScreenShake('heavy'); // Ensure heavy screen shake on bomb explosion
+            activateFeverMode(); // Bomb explosion triggers/extends Fever Mode!
         }
 
         // 2. Melt ice blocks adjacent to cleared rows/cols
@@ -1439,6 +1577,10 @@ function checkAndClearLines() {
 
         if (isCrossClear) {
             pointsAwarded += 150; // Devasa Cross-Blast Bonusu!
+        }
+
+        if (state.isFeverActive) {
+            pointsAwarded *= 2; // Double points in Fever Mode!
         }
 
         state.score += pointsAwarded;
@@ -1544,6 +1686,7 @@ function checkGameOver() {
 
     if (!anyBlockFits) {
         state.isGameOver = true;
+        deactivateFeverMode();
 
         // Play game over tune
         AudioFX.playGameOver();
@@ -1575,6 +1718,7 @@ function resetGame() {
     state.comboCount = 0;
     state.rotationRights = 3; // Reset rotation rights!
     state.isGameOver = false;
+    deactivateFeverMode();
     deselectBlock(); // Reset block selection state
     gameOverScreen.classList.add('hidden');
     spawnIceBlocks(); // Spawn ice blocks on reset
