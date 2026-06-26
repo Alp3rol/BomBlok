@@ -466,6 +466,42 @@ const AudioFX = {
             osc.start(now);
             osc.stop(now + 0.15);
         });
+    },
+
+    playUndo() {
+        this.play((ctx) => {
+            const now = ctx.currentTime;
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(600, now);
+            osc.frequency.exponentialRampToValueAtTime(200, now + 0.25);
+            gain.gain.setValueAtTime(0.08, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+            osc.start(now);
+            osc.stop(now + 0.3);
+        });
+    },
+
+    playReroll() {
+        this.play((ctx) => {
+            const now = ctx.currentTime;
+            const notes = [300, 400, 500, 700];
+            notes.forEach((freq, i) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(freq, now + i * 0.06);
+                gain.gain.setValueAtTime(0.06, now + i * 0.06);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.06 + 0.08);
+                osc.start(now + i * 0.06);
+                osc.stop(now + i * 0.06 + 0.08);
+            });
+        });
     }
 };
 
@@ -704,9 +740,9 @@ function renderBlockInSlot(shape, slot, index) {
     blockEl.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
     blockEl.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
 
-    // Total block size (assuming 32px cells + gaps)
-    const cellSize = 32;
-    const gap = 4;
+    // Fixed cell size for uniform look — max 4 cells = 4*22 + 3*2 = 94px, fits in dock
+    const cellSize = 22;
+    const gap = 2;
     blockEl.style.width = `${cols * cellSize + (cols - 1) * gap}px`;
     blockEl.style.height = `${rows * cellSize + (rows - 1) * gap}px`;
     blockEl.style.display = 'grid';
@@ -1023,6 +1059,8 @@ function tryPlaceSelectedBlock(gridR, gridC) {
     }
 
     if (fits) {
+        // Save state snapshot before placement for Undo
+        saveStateSnapshot();
         proposedCells.forEach(cell => {
             const relativeR = cell.r - offsetR;
             const relativeC = cell.c - offsetC;
@@ -1056,6 +1094,7 @@ function tryPlaceSelectedBlock(gridR, gridC) {
         if (isDockEmpty) {
             generateDockBlocks();
         }
+        updateJokerButtonsUI();
     } else {
         AudioFX.playBuzzer();
     }
@@ -1195,6 +1234,8 @@ function onPointerUp(e) {
 
     // 2. Normal placement logic
     if (validPlacement && targetCells.length > 0) {
+        // Save state snapshot before placement for Undo
+        saveStateSnapshot();
         const { offsetR, offsetC } = activeDrag;
 
         // Place Block
@@ -1239,6 +1280,7 @@ function onPointerUp(e) {
         if (isDockEmpty) {
             generateDockBlocks();
         }
+        updateJokerButtonsUI();
 
     } else {
         // Append back to its original slot
@@ -1343,6 +1385,7 @@ function updateMissionUI() {
 function completeMission() {
     state.currentMission.completed = true;
     state.jokers++;
+    updateJokerButtonsUI();
     localStorage.setItem('bomblok_jokers', state.jokers);
 
     // Play victory chime
@@ -1816,6 +1859,7 @@ function checkGameOver() {
         }, 600);
 
         console.log('Game Over! No shapes can fit.');
+        updateJokerButtonsUI();
     }
 }
 
@@ -1829,20 +1873,174 @@ function updateScoreUI() {
     }
 }
 
+// --- JOKER MECHANICS: UNDO & REROLL ---
+const undoBtn = document.getElementById('undo-btn');
+const rerollBtn = document.getElementById('reroll-btn');
+
+function saveStateSnapshot() {
+    state.previousState = {
+        grid: JSON.parse(JSON.stringify(state.grid)),
+        dockedBlocks: JSON.parse(JSON.stringify(state.dockedBlocks)),
+        score: state.score,
+        comboCount: state.comboCount,
+        rotationRights: state.rotationRights,
+        isFeverActive: state.isFeverActive,
+        feverTimeLeft: state.feverTimeLeft,
+        currentMission: state.currentMission ? JSON.parse(JSON.stringify(state.currentMission)) : null
+    };
+}
+
+function updateJokerButtonsUI() {
+    const jokerCountEl = document.getElementById('joker-count');
+    if (jokerCountEl) jokerCountEl.textContent = state.jokers;
+
+    if (undoBtn) {
+        undoBtn.disabled = (
+            state.jokers <= 0 ||
+            !state.previousState ||
+            state.undoUsedThisGame
+        );
+    }
+    if (rerollBtn) {
+        rerollBtn.disabled = (
+            state.jokers <= 0 ||
+            state.rerollUsedThisGame ||
+            state.dockedBlocks.every(b => b === null)
+        );
+    }
+}
+
+function performUndo() {
+    if (!state.previousState || state.jokers <= 0 || state.undoUsedThisGame) return;
+
+    // Deduct joker
+    state.jokers--;
+    localStorage.setItem('bomblok_jokers', state.jokers);
+    state.undoUsedThisGame = true;
+
+    // Restore state
+    const prev = state.previousState;
+    state.grid = prev.grid;
+    state.dockedBlocks = prev.dockedBlocks;
+    state.score = prev.score;
+    state.comboCount = prev.comboCount;
+    state.rotationRights = prev.rotationRights;
+    if (prev.currentMission) state.currentMission = prev.currentMission;
+
+    // Handle fever restore
+    if (prev.isFeverActive && !state.isFeverActive) {
+        activateFeverMode();
+    } else if (!prev.isFeverActive && state.isFeverActive) {
+        deactivateFeverMode();
+    }
+
+    // If was game over, cancel it
+    if (state.isGameOver) {
+        state.isGameOver = false;
+        gameOverScreen.classList.add('hidden');
+    }
+
+    state.previousState = null;
+
+    // Re-draw everything
+    deselectBlock();
+    initGrid();
+    redrawDock();
+    updateScoreUI();
+    updateMissionUI();
+    updateJokerButtonsUI();
+
+    AudioFX.playUndo();
+}
+
+function rerollDockBlocks() {
+    if (state.jokers <= 0 || state.rerollUsedThisGame) return;
+
+    // Deduct joker
+    state.jokers--;
+    localStorage.setItem('bomblok_jokers', state.jokers);
+    state.rerollUsedThisGame = true;
+
+    // Generate new blocks for remaining slots
+    const slots = document.querySelectorAll('.dock-slot');
+    state.dockedBlocks.forEach((block, index) => {
+        if (block !== null) {
+            // Generate new random shape
+            let randomShapeIndex = Math.floor(Math.random() * SHAPES.length);
+            let shape = JSON.parse(JSON.stringify(SHAPES[randomShapeIndex]));
+
+            // Reduce 1x1 single block frequency
+            if (shape.matrix.length === 1 && shape.matrix[0].length === 1) {
+                if (Math.random() < 0.95) {
+                    const nonSingleShapes = SHAPES.filter(s => !(s.matrix.length === 1 && s.matrix[0].length === 1));
+                    shape = JSON.parse(JSON.stringify(nonSingleShapes[Math.floor(Math.random() * nonSingleShapes.length)]));
+                }
+            }
+
+            // 25% chance for bomb
+            if (Math.random() < 0.25) {
+                const solidCells = [];
+                for (let r = 0; r < shape.matrix.length; r++) {
+                    for (let c = 0; c < shape.matrix[r].length; c++) {
+                        if (shape.matrix[r][c] === 1) solidCells.push({ r, c });
+                    }
+                }
+                if (solidCells.length > 0) {
+                    shape.bombCell = solidCells[Math.floor(Math.random() * solidCells.length)];
+                }
+            }
+
+            state.dockedBlocks[index] = shape;
+        }
+    });
+
+    // Re-draw dock
+    deselectBlock();
+    redrawDock();
+
+    // If was game over, check if new blocks fit
+    if (state.isGameOver) {
+        const activeBlocks = state.dockedBlocks.filter(b => b !== null);
+        const anyFits = activeBlocks.some(s => canShapeFitWithRotation(s));
+        if (anyFits) {
+            state.isGameOver = false;
+            gameOverScreen.classList.add('hidden');
+        }
+    }
+
+    updateJokerButtonsUI();
+    AudioFX.playReroll();
+}
+
+function redrawDock() {
+    const slots = document.querySelectorAll('.dock-slot');
+    slots.forEach((slot, index) => {
+        slot.innerHTML = '';
+        const shape = state.dockedBlocks[index];
+        if (shape) {
+            renderBlockInSlot(shape, slot, index);
+        }
+    });
+}
+
 // Reset Game
 function resetGame() {
     state.grid = Array(8).fill(null).map(() => Array(8).fill(0));
     state.score = 0;
     state.comboCount = 0;
-    state.rotationRights = 3; // Reset rotation rights!
+    state.rotationRights = 3;
     state.isGameOver = false;
+    state.previousState = null;
+    state.undoUsedThisGame = false;
+    state.rerollUsedThisGame = false;
     deactivateFeverMode();
     initMission();
-    deselectBlock(); // Reset block selection state
+    deselectBlock();
     gameOverScreen.classList.add('hidden');
-    spawnIceBlocks(); // Spawn ice blocks on reset
+    spawnIceBlocks();
     initGrid();
     generateDockBlocks();
+    updateJokerButtonsUI();
 }
 
 // Event Listeners
@@ -1917,4 +2115,22 @@ initGrid();
 resizeCanvas(); // Align canvas size to grid
 generateDockBlocks();
 initMission(); // Initialize first mission!
+updateJokerButtonsUI(); // Set initial button states
+
+// Joker button event listeners
+if (undoBtn) {
+    undoBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        AudioFX.init();
+        performUndo();
+    });
+}
+if (rerollBtn) {
+    rerollBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        AudioFX.init();
+        rerollDockBlocks();
+    });
+}
+
 console.log('BomBlok Initialized: Game Fully Functional!');
