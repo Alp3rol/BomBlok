@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BomBlok - Premium Web Oyunu</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <!-- Header: Top Row (Title & Controls) -->
+        <header class="game-header">
+            <h1 class="game-title">BOM <span class="accent-text">BLOK</span></h1>
+            <div class="header-controls">
+                <select id="theme-select" class="theme-select" title="Tema Değiştir">
+                    <option value="dark">🌌 Karanlık</option>
+                    <option value="neon">🧬 Neon</option>
+                    <option value="wood">🪵 Ahşap</option>
+                    <option value="retro">👾 Retro</option>
+                </select>
+                <button id="sound-btn" class="sound-button" title="Sesi Kapat/Aç">🔊</button>
+            </div>
+        </header>
+
+        <!-- Scoreboard: Second Row (Centered above the grid) -->
+        <section class="scoreboard-row">
+            <div class="score-card">
+                <span class="score-label">DÖNDÜRME</span>
+                <span id="rotation-rights" class="score-value">3</span>
+            </div>
+            <div class="score-card">
+                <span class="score-label">SKOR</span>
+                <span id="current-score" class="score-value">0</span>
+            </div>
+            <div class="score-card">
+                <span class="score-label">EN YÜKSEK</span>
+                <span id="best-score" class="score-value">0</span>
+            </div>
+        </section>
+
+        <!-- Main Board: 8x8 Grid -->
+        <main class="grid-board-container">
+            <div id="grid-board" class="grid-board">
+                <!-- Grid hücreleri JS ile dinamik oluşturulacak -->
+            </div>
+            <canvas id="effects-canvas"></canvas>
+        </main>
+
+        <!-- Footer: Dock containing 3 shape slots -->
+        <footer class="dock-container">
+            <div id="block-dock" class="block-dock">
+                <div class="dock-slot" data-slot="0"></div>
+                <div class="dock-slot" data-slot="1"></div>
+                <div class="dock-slot" data-slot="2"></div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="game-over-screen" class="game-over-overlay hidden">
+        <div class="game-over-card">
+            <h2 class="game-over-title">OYUN BİTTİ</h2>
+            <div class="final-score-container">
+                <p>Toplam Skor</p>
+                <h3 id="final-score">0</h3>
+            </div>
+            <button id="restart-btn" class="restart-button">Yeniden Başla</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
