@@ -73,24 +73,27 @@
             <canvas id="effects-canvas"></canvas>
         </main>
 
-        <!-- Joker Controls (Undo & Reroll) -->
-        <div class="joker-controls">
-            <button id="undo-btn" class="joker-button" title="Hamleyi Geri Al (1 Joker)">
-                <span class="joker-btn-icon">⏪</span> Geri Al
-            </button>
-            <button id="reroll-btn" class="joker-button" title="Bekleyen Şekilleri Yenile (1 Joker)">
-                <span class="joker-btn-icon">🔄</span> Yenile
-            </button>
-        </div>
-
-        <!-- Footer: Dock containing 3 shape slots -->
-        <footer class="dock-container">
-            <div id="block-dock" class="block-dock">
-                <div class="dock-slot" data-slot="0"></div>
-                <div class="dock-slot" data-slot="1"></div>
-                <div class="dock-slot" data-slot="2"></div>
+        <!-- Bottom Section: Controls + Dock -->
+        <div class="bottom-section">
+            <!-- Joker Controls (Undo & Reroll) -->
+            <div class="joker-controls">
+                <button id="undo-btn" class="joker-button" title="Hamleyi Geri Al (1 Joker)">
+                    <span class="joker-btn-icon">⏪</span> Geri Al
+                </button>
+                <button id="reroll-btn" class="joker-button" title="Bekleyen Şekilleri Yenile (1 Joker)">
+                    <span class="joker-btn-icon">🔄</span> Yenile
+                </button>
             </div>
-        </footer>
+
+            <!-- Footer: Dock containing 3 shape slots -->
+            <footer class="dock-container">
+                <div id="block-dock" class="block-dock">
+                    <div class="dock-slot" data-slot="0"></div>
+                    <div class="dock-slot" data-slot="1"></div>
+                    <div class="dock-slot" data-slot="2"></div>
+                </div>
+            </footer>
+        </div>
     </div>
 
     <!-- Game Over Screen -->

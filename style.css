@@ -35,11 +35,15 @@
     -webkit-user-select: none;
 }
 
+html, body {
+    height: 100dvh;
+    height: 100vh; /* fallback */
+}
+
 body {
     font-family: var(--font-main);
     background: var(--bg-gradient);
     color: var(--text-primary);
-    min-height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -50,15 +54,15 @@ body {
 .game-container {
     width: 100%;
     max-width: 480px;
-    height: 100vh;
-    max-height: 850px;
-    padding: 20px;
+    height: 100dvh;
+    height: 100vh; /* fallback */
+    padding: 12px 16px;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
     align-items: center;
     position: relative;
     overflow: hidden;
+    gap: 6px;
 }
 
 /* Header */
@@ -67,7 +71,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 15px;
+    flex-shrink: 0;
 }
 
 .game-title {
@@ -96,8 +100,8 @@ body {
     width: 100%;
     display: flex;
     justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 15px;
+    gap: 8px;
+    flex-shrink: 0;
 }
 
 .score-card {
@@ -132,19 +136,21 @@ body {
 /* Grid Board */
 .grid-board-container {
     width: 100%;
+    flex: 1 1 0;
+    min-height: 0;
+    max-width: 100%;
     aspect-ratio: 1 / 1;
     background: var(--panel-bg);
     border: 1px solid var(--panel-border);
-    border-radius: 20px;
-    padding: 10px;
+    border-radius: 16px;
+    padding: 8px;
     box-shadow: var(--panel-glow), 0 0 30px rgba(111, 66, 193, 0.1);
     backdrop-filter: blur(15px);
     -webkit-backdrop-filter: blur(15px);
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-bottom: 6px;
-    position: relative; /* Added for absolute children alignment */
+    position: relative;
 }
 
 .grid-board {
@@ -191,17 +197,26 @@ body {
 .grid-cell.filled-pink { background: var(--color-pink); }
 .grid-cell.filled-cyan { background: var(--color-cyan); }
 
+/* Bottom Section Wrapper */
+.bottom-section {
+    width: 100%;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
 /* Block Dock / Offering Area */
 .dock-container {
     width: 100%;
     background: var(--panel-bg);
     border: 1px solid var(--panel-border);
-    border-radius: 20px;
-    padding: 15px 10px;
+    border-radius: 16px;
+    padding: 10px 8px;
     box-shadow: var(--panel-glow);
     backdrop-filter: blur(15px);
     -webkit-backdrop-filter: blur(15px);
-    margin-bottom: 0;
 }
 
 .block-dock {
@@ -209,7 +224,7 @@ body {
     justify-content: space-around;
     align-items: center;
     width: 100%;
-    height: 120px;
+    height: 100px;
 }
 
 .dock-slot {
@@ -395,13 +410,33 @@ body {
 /* Responsive Scaling */
 @media (max-height: 700px) {
     .game-container {
-        padding: 10px;
+        padding: 8px 12px;
+        gap: 4px;
     }
-    .grid-board-container {
-        margin-bottom: 10px;
+    .score-card {
+        padding: 4px 8px;
+    }
+    .score-value {
+        font-size: 16px;
     }
     .block-dock {
-        height: 100px;
+        height: 80px;
+    }
+    .dock-container {
+        padding: 6px;
+    }
+}
+
+@media (max-height: 600px) {
+    .game-container {
+        padding: 4px 8px;
+        gap: 2px;
+    }
+    .block-dock {
+        height: 65px;
+    }
+    .game-header {
+        margin-bottom: 0;
     }
 }
 
@@ -444,10 +479,10 @@ body {
 /* Effects Canvas Overlay */
 #effects-canvas {
     position: absolute;
-    top: 10px;
-    left: 10px;
-    width: calc(100% - 20px);
-    height: calc(100% - 20px);
+    top: 8px;
+    left: 8px;
+    width: calc(100% - 16px);
+    height: calc(100% - 16px);
     pointer-events: none;
     z-index: 10;
 }
@@ -971,7 +1006,7 @@ body.theme-retro.fever-active .game-container::after {
     flex-direction: column;
     align-items: center;
     gap: 4px;
-    margin: -6px auto 4px auto;
+    margin: 0 auto;
     transition: opacity 0.3s ease;
     z-index: 10;
     flex-shrink: 0;
@@ -1034,12 +1069,12 @@ body.theme-retro .fever-bar-fill {
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid var(--panel-border);
     border-radius: 12px;
-    padding: 10px 16px;
+    padding: 8px 14px;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    margin-bottom: 12px;
+    gap: 6px;
+    flex-shrink: 0;
     box-shadow: var(--panel-glow);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
@@ -1204,10 +1239,8 @@ body.theme-retro .complete-reward {
 .joker-controls {
     display: flex;
     justify-content: center;
-    gap: 16px;
+    gap: 20px;
     width: 100%;
-    margin-top: 4px;
-    margin-bottom: 2px;
 }
 
 .joker-button {
