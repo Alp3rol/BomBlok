@@ -1173,19 +1173,28 @@ function onPointerUp(e) {
 }
 
 // --- SCREEN SHAKE EFFECT ---
-function triggerScreenShake(intensity) {
-    const board = document.querySelector('.grid-board-container');
-    if (!board) return;
+let shakeTimeoutId = null;
 
-    board.classList.remove('shake-mild', 'shake-heavy');
-    void board.offsetWidth; // Trigger reflow to restart CSS animation
+function triggerScreenShake(intensity) {
+    const container = document.querySelector('.game-container');
+    if (!container) return;
+
+    if (shakeTimeoutId) {
+        clearTimeout(shakeTimeoutId);
+    }
+
+    container.classList.remove('shake-mild', 'shake-heavy');
+    void container.offsetWidth; // Trigger reflow to restart CSS animation
 
     const shakeClass = intensity === 'heavy' ? 'shake-heavy' : 'shake-mild';
-    board.classList.add(shakeClass);
+    const duration = intensity === 'heavy' ? 350 : 200;
 
-    board.addEventListener('animationend', () => {
-        board.classList.remove(shakeClass);
-    }, { once: true });
+    container.classList.add(shakeClass);
+
+    shakeTimeoutId = setTimeout(() => {
+        container.classList.remove('shake-mild', 'shake-heavy');
+        shakeTimeoutId = null;
+    }, duration);
 }
 
 // --- FLOATING TEXT COMBO POPUPS ---
@@ -1196,22 +1205,28 @@ function showComboPopup(linesCleared, comboCount, isCrossClear = false) {
     const x = boardRect.left + boardRect.width / 2;
     const y = boardRect.top + boardRect.height / 2;
 
-    let text = 'HARİKA!';
     let isGold = false;
+    let lines = [];
 
     if (isCrossClear) {
-        text = 'MÜKEMMEL!\nCROSS BLAST!';
+        lines.push('MÜKEMMEL!');
+        lines.push('CROSS BLAST!');
         isGold = true;
     } else if (linesCleared === 2) {
-        text = 'DOUBLE BLAST!';
+        lines.push('DOUBLE BLAST!');
     } else if (linesCleared === 3) {
-        text = 'TRIPLE BLAST!';
+        lines.push('TRIPLE BLAST!');
     } else if (linesCleared >= 4) {
-        text = 'MEGA BLAST!';
+        lines.push('MEGA BLAST!');
+    } else {
+        lines.push('HARİKA!');
     }
 
     if (comboCount > 1) {
-        text += `\nCOMBO x${comboCount}!`;
+        lines.push(`COMBO x${comboCount}!`);
+    }
+    if (comboCount >= 5) {
+        lines.push('🔥 FEVER MODE! 🔥');
     }
 
     const popup = document.createElement('div');
@@ -1219,10 +1234,15 @@ function showComboPopup(linesCleared, comboCount, isCrossClear = false) {
     if (isGold) {
         popup.classList.add('gold-glow');
     }
-    popup.innerHTML = text.replace('\n', '<br><span style="font-size: 18px; color: #ff007f;">');
-    if (comboCount > 1 || isGold) {
-        popup.innerHTML += '</span>';
+
+    let html = lines[0];
+    if (lines.length > 1) {
+        html += '<br><span style="font-size: 18px; color: #ff007f; display: block; margin-top: 4px;">';
+        html += lines.slice(1).join('<br>');
+        html += '</span>';
     }
+    popup.innerHTML = html;
+
     popup.style.left = `${x}px`;
     popup.style.top = `${y}px`;
     popup.style.textAlign = 'center';
@@ -1278,13 +1298,6 @@ function checkAndClearLines() {
         // Show floating combo text popups with multiplier and cross-clear state
         showComboPopup(linesCleared, state.comboCount, isCrossClear);
 
-        // Trigger screen shake based on combo/lines cleared intensity
-        if (linesCleared >= 3 || isCrossClear || state.comboCount >= 3) {
-            triggerScreenShake('heavy');
-        } else {
-            triggerScreenShake('mild');
-        }
-
         const cellsToClear = [];
 
         // Collect coordinates and current colors of cells in full rows/columns
@@ -1294,6 +1307,17 @@ function checkAndClearLines() {
                     cellsToClear.push({ r, c, color: state.grid[r][c] });
                 }
             }
+        }
+
+        // Check if a bomb was part of the initial clearing
+        const hasBombInClearing = cellsToClear.some(cell => typeof cell.color === 'string' && cell.color.endsWith('-bomb'));
+        const isFever = state.comboCount >= 5;
+
+        // Trigger screen shake based on combo/lines cleared intensity, bomb, or Fever Mode
+        if (linesCleared >= 3 || isCrossClear || state.comboCount >= 3 || hasBombInClearing || isFever) {
+            triggerScreenShake('heavy');
+        } else {
+            triggerScreenShake('mild');
         }
 
         // 1. Process Bomb Explosions (Chain-reaction)
@@ -1318,7 +1342,7 @@ function checkAndClearLines() {
                         const nr = bombR + dr;
                         const nc = bombC + dc;
 
-                        if (nr >= 0 && nr < 20 && nc >= 0 && nc < 20) {
+                        if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8) {
                             const cellColor = state.grid[nr][nc];
                             const key = `${nr},${nc}`;
 
@@ -1354,6 +1378,7 @@ function checkAndClearLines() {
 
         if (hasBombExploded) {
             AudioFX.playBomb();
+            triggerScreenShake('heavy'); // Ensure heavy screen shake on bomb explosion
         }
 
         // 2. Melt ice blocks adjacent to cleared rows/cols
