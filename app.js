@@ -541,31 +541,63 @@ class Particle {
         this.y = y;
         this.color = COLOR_MAP[colorName] || '#ff007f';
         const angle = Math.random() * Math.PI * 2;
-        const speed = 1.0 + Math.random() * 4.0;
+        const speed = 2.0 + Math.random() * 5.0;
         this.vx = Math.cos(angle) * speed;
         this.vy = Math.sin(angle) * speed;
-        this.radius = 2.5 + Math.random() * 3.5;
+        this.radius = 2.0 + Math.random() * 3.0;
         this.alpha = 1.0;
-        this.decay = 0.02 + Math.random() * 0.02;
+        this.decay = 0.015 + Math.random() * 0.015;
+        this.gravity = 0.05 + Math.random() * 0.05; // gentle gravity pull
+        this.type = Math.random() < 0.35 ? 'sparkle' : (Math.random() < 0.45 ? 'diamond' : 'circle');
+        this.rotation = Math.random() * Math.PI * 2;
+        this.rotationSpeed = (Math.random() - 0.5) * 0.15;
     }
 
     update() {
         this.x += this.vx;
         this.y += this.vy;
-        this.vx *= 0.95; // Friction
-        this.vy *= 0.95;
+        this.vy += this.gravity; // Apply gravity
+        this.vx *= 0.94; // Friction
+        this.vy *= 0.94;
+        this.rotation += this.rotationSpeed;
         this.alpha -= this.decay;
     }
 
     draw(c) {
         c.save();
         c.globalAlpha = Math.max(0, this.alpha);
-        c.beginPath();
-        c.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        c.translate(this.x, this.y);
+        c.rotate(this.rotation);
         c.fillStyle = this.color;
-        c.shadowBlur = 8;
+        c.shadowBlur = 10;
         c.shadowColor = this.color;
-        c.fill();
+
+        if (this.type === 'sparkle') {
+            // Draw a beautiful 4-point magic sparkle star
+            c.beginPath();
+            for (let i = 0; i < 4; i++) {
+                c.lineTo(this.radius * 2.2, 0);
+                c.lineTo(this.radius * 0.4, this.radius * 0.4);
+                c.rotate(Math.PI / 2);
+            }
+            c.closePath();
+            c.fill();
+        } else if (this.type === 'diamond') {
+            // Draw a shiny diamond
+            c.beginPath();
+            c.moveTo(0, -this.radius * 1.4);
+            c.lineTo(this.radius * 1.4, 0);
+            c.lineTo(0, this.radius * 1.4);
+            c.lineTo(-this.radius * 1.4, 0);
+            c.closePath();
+            c.fill();
+        } else {
+            // Draw a neon sphere
+            c.beginPath();
+            c.arc(0, 0, this.radius, 0, Math.PI * 2);
+            c.fill();
+        }
+
         c.restore();
     }
 }
@@ -1117,122 +1149,86 @@ function onPointerUp(e) {
     const clickDistance = Math.hypot(e.clientX - startX, e.clientY - startY);
 
     if (clickDuration < 220 && clickDistance < 10) {
+        // Tıklama algılandı, sürüklenen geçici büyük elemanı kaldır
+        blockEl.remove();
+
         if (state.selectedBlockIndex !== slotIndex) {
+            // Yeni blok seçiliyor
             selectBlock(slotIndex);
-
-            // Return block to dock visually
-            blockEl.style.position = '';
-            blockEl.style.left = '';
-            blockEl.style.top = '';
-            if (originalSlot) {
-                originalSlot.innerHTML = '';
-                originalSlot.appendChild(blockEl);
-            }
-
-            blockEl.classList.remove('dragging');
-            blockEl.classList.add('in-dock');
-
-            activeDrag = {
-                blockEl: null, shape: null, slotIndex: null, pointerId: null,
-                dragOffset: { x: 0, y: 0 }, gridCellSize: 0, gap: 6,
-                validPlacement: false, targetCells: [], originalSlot: null,
-                startX: 0, startY: 0, startTime: 0, offsetR: null, offsetC: null
-            };
-            return;
-        }
-
-        // Check rotation rights
-        if (state.rotationRights <= 0) {
-            AudioFX.playBuzzer();
-
-            // Return block to dock visually
-            blockEl.style.position = '';
-            blockEl.style.left = '';
-            blockEl.style.top = '';
-            if (originalSlot) {
-                originalSlot.innerHTML = '';
-                originalSlot.appendChild(blockEl);
-            }
-
-            blockEl.classList.remove('dragging');
-            blockEl.classList.add('in-dock');
-
-            activeDrag = {
-                blockEl: null, shape: null, slotIndex: null, pointerId: null,
-                dragOffset: { x: 0, y: 0 }, gridCellSize: 0, gap: 6,
-                validPlacement: false, targetCells: [], originalSlot: null,
-                startX: 0, startY: 0, startTime: 0, offsetR: null, offsetC: null
-            };
-            return;
-        }
-
-        // Consume 1 rotation right
-        state.rotationRights--;
-        updateScoreUI();
-
-        // Play rotate sound
-        AudioFX.playRotate();
-
-        // Rotate shape matrix 90 degrees clockwise
-        const rCount = shape.matrix.length;
-        shape.matrix = getRotatedMatrix(shape.matrix);
-
-        // If block has a bomb cell, rotate its bomb coordinates as well!
-        if (shape.bombCell) {
-            const oldR = shape.bombCell.r;
-            const oldC = shape.bombCell.c;
-            shape.bombCell.r = oldC;
-            shape.bombCell.c = rCount - 1 - oldR;
-        }
-
-        // Update shape state
-        state.dockedBlocks[slotIndex] = shape;
-
-        // Clear drag styles, snap back to slot immediately
-        blockEl.style.position = '';
-        blockEl.style.left = '';
-        blockEl.style.top = '';
-
-        if (originalSlot) {
-            originalSlot.innerHTML = '';
-            originalSlot.appendChild(blockEl);
-        }
-
-        // Trigger CSS rotate animation
-        blockEl.classList.remove('dragging');
-        blockEl.classList.add('rotating');
-
-        blockEl.addEventListener('animationend', () => {
+            
+            // Orijinal slota küçük 22px boyutlarında temizce yeniden çiz ve selected sınıfı ekle
             if (originalSlot) {
                 originalSlot.innerHTML = '';
                 renderBlockInSlot(shape, originalSlot, slotIndex);
+                const newBlockEl = originalSlot.querySelector('.block-shape');
+                if (newBlockEl) newBlockEl.classList.add('selected');
             }
-            // Recalculate game over check since shape dimensions/orientation changed
-            checkGameOver();
-        }, { once: true });
+        } else {
+            // Zaten seçiliydi: Döndür!
+            if (state.rotationRights <= 0) {
+                AudioFX.playBuzzer();
+                
+                // Hak yoksa sadece tepsiyi seçili haliyle yeniden çiz
+                if (originalSlot) {
+                    originalSlot.innerHTML = '';
+                    renderBlockInSlot(shape, originalSlot, slotIndex);
+                    const newBlockEl = originalSlot.querySelector('.block-shape');
+                    if (newBlockEl) newBlockEl.classList.add('selected');
+                }
+                
+                activeDrag = {
+                    blockEl: null, shape: null, slotIndex: null, pointerId: null,
+                    dragOffset: { x: 0, y: 0 }, gridCellSize: 0, gap: 6,
+                    validPlacement: false, targetCells: [], originalSlot: null,
+                    startX: 0, startY: 0, startTime: 0, offsetR: null, offsetC: null
+                };
+                return;
+            }
+
+            // Döndürme hakkı düş ve döndür
+            state.rotationRights--;
+            updateScoreUI();
+            AudioFX.playRotate();
+
+            const rCount = shape.matrix.length;
+            shape.matrix = getRotatedMatrix(shape.matrix);
+
+            if (shape.bombCell) {
+                const oldR = shape.bombCell.r;
+                const oldC = shape.bombCell.c;
+                shape.bombCell.r = oldC;
+                shape.bombCell.c = rCount - 1 - oldR;
+            }
+
+            state.dockedBlocks[slotIndex] = shape;
+
+            // Tepsisine temiz çiz, ardından pürüzsüz dönüş transition'ı oynat!
+            if (originalSlot) {
+                originalSlot.innerHTML = '';
+                renderBlockInSlot(shape, originalSlot, slotIndex);
+                const newBlockEl = originalSlot.querySelector('.block-shape');
+                if (newBlockEl) {
+                    newBlockEl.classList.add('selected', 'rotating-smooth');
+                    newBlockEl.addEventListener('transitionend', () => {
+                        newBlockEl.classList.remove('rotating-smooth');
+                        checkGameOver();
+                        updateJokerButtonsUI();
+                    }, { once: true });
+                }
+            }
+        }
 
         // Reset active drag state
         activeDrag = {
-            blockEl: null,
-            shape: null,
-            slotIndex: null,
-            pointerId: null,
-            dragOffset: { x: 0, y: 0 },
-            gridCellSize: 0,
-            gap: 6,
-            validPlacement: false,
-            targetCells: [],
-            originalSlot: null,
-            startX: 0,
-            startY: 0,
-            startTime: 0,
-            offsetR: null,
-            offsetC: null
+            blockEl: null, shape: null, slotIndex: null, pointerId: null,
+            dragOffset: { x: 0, y: 0 }, gridCellSize: 0, gap: 6,
+            validPlacement: false, targetCells: [], originalSlot: null,
+            startX: 0, startY: 0, startTime: 0, offsetR: null, offsetC: null
         };
         return;
     }
 
-    // 2. Normal placement logic
+    // 2. Sürükleme bırakıldıysa:
     if (validPlacement && targetCells.length > 0) {
         // Save state snapshot before placement for Undo
         saveStateSnapshot();
@@ -1283,28 +1279,19 @@ function onPointerUp(e) {
         updateJokerButtonsUI();
 
     } else {
-        // Append back to its original slot
+        // Sürükleme iptal edildiyse, geçici büyük elemanı silip tepsisine temiz 22px çiz!
+        blockEl.remove();
+        
         if (originalSlot) {
-            originalSlot.appendChild(blockEl);
+            originalSlot.innerHTML = '';
+            renderBlockInSlot(shape, originalSlot, slotIndex);
+            
+            // Eğer blok önceden seçiliyse selected sınıfı ekle
+            if (state.selectedBlockIndex === slotIndex) {
+                const newBlockEl = originalSlot.querySelector('.block-shape');
+                if (newBlockEl) newBlockEl.classList.add('selected');
+            }
         }
-
-        // Return block to dock
-        blockEl.classList.remove('dragging');
-        blockEl.classList.add('in-dock');
-
-        // Reset absolute positioning styles
-        blockEl.style.position = '';
-        blockEl.style.left = '';
-        blockEl.style.top = '';
-
-        // Reset slot size
-        const cellSize = 32;
-        const gap = 4;
-        const rows = shape.matrix.length;
-        const cols = shape.matrix[0].length;
-        blockEl.style.width = `${cols * cellSize + (cols - 1) * gap}px`;
-        blockEl.style.height = `${rows * cellSize + (rows - 1) * gap}px`;
-        blockEl.style.gap = `${gap}px`;
     }
 
     // Reset active drag state
@@ -1876,6 +1863,7 @@ function updateScoreUI() {
 // --- JOKER MECHANICS: UNDO & REROLL ---
 const undoBtn = document.getElementById('undo-btn');
 const rerollBtn = document.getElementById('reroll-btn');
+const rotationRightsBtn = document.getElementById('rotation-rights-btn');
 
 function saveStateSnapshot() {
     state.previousState = {
@@ -1906,6 +1894,12 @@ function updateJokerButtonsUI() {
             state.jokers <= 0 ||
             state.rerollUsedThisGame ||
             state.dockedBlocks.every(b => b === null)
+        );
+    }
+    if (rotationRightsBtn) {
+        rotationRightsBtn.disabled = (
+            (state.rotationRights <= 0 && state.jokers <= 0) ||
+            state.isGameOver
         );
     }
 }
@@ -2023,6 +2017,27 @@ function redrawDock() {
     });
 }
 
+function animateAndRotateBlock(slotIndex, shape) {
+    const blockEl = blockDock.querySelector(`.block-shape[data-slot-index="${slotIndex}"]`);
+    if (blockEl) {
+        blockEl.classList.add('rotating-smooth');
+        blockEl.addEventListener('transitionend', () => {
+            blockEl.classList.remove('rotating-smooth');
+            deselectBlock();
+            redrawDock();
+            selectBlock(slotIndex);
+            checkGameOver();
+            updateJokerButtonsUI();
+        }, { once: true });
+    } else {
+        deselectBlock();
+        redrawDock();
+        selectBlock(slotIndex);
+        checkGameOver();
+        updateJokerButtonsUI();
+    }
+}
+
 // Reset Game
 function resetGame() {
     state.grid = Array(8).fill(null).map(() => Array(8).fill(0));
@@ -2130,6 +2145,79 @@ if (rerollBtn) {
         e.stopPropagation();
         AudioFX.init();
         rerollDockBlocks();
+    });
+}
+if (rotationRightsBtn) {
+    rotationRightsBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        AudioFX.init();
+        
+        const isBlockSelected = state.selectedBlockIndex !== null;
+        
+        // Eğer döndürme hakkı varsa ve blok seçiliyse normal şekilde döndür
+        if (isBlockSelected && state.rotationRights > 0) {
+            const slotIndex = state.selectedBlockIndex;
+            const shape = state.dockedBlocks[slotIndex];
+            if (shape) {
+                state.rotationRights--;
+                updateScoreUI();
+                AudioFX.playRotate();
+                
+                const rCount = shape.matrix.length;
+                shape.matrix = getRotatedMatrix(shape.matrix);
+                
+                if (shape.bombCell) {
+                    const oldR = shape.bombCell.r;
+                    const oldC = shape.bombCell.c;
+                    shape.bombCell.r = oldC;
+                    shape.bombCell.c = rCount - 1 - oldR;
+                }
+                
+                state.dockedBlocks[slotIndex] = shape;
+                animateAndRotateBlock(slotIndex, shape);
+            }
+        } 
+        // Eğer döndürme hakkı yoksa VEYA blok seçili değilken tıklanıp "Top-up" yapılmak isteniyorsa:
+        else {
+            // Joker varsa 1 Joker harca ve +3 Döndürme Hakkı ekle!
+            if (state.jokers > 0) {
+                state.jokers--;
+                localStorage.setItem('bomblok_jokers', state.jokers);
+                state.rotationRights += 3;
+                
+                updateScoreUI();
+                updateJokerButtonsUI();
+                updateMissionUI();
+                AudioFX.playReroll(); // Satın alma sesi
+                
+                // Eğer tıklandığında bir blok seçiliyse, yeni alınan haktan 1 tane harcayarak onu hemen döndür!
+                if (isBlockSelected) {
+                    const slotIndex = state.selectedBlockIndex;
+                    const shape = state.dockedBlocks[slotIndex];
+                    if (shape) {
+                        state.rotationRights--; // 1 hak harca (kalan 2 olacak)
+                        updateScoreUI();
+                        AudioFX.playRotate();
+                        
+                        const rCount = shape.matrix.length;
+                        shape.matrix = getRotatedMatrix(shape.matrix);
+                        
+                        if (shape.bombCell) {
+                            const oldR = shape.bombCell.r;
+                            const oldC = shape.bombCell.c;
+                            shape.bombCell.r = oldC;
+                            shape.bombCell.c = rCount - 1 - oldR;
+                        }
+                        
+                        state.dockedBlocks[slotIndex] = shape;
+                        animateAndRotateBlock(slotIndex, shape);
+                    }
+                }
+            } else {
+                // Hak da yoksa joker de yoksa uyarı sesi çal
+                AudioFX.playBuzzer();
+            }
+        }
     });
 }
 
