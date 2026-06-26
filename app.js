@@ -269,6 +269,57 @@ const AudioFX = {
         });
     },
     
+    playBomb() {
+        this.play((ctx) => {
+            const now = ctx.currentTime;
+            
+            // Create a lowpass filter to make the boom soft, warm, and low-frequency
+            const filter = ctx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(250, now); // Low cutoff removes all high noise crackle
+            filter.frequency.exponentialRampToValueAtTime(70, now + 0.35);
+            filter.Q.setValueAtTime(1.0, now);
+            filter.connect(ctx.destination);
+            
+            // 1. Deep sine wave boom
+            const osc = ctx.createOscillator();
+            const gainOsc = ctx.createGain();
+            osc.connect(gainOsc);
+            gainOsc.connect(filter);
+            
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(110, now);
+            osc.frequency.exponentialRampToValueAtTime(30, now + 0.3);
+            
+            gainOsc.gain.setValueAtTime(0.45, now);
+            gainOsc.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+            
+            osc.start(now);
+            osc.stop(now + 0.3);
+            
+            // 2. Soft white noise explosion puff
+            const bufferSize = ctx.sampleRate * 0.25; // 0.25s duration
+            const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                data[i] = Math.random() * 2 - 1;
+            }
+            
+            const noise = ctx.createBufferSource();
+            noise.buffer = buffer;
+            
+            const gainNoise = ctx.createGain();
+            noise.connect(gainNoise);
+            gainNoise.connect(filter);
+            
+            gainNoise.gain.setValueAtTime(0.18, now);
+            gainNoise.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+            
+            noise.start(now);
+            noise.stop(now + 0.25);
+        });
+    },
+    
     playGameOver() {
         this.play((ctx) => {
             const now = ctx.currentTime;
@@ -1255,12 +1306,15 @@ function checkAndClearLines() {
         // Add initial cleared cells to exploded list so they are not duplicate-processed
         cellsToClear.forEach(cell => explodedCells.add(`${cell.r},${cell.c}`));
         
+        let hasBombExploded = false;
+        
         while (bombCells.length > 0) {
             const nextBombCells = [];
             
             bombCells.forEach(bomb => {
                 const bombR = bomb.r;
                 const bombC = bomb.c;
+                hasBombExploded = true;
                 
                 // Explode a 3x3 area
                 for (let dr = -1; dr <= 1; dr++) {
@@ -1300,6 +1354,10 @@ function checkAndClearLines() {
                 }
             });
             bombCells = nextBombCells;
+        }
+        
+        if (hasBombExploded) {
+            AudioFX.playBomb();
         }
 
         // 2. Melt ice blocks adjacent to cleared rows/cols
