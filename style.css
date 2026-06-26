@@ -461,7 +461,7 @@ body {
     pointer-events: none;
     z-index: 200;
     transform: translate(-50%, -50%);
-    animation: float-up-fade 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    animation: float-up-fade 2.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 
 .floating-text.gold-glow {
@@ -473,16 +473,20 @@ body {
         transform: translate(-50%, -30%) scale(0.6);
         opacity: 0;
     }
-    20% {
+    8% {
         transform: translate(-50%, -50%) scale(1.2);
         opacity: 1;
     }
-    40% {
+    12% {
         transform: translate(-50%, -50%) scale(1);
         opacity: 1;
     }
+    80% {
+        transform: translate(-50%, -65px) scale(1);
+        opacity: 1;
+    }
     100% {
-        transform: translate(-50%, -100px) scale(0.8);
+        transform: translate(-50%, -105px) scale(0.8);
         opacity: 0;
     }
 }

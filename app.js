@@ -1229,9 +1229,9 @@ function showComboPopup(linesCleared, comboCount, isCrossClear = false) {
 
     document.body.appendChild(popup);
 
-    popup.addEventListener('animationend', () => {
+    setTimeout(() => {
         popup.remove();
-    });
+    }, 2500);
 }
 
 // --- GRID CLEARING & PATLAMA MECHANICS ---
