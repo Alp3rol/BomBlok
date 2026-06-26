@@ -1166,23 +1166,31 @@ function onPointerUp(e) {
         } else {
             // Zaten seçiliydi: Döndür!
             if (state.rotationRights <= 0) {
-                AudioFX.playBuzzer();
-                
-                // Hak yoksa sadece tepsiyi seçili haliyle yeniden çiz
-                if (originalSlot) {
-                    originalSlot.innerHTML = '';
-                    renderBlockInSlot(shape, originalSlot, slotIndex);
-                    const newBlockEl = originalSlot.querySelector('.block-shape');
-                    if (newBlockEl) newBlockEl.classList.add('selected');
+                // Hak yoksa jokerle satın al
+                if (state.jokers > 0) {
+                    state.jokers--;
+                    localStorage.setItem('bomblok_jokers', state.jokers);
+                    state.rotationRights += 3;
+                    updateJokerButtonsUI();
+                    AudioFX.playReroll();
+                } else {
+                    AudioFX.playBuzzer();
+                    
+                    if (originalSlot) {
+                        originalSlot.innerHTML = '';
+                        renderBlockInSlot(shape, originalSlot, slotIndex);
+                        const newBlockEl = originalSlot.querySelector('.block-shape');
+                        if (newBlockEl) newBlockEl.classList.add('selected');
+                    }
+                    
+                    activeDrag = {
+                        blockEl: null, shape: null, slotIndex: null, pointerId: null,
+                        dragOffset: { x: 0, y: 0 }, gridCellSize: 0, gap: 6,
+                        validPlacement: false, targetCells: [], originalSlot: null,
+                        startX: 0, startY: 0, startTime: 0, offsetR: null, offsetC: null
+                    };
+                    return;
                 }
-                
-                activeDrag = {
-                    blockEl: null, shape: null, slotIndex: null, pointerId: null,
-                    dragOffset: { x: 0, y: 0 }, gridCellSize: 0, gap: 6,
-                    validPlacement: false, targetCells: [], originalSlot: null,
-                    startX: 0, startY: 0, startTime: 0, offsetR: null, offsetC: null
-                };
-                return;
             }
 
             // Döndürme hakkı düş ve döndür
