@@ -15,6 +15,7 @@
         <header class="game-header">
             <h1 class="game-title">BOM <span class="accent-text">BLOK</span></h1>
             <div class="header-controls">
+                <button id="help-btn" class="help-button" title="Nasıl Oynanır?">?</button>
                 <select id="theme-select" class="theme-select" title="Tema Değiştir">
                     <option value="dark">🌌 Karanlık</option>
                     <option value="neon">🧬 Neon</option>
@@ -68,6 +69,53 @@
                 <h3 id="final-score">0</h3>
             </div>
             <button id="restart-btn" class="restart-button">Yeniden Başla</button>
+        </div>
+    </div>
+
+    <!-- Help / How to Play Modal -->
+    <div id="help-modal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <button class="modal-close-btn" id="help-close-btn">&times;</button>
+            <h2 class="modal-title">Nasıl Oynanır?</h2>
+            <div class="modal-content">
+                <div class="rule-item">
+                    <span class="rule-emoji">🧩</span>
+                    <div class="rule-text">
+                        <strong>Sürükle & Yerleştir:</strong> Alttaki şekilleri 8x8'lik alana yerleştir.
+                    </div>
+                </div>
+                <div class="rule-item">
+                    <span class="rule-emoji">💥</span>
+                    <div class="rule-text">
+                        <strong>Satırları Temizle:</strong> Dikey veya yatay olarak tam bir sıra oluşturduğunda bloklar patlar. Çapraz eşleşme yoktur!
+                    </div>
+                </div>
+                <div class="rule-item">
+                    <span class="rule-emoji">💣</span>
+                    <div class="rule-text">
+                        <strong>Bomba Bloklar:</strong> Bazen şekiller bomba simgesiyle gelir. Bu şekli içeren bir satırı patlattığında, etrafındaki 3x3'lük devasa bir alanı da havaya uçurur!
+                    </div>
+                </div>
+                <div class="rule-item">
+                    <span class="rule-emoji">🧊</span>
+                    <div class="rule-text">
+                        <strong>Buzlu Hücreler:</strong> Oyun alanındaki bazı hücreler başlangıçta buzla kaplıdır. O hücreyi kullanabilmek için önce hemen yanındaki bir satırı veya sütunu patlatarak buzu kırmalısın.
+                    </div>
+                </div>
+                <div class="rule-item">
+                    <span class="rule-emoji">🔄</span>
+                    <div class="rule-text">
+                        <strong>Döndürme Hakkı:</strong> Sıkıştığında, sınırlı sayıdaki döndürme (rotation) hakkını kullanarak şekillerin yönünü değiştir.
+                    </div>
+                </div>
+                <div class="rule-item">
+                    <span class="rule-emoji">🛑</span>
+                    <div class="rule-text">
+                        <strong>Oyun Bitişi:</strong> Bekleyen şekiller boşluklara sığmadığında (ve döndürme hakkın kalmadığında) oyun biter.
+                    </div>
+                </div>
+            </div>
+            <button id="modal-start-btn" class="modal-start-btn">Anladım, Oyuna Dön</button>
         </div>
     </div>
 

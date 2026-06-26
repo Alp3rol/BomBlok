@@ -56,6 +56,10 @@ const finalScoreEl = document.getElementById('final-score');
 const restartBtn = document.getElementById('restart-btn');
 const soundBtn = document.getElementById('sound-btn');
 const themeSelectEl = document.getElementById('theme-select');
+const helpBtn = document.getElementById('help-btn');
+const helpModal = document.getElementById('help-modal');
+const helpCloseBtn = document.getElementById('help-close-btn');
+const modalStartBtn = document.getElementById('modal-start-btn');
 
 // --- THEME MANAGER ---
 const ThemeManager = {
@@ -1557,6 +1561,43 @@ function resetGame() {
 restartBtn.addEventListener('click', () => {
     resetGame();
 });
+
+// Help Modal Event Listeners
+if (helpBtn && helpModal) {
+    helpBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        AudioFX.init();
+        AudioFX.playGrab();
+        helpModal.classList.remove('hidden');
+    });
+}
+
+if (helpModal) {
+    helpModal.addEventListener('click', (e) => {
+        // Close if clicking the overlay itself (outside the modal-card)
+        if (e.target === helpModal) {
+            AudioFX.init();
+            AudioFX.playGrab();
+            helpModal.classList.add('hidden');
+        }
+    });
+}
+
+if (helpCloseBtn) {
+    helpCloseBtn.addEventListener('click', () => {
+        AudioFX.init();
+        AudioFX.playGrab();
+        helpModal.classList.add('hidden');
+    });
+}
+
+if (modalStartBtn) {
+    modalStartBtn.addEventListener('click', () => {
+        AudioFX.init();
+        AudioFX.playGrab();
+        helpModal.classList.add('hidden');
+    });
+}
 
 // Deselect selected block if clicked outside of any dock slot or grid cell
 window.addEventListener('click', (e) => {

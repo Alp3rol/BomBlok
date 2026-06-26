@@ -718,5 +718,202 @@ body.theme-retro::before {
     z-index: 1000;
     pointer-events: none;
 }
+/* Help Button */
+.help-button {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--panel-border);
+    border-radius: 50%;
+    color: var(--text-primary);
+    width: 38px;
+    height: 38px;
+    font-size: 18px;
+    font-weight: 800;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    box-shadow: var(--panel-glow);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    transition: transform 0.2s ease, background 0.2s ease;
+}
 
+.help-button:hover {
+    background: rgba(255, 255, 255, 0.12);
+    transform: scale(1.05);
+}
 
+.help-button:active {
+    transform: scale(0.95);
+}
+
+/* Modal Overlay */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    transition: opacity 0.3s ease;
+}
+
+.modal-overlay.hidden {
+    display: none;
+}
+
+/* Modal Card */
+.modal-card {
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    box-shadow: var(--panel-glow);
+    border-radius: 20px;
+    width: 90%;
+    max-width: 440px;
+    padding: 28px;
+    position: relative;
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    animation: modal-zoom 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes modal-zoom {
+    from {
+        transform: scale(0.85);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Modal Close Cross Button */
+.modal-close-btn {
+    position: absolute;
+    top: 16px;
+    right: 20px;
+    border: none;
+    background: transparent;
+    font-size: 28px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    line-height: 1;
+    transition: color 0.2s ease;
+}
+
+.modal-close-btn:hover {
+    color: var(--accent);
+}
+
+/* Modal Title */
+.modal-title {
+    font-size: 24px;
+    font-weight: 800;
+    text-align: center;
+    color: var(--text-primary);
+    margin-bottom: 20px;
+    letter-spacing: 1px;
+}
+
+/* Modal Content and Rule Items */
+.modal-content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-height: 450px;
+    overflow-y: auto;
+    padding-right: 6px;
+}
+
+/* Custom Scrollbar for Modal Content */
+.modal-content::-webkit-scrollbar {
+    width: 6px;
+}
+.modal-content::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 3px;
+}
+.modal-content::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+}
+.modal-content::-webkit-scrollbar-thumb:hover {
+    background: var(--accent);
+}
+
+.rule-item {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+}
+
+.rule-emoji {
+    font-size: 22px;
+    line-height: 1.2;
+    flex-shrink: 0;
+}
+
+.rule-text {
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: var(--text-secondary);
+}
+
+.rule-text strong {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+/* Modal Start Button */
+.modal-start-btn {
+    width: 100%;
+    padding: 14px;
+    border-radius: 12px;
+    border: none;
+    background: linear-gradient(135deg, #ff007f 0%, #7f00ff 100%);
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+    margin-top: 24px;
+    box-shadow: 0 4px 15px rgba(255, 0, 127, 0.3);
+}
+
+.modal-start-btn:hover {
+    transform: scale(1.02);
+    box-shadow: 0 6px 20px rgba(255, 0, 127, 0.45);
+}
+
+.modal-start-btn:active {
+    transform: scale(0.98);
+}
+
+/* Retro Theme Modal Customization */
+body.theme-retro .help-button,
+body.theme-retro .modal-card,
+body.theme-retro .modal-start-btn {
+    border: 2px solid #00ff00;
+    border-radius: 0;
+    box-shadow: none;
+    background: #000;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    color: #00ff00;
+}
+body.theme-retro .modal-close-btn {
+    color: #00ff00;
+}
+body.theme-retro .modal-close-btn:hover {
+    color: #ffffff;
+}
