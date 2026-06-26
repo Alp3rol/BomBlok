@@ -29,14 +29,6 @@
         <!-- Scoreboard: Second Row (Centered above the grid) -->
         <section class="scoreboard-row">
             <div class="score-card">
-                <span class="score-label">DÖNDÜRME</span>
-                <span id="rotation-rights" class="score-value">3</span>
-            </div>
-            <div class="score-card">
-                <span class="score-label">JOKER</span>
-                <span id="joker-count" class="score-value">0</span>
-            </div>
-            <div class="score-card">
                 <span class="score-label">SKOR</span>
                 <span id="current-score" class="score-value">0</span>
             </div>
@@ -44,6 +36,26 @@
                 <span class="score-label">EN YÜKSEK</span>
                 <span id="best-score" class="score-value">0</span>
             </div>
+        </section>
+
+        <!-- Action Controls Row (Joker, Döndürme, Geri Al, Yenile) -->
+        <section class="controls-row">
+            <div class="control-card" title="Kalan Joker Sayısı">
+                <span class="control-label">JOKER</span>
+                <span id="joker-count" class="control-value">0</span>
+            </div>
+            <button id="rotation-rights-btn" class="control-card" title="Seçili Şekli Döndür (Hak Yoksa: 1 Joker = +3 Hak)">
+                <span class="control-label">DÖNDÜRME</span>
+                <span id="rotation-rights" class="control-value">3</span>
+            </button>
+            <button id="undo-btn" class="control-card" title="Hamleyi Geri Al (1 Joker)">
+                <span class="control-label">GERİ AL</span>
+                <span class="control-value">⏪</span>
+            </button>
+            <button id="reroll-btn" class="control-card" title="Bekleyen Şekilleri Yenile (1 Joker)">
+                <span class="control-label">YENİLE</span>
+                <span class="control-value">🔄</span>
+            </button>
         </section>
 
         <!-- Current Mission Panel -->
@@ -75,16 +87,6 @@
 
         <!-- Bottom Section: Controls + Dock -->
         <div class="bottom-section">
-            <!-- Joker Controls (Undo & Reroll) -->
-            <div class="joker-controls">
-                <button id="undo-btn" class="joker-button" title="Hamleyi Geri Al (1 Joker)">
-                    <span class="joker-btn-icon">⏪</span> Geri Al
-                </button>
-                <button id="reroll-btn" class="joker-button" title="Bekleyen Şekilleri Yenile (1 Joker)">
-                    <span class="joker-btn-icon">🔄</span> Yenile
-                </button>
-            </div>
-
             <!-- Footer: Dock containing 3 shape slots -->
             <footer class="dock-container">
                 <div id="block-dock" class="block-dock">
