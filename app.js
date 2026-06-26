@@ -130,20 +130,34 @@ const AudioFX = {
     
     playDrop() {
         this.play((ctx) => {
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-            osc.connect(gain);
-            gain.connect(ctx.destination);
+            const now = ctx.currentTime;
+            const duration = 0.06; // very short decay
             
-            osc.type = 'triangle';
-            osc.frequency.setValueAtTime(150, ctx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(50, ctx.currentTime + 0.15);
+            // Fundamental sine (soft & warm)
+            const osc1 = ctx.createOscillator();
+            const gain1 = ctx.createGain();
+            osc1.connect(gain1);
+            gain1.connect(ctx.destination);
+            osc1.type = 'sine';
+            osc1.frequency.setValueAtTime(350, now);
+            osc1.frequency.exponentialRampToValueAtTime(120, now + duration);
+            gain1.gain.setValueAtTime(0.25, now);
+            gain1.gain.exponentialRampToValueAtTime(0.001, now + duration);
+            osc1.start(now);
+            osc1.stop(now + duration);
             
-            gain.gain.setValueAtTime(0.3, ctx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
-            
-            osc.start(ctx.currentTime);
-            osc.stop(ctx.currentTime + 0.15);
+            // Quiet wood block overtone
+            const osc2 = ctx.createOscillator();
+            const gain2 = ctx.createGain();
+            osc2.connect(gain2);
+            gain2.connect(ctx.destination);
+            osc2.type = 'sine';
+            osc2.frequency.setValueAtTime(700, now);
+            osc2.frequency.exponentialRampToValueAtTime(240, now + duration);
+            gain2.gain.setValueAtTime(0.06, now);
+            gain2.gain.exponentialRampToValueAtTime(0.001, now + duration);
+            osc2.start(now);
+            osc2.stop(now + duration);
         });
     },
     
@@ -154,15 +168,16 @@ const AudioFX = {
             osc.connect(gain);
             gain.connect(ctx.destination);
             
+            // A soft, low-frequency 30ms pop
             osc.type = 'sine';
-            osc.frequency.setValueAtTime(800, ctx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(1000, ctx.currentTime + 0.02);
+            osc.frequency.setValueAtTime(400, ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(300, ctx.currentTime + 0.03);
             
-            gain.gain.setValueAtTime(0.08, ctx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.02);
+            gain.gain.setValueAtTime(0.06, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.03);
             
             osc.start(ctx.currentTime);
-            osc.stop(ctx.currentTime + 0.02);
+            osc.stop(ctx.currentTime + 0.03);
         });
     },
     
@@ -173,45 +188,51 @@ const AudioFX = {
             osc.connect(gain);
             gain.connect(ctx.destination);
             
+            // Soft sine sweep
             osc.type = 'sine';
-            osc.frequency.setValueAtTime(450, ctx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(700, ctx.currentTime + 0.06);
+            osc.frequency.setValueAtTime(500, ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.05);
             
-            gain.gain.setValueAtTime(0.12, ctx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.06);
+            gain.gain.setValueAtTime(0.05, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.05);
             
             osc.start(ctx.currentTime);
-            osc.stop(ctx.currentTime + 0.06);
+            osc.stop(ctx.currentTime + 0.05);
         });
     },
     
     playClear(comboCount = 1) {
         this.play((ctx) => {
             const now = ctx.currentTime;
-            const notes = [261.63, 329.63, 392.00, 523.25, 659.25, 783.99, 1046.50, 1318.51, 1567.98];
-            const baseIndex = Math.min(comboCount - 1, notes.length - 3);
+            // Warm pentatonic notes
+            const notes = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 587.33, 659.25, 783.99];
+            const baseIndex = Math.min(comboCount - 1, notes.length - 2);
             
             const f1 = notes[baseIndex];
             const f2 = notes[baseIndex + 1];
-            const f3 = notes[baseIndex + 2];
             
-            // Triple pluck arpeggio for glass chime
-            [f1, f2, f3].forEach((freq, idx) => {
+            // Soft lowpass filter to remove any high-frequency transients/clicks
+            const filter = ctx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(750, now);
+            filter.connect(ctx.destination);
+            
+            const duration = 0.12; // very short decay
+            
+            [f1, f2].forEach((freq, idx) => {
                 const osc = ctx.createOscillator();
                 const gain = ctx.createGain();
                 osc.connect(gain);
-                gain.connect(ctx.destination);
+                gain.connect(filter);
                 
                 osc.type = 'sine';
-                osc.frequency.setValueAtTime(freq, now + idx * 0.04);
-                osc.frequency.setValueAtTime(freq * 1.4, now + idx * 0.04 + 0.01);
-                osc.frequency.exponentialRampToValueAtTime(freq, now + idx * 0.04 + 0.05);
+                osc.frequency.setValueAtTime(freq, now + idx * 0.03);
                 
-                gain.gain.setValueAtTime(0.18, now + idx * 0.04);
-                gain.gain.exponentialRampToValueAtTime(0.002, now + idx * 0.04 + 0.22);
+                gain.gain.setValueAtTime(0.18, now + idx * 0.03);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.03 + duration);
                 
-                osc.start(now + idx * 0.04);
-                osc.stop(now + idx * 0.04 + 0.22);
+                osc.start(now + idx * 0.03);
+                osc.stop(now + idx * 0.03 + duration);
             });
         });
     },
@@ -219,18 +240,31 @@ const AudioFX = {
     playCrossClear() {
         this.play((ctx) => {
             const now = ctx.currentTime;
-            const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51]; // C5, E5, G5, C6, E6 (Golden sweep arpeggio!)
-            notes.forEach((freq, i) => {
+            // Beautiful warm Cmaj9 chord (C4, E4, G4, B4, D5)
+            const notes = [261.63, 329.63, 392.00, 493.88, 587.33];
+            
+            const filter = ctx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(900, now);
+            filter.connect(ctx.destination);
+            
+            const duration = 0.18;
+            
+            notes.forEach((freq, idx) => {
                 const osc = ctx.createOscillator();
                 const gain = ctx.createGain();
                 osc.connect(gain);
-                gain.connect(ctx.destination);
+                gain.connect(filter);
+                
                 osc.type = 'sine';
-                osc.frequency.setValueAtTime(freq, now + i * 0.05);
-                gain.gain.setValueAtTime(0.15, now + i * 0.05);
-                gain.gain.exponentialRampToValueAtTime(0.005, now + i * 0.05 + 0.22);
-                osc.start(now + i * 0.05);
-                osc.stop(now + i * 0.05 + 0.22);
+                // Strummed offset
+                osc.frequency.setValueAtTime(freq, now + idx * 0.025);
+                
+                gain.gain.setValueAtTime(0.12, now + idx * 0.025);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.025 + duration);
+                
+                osc.start(now + idx * 0.025);
+                osc.stop(now + idx * 0.025 + duration);
             });
         });
     },
@@ -238,20 +272,24 @@ const AudioFX = {
     playGameOver() {
         this.play((ctx) => {
             const now = ctx.currentTime;
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-            osc.connect(gain);
-            gain.connect(ctx.destination);
+            const notes = [300, 250, 200, 150];
+            const duration = 0.2;
             
-            osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(180, now);
-            osc.frequency.linearRampToValueAtTime(40, now + 0.75);
-            
-            gain.gain.setValueAtTime(0.2, now);
-            gain.gain.linearRampToValueAtTime(0.01, now + 0.75);
-            
-            osc.start(now);
-            osc.stop(now + 0.75);
+            notes.forEach((freq, idx) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, now + idx * 0.1);
+                
+                gain.gain.setValueAtTime(0.1, now + idx * 0.1);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.1 + duration);
+                
+                osc.start(now + idx * 0.1);
+                osc.stop(now + idx * 0.1 + duration);
+            });
         });
     },
     
@@ -263,13 +301,15 @@ const AudioFX = {
             osc.connect(gain);
             gain.connect(ctx.destination);
             
-            osc.type = 'triangle';
-            osc.frequency.setValueAtTime(100, now);
-            gain.gain.setValueAtTime(0.2, now);
-            gain.gain.linearRampToValueAtTime(0.01, now + 0.15);
+            // Soft deep thud
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(120, now);
+            
+            gain.gain.setValueAtTime(0.18, now);
+            gain.gain.linearRampToValueAtTime(0.001, now + 0.12);
             
             osc.start(now);
-            osc.stop(now + 0.15);
+            osc.stop(now + 0.12);
         });
     }
 };
