@@ -962,17 +962,22 @@ function onPointerMove(e) {
             blockEl.classList.remove('in-dock');
             blockEl.classList.add('dragging');
 
-            // Preserve visual position based on original dock slot
-            const origRect = activeDrag.originalSlot.getBoundingClientRect();
             document.body.appendChild(blockEl);
             blockEl.style.position = 'fixed';
             blockEl.style.width = `${targetWidth}px`;
             blockEl.style.height = `${targetHeight}px`;
             blockEl.style.gap = `${activeDrag.gap}px`;
+            blockEl.style.left = '0px';
+            blockEl.style.top = '0px';
 
-            // Compute initial transform so the block stays under the pointer
-            const initX = origRect.left - (activeDrag.startX - activeDrag.dragOffset.x);
-            const initY = origRect.top - (activeDrag.startY - activeDrag.dragOffset.y);
+            let startYOffset = 0;
+            if (e.pointerType === 'touch' || e.pointerType === 'pen') {
+                startYOffset = -80;
+            }
+            const initX = e.clientX - activeDrag.dragOffset.x;
+            const initY = e.clientY - activeDrag.dragOffset.y + startYOffset;
+
+            // Compute initial transform so the block instantly snaps under the pointer
             blockEl.style.transform = `translate3d(${initX}px, ${initY}px, 0)`;
             blockEl.style.willChange = 'transform';
         } else {
