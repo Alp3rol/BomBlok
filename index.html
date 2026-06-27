@@ -2,12 +2,13 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>BomBlok - Premium Web Oyunu</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="themes.css">
 </head>
 <body>
     <div class="game-container">
@@ -17,9 +18,11 @@
             <div class="header-controls">
                 <button id="help-btn" class="help-button" title="Nasıl Oynanır?">?</button>
                 <select id="theme-select" class="theme-select" title="Tema Değiştir">
-                    <option value="dark">🌌 Karanlık</option>
-                    <option value="neon">🧬 Neon</option>
+                    <option value="dark">🌙 Karanlık</option>
+                    <option value="neon">⚡ Neon</option>
                     <option value="wood">🪵 Ahşap</option>
+                    <option value="candy">🍭 Şeker</option>
+                    <option value="cosmos">🌌 Uzay</option>
                     <option value="retro">👾 Retro</option>
                 </select>
                 <button id="sound-btn" class="sound-button" title="Sesi Kapat/Aç">🔊</button>
@@ -67,13 +70,17 @@
             <div class="mission-progress-bg">
                 <div id="mission-progress-fill" class="mission-progress-fill" style="width: 0%;"></div>
             </div>
-        </div>
-
-        <!-- Fever Mode Banner -->
-        <div id="fever-banner" class="fever-banner hidden">
-            <span class="fever-title">🔥 FEVER MODE (2x PUAN) 🔥</span>
-            <div class="fever-bar-bg">
-                <div id="fever-bar-fill" class="fever-bar-fill"></div>
+            <!-- Embedded completion banner -->
+            <div id="mission-complete-banner" class="mission-complete-banner">
+                <span class="banner-icon">🏆</span>
+                <span class="banner-text">GÖREV TAMAMLANDI! +1 JOKER</span>
+            </div>
+            <!-- Embedded Fever Mode Banner -->
+            <div id="fever-banner" class="fever-banner hidden">
+                <span class="fever-title">🔥 FEVER MODE (2x PUAN) 🔥</span>
+                <div class="fever-bar-bg">
+                    <div id="fever-bar-fill" class="fever-bar-fill"></div>
+                </div>
             </div>
         </div>
 

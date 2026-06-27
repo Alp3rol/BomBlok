@@ -34,15 +34,18 @@ const SHAPES = [
     { matrix: [[0, 1, 0], [1, 1, 1]], color: 'purple' }
 ];
 
+const TIME_BOMB_SCORE_THRESHOLD = 0; // TODO: İleride 1000'e çekilecek
+
 // Game State
 const state = {
     grid: Array(8).fill(null).map(() => Array(8).fill(0)), // 0 = empty, string (e.g., 'blue') = color of filled block
+    timeBombs: [],
     score: 0,
     bestScore: parseInt(localStorage.getItem('bomblok_best') || localStorage.getItem('block_blast_best') || '0', 10),
     dockedBlocks: [null, null, null], // Holds current shapes on dock
     isGameOver: false,
     comboCount: 0, // Track consecutive clears!
-    rotationRights: 3, // Rotation rights per game!
+    rotationRights: 0, // Rotation rights per game!
     selectedBlockIndex: null, // Track selected block for click-to-place
     isFeverActive: false,
     feverTimeLeft: 0,
@@ -89,9 +92,10 @@ const ThemeManager = {
         localStorage.setItem('block_blast_theme', themeName);
 
         // Remove existing theme classes
-        document.body.classList.remove('theme-dark', 'theme-neon', 'theme-wood', 'theme-retro');
+        document.body.classList.remove('theme-dark', 'theme-neon', 'theme-wood', 'theme-candy', 'theme-cosmos', 'theme-retro');
 
         // Add new theme class
+        document.body.classList.add(`theme-${themeName}`);
         document.body.classList.add(`theme-${themeName}`);
 
         // Re-align canvas size
@@ -539,18 +543,57 @@ class Particle {
     constructor(x, y, colorName) {
         this.x = x;
         this.y = y;
-        this.color = COLOR_MAP[colorName] || '#ff007f';
+        const isWood = document.body.classList.contains('theme-wood');
+        const isCandy = document.body.classList.contains('theme-candy');
+        const isNeon = document.body.classList.contains('theme-neon');
+        const isRetro = document.body.classList.contains('theme-retro');
+        const isCosmos = document.body.classList.contains('theme-cosmos');
+        
+        let baseColor = COLOR_MAP[colorName] || '#ff007f';
+
+        if (isWood) {
+            this.type = 'wood-splinter';
+            const woodColors = ['#8d6e63', '#6d4c41', '#5d4037', '#795548', '#a1887f'];
+            this.color = woodColors[Math.floor(Math.random() * woodColors.length)];
+            this.radius = 4.0 + Math.random() * 6.0;
+            this.gravity = 0.15 + Math.random() * 0.15;
+        } else if (isCandy) {
+            this.type = Math.random() < 0.5 ? 'confetti' : 'circle';
+            this.color = baseColor;
+            this.radius = 4.0 + Math.random() * 5.0;
+            this.gravity = 0.08 + Math.random() * 0.1;
+        } else if (isNeon) {
+            this.type = 'glitch';
+            const neonColors = [baseColor, '#00ffff', '#ff00ff', '#ffffff'];
+            this.color = neonColors[Math.floor(Math.random() * neonColors.length)];
+            this.radius = 1.0 + Math.random() * 3.0;
+            this.gravity = 0.02 + Math.random() * 0.05;
+        } else if (isRetro) {
+            this.type = 'pixel';
+            this.color = baseColor;
+            this.radius = 4.0 + Math.random() * 4.0;
+            this.gravity = 0.1 + Math.random() * 0.1;
+        } else if (isCosmos) {
+            this.type = 'stardust';
+            const cosmosColors = [baseColor, '#8a2be2', '#00ffff', '#ffffff'];
+            this.color = cosmosColors[Math.floor(Math.random() * cosmosColors.length)];
+            this.radius = 1.0 + Math.random() * 2.0;
+            this.gravity = 0; // Float around
+        } else {
+            this.color = baseColor;
+            this.type = Math.random() < 0.35 ? 'sparkle' : (Math.random() < 0.45 ? 'diamond' : 'circle');
+            this.radius = 2.0 + Math.random() * 3.0;
+            this.gravity = 0.05 + Math.random() * 0.05;
+        }
+        
         const angle = Math.random() * Math.PI * 2;
         const speed = 2.0 + Math.random() * 5.0;
         this.vx = Math.cos(angle) * speed;
         this.vy = Math.sin(angle) * speed;
-        this.radius = 2.0 + Math.random() * 3.0;
         this.alpha = 1.0;
         this.decay = 0.015 + Math.random() * 0.015;
-        this.gravity = 0.05 + Math.random() * 0.05; // gentle gravity pull
-        this.type = Math.random() < 0.35 ? 'sparkle' : (Math.random() < 0.45 ? 'diamond' : 'circle');
         this.rotation = Math.random() * Math.PI * 2;
-        this.rotationSpeed = (Math.random() - 0.5) * 0.15;
+        this.rotationSpeed = (Math.random() - 0.5) * 0.3;
     }
 
     update() {
@@ -569,20 +612,50 @@ class Particle {
         c.translate(this.x, this.y);
         c.rotate(this.rotation);
         c.fillStyle = this.color;
-        c.shadowBlur = 10;
-        c.shadowColor = this.color;
 
-        if (this.type === 'sparkle') {
-            // Draw a beautiful 4-point magic sparkle star
+        if (this.type === 'wood-splinter') {
+            c.shadowBlur = 3;
+            c.shadowColor = 'rgba(0,0,0,0.5)';
+            c.fillRect(-this.radius, -this.radius * 0.25, this.radius * 2, this.radius * 0.5);
+            c.strokeStyle = 'rgba(0,0,0,0.4)';
+            c.lineWidth = 1;
             c.beginPath();
-            for (let i = 0; i < 4; i++) {
-                c.lineTo(this.radius * 2.2, 0);
-                c.lineTo(this.radius * 0.4, this.radius * 0.4);
-                c.rotate(Math.PI / 2);
-            }
-            c.closePath();
+            c.moveTo(-this.radius * 0.8, 0);
+            c.lineTo(this.radius * 0.8, 0);
+            c.stroke();
+        } else if (this.type === 'confetti') {
+            c.shadowBlur = 5;
+            c.shadowColor = this.color;
+            c.fillRect(-this.radius, -this.radius*0.5, this.radius*2, this.radius);
+        } else if (this.type === 'pixel') {
+            c.shadowBlur = 0;
+            c.rotate(-this.rotation); // Undo rotation to keep squares axis-aligned
+            c.fillRect(-this.radius, -this.radius, this.radius*2, this.radius*2);
+        } else if (this.type === 'glitch') {
+            c.shadowBlur = 10;
+            c.shadowColor = this.color;
+            c.globalCompositeOperation = 'screen';
+            c.fillRect(-this.radius*2, -this.radius*0.2, this.radius*4, this.radius*0.4);
+        } else if (this.type === 'stardust') {
+            c.shadowBlur = 15;
+            c.shadowColor = this.color;
+            c.beginPath();
+            c.arc(0, 0, this.radius, 0, Math.PI * 2);
             c.fill();
-        } else if (this.type === 'diamond') {
+        } else {
+            c.shadowBlur = 10;
+            c.shadowColor = this.color;
+            if (this.type === 'sparkle') {
+                // Draw a beautiful 4-point magic sparkle star
+                c.beginPath();
+                for (let i = 0; i < 4; i++) {
+                    c.lineTo(this.radius * 2.2, 0);
+                    c.lineTo(this.radius * 0.4, this.radius * 0.4);
+                    c.rotate(Math.PI / 2);
+                }
+                c.closePath();
+                c.fill();
+            } else if (this.type === 'diamond') {
             // Draw a shiny diamond
             c.beginPath();
             c.moveTo(0, -this.radius * 1.4);
@@ -596,6 +669,7 @@ class Particle {
             c.beginPath();
             c.arc(0, 0, this.radius, 0, Math.PI * 2);
             c.fill();
+        }
         }
 
         c.restore();
@@ -679,6 +753,12 @@ function initGrid() {
             if (cellState !== 0) {
                 if (cellState === 'ice') {
                     cell.classList.add('filled', 'filled-ice');
+                } else if (cellState === 'timebomb') {
+                    cell.classList.add('filled', 'filled-timebomb');
+                    const tb = state.timeBombs.find(b => b.r === r && b.c === c);
+                    if (tb) cell.dataset.timer = tb.timer;
+                } else if (cellState === 'stone') {
+                    cell.classList.add('filled', 'filled-stone');
                 } else if (typeof cellState === 'string' && cellState.endsWith('-bomb')) {
                     const color = cellState.split('-')[0];
                     cell.classList.add('filled', `filled-${color}`, 'bomb');
@@ -813,22 +893,20 @@ let activeDrag = {
     gridCellSize: 0,
     gap: 6,
     validPlacement: false,
-    targetCells: [], // Array of { r, c, el }
-    originalSlot: null, // Store parent container
+    targetCells: [],
+    originalSlot: null,
     startX: 0,
     startY: 0,
     startTime: 0,
     offsetR: null,
-    offsetC: null
+    offsetC: null,
+    isDragging: false
 };
 
 function onPointerDown(e, blockEl, shape, slotIndex) {
     if (state.isGameOver) return;
     e.preventDefault();
 
-    AudioFX.playGrab();
-
-    // Setup active drag state
     activeDrag.blockEl = blockEl;
     activeDrag.shape = shape;
     activeDrag.slotIndex = slotIndex;
@@ -837,59 +915,64 @@ function onPointerDown(e, blockEl, shape, slotIndex) {
     activeDrag.startX = e.clientX;
     activeDrag.startY = e.clientY;
     activeDrag.startTime = Date.now();
+    activeDrag.isDragging = false;
 
-    // Calculate grid cell size from active board
     const firstGridCell = gridBoard.querySelector('.grid-cell');
     activeDrag.gridCellSize = firstGridCell.getBoundingClientRect().width;
-    activeDrag.gap = 6; // Matching grid gap
+    activeDrag.gap = 6;
 
-    // Center the block horizontally under pointer and center vertically
-    const cols = shape.matrix[0].length;
-    const rows = shape.matrix.length;
-    const targetWidth = cols * activeDrag.gridCellSize + (cols - 1) * activeDrag.gap;
-    const targetHeight = rows * activeDrag.gridCellSize + (rows - 1) * activeDrag.gap;
-
-    activeDrag.dragOffset = {
-        x: targetWidth / 2,
-        y: targetHeight / 2
-    };
-
-    // Set dragging styles
-    blockEl.classList.remove('in-dock');
-    blockEl.classList.add('dragging');
-
-    // Append to document.body to prevent backdrop-filter containing block offset issues
-    document.body.appendChild(blockEl);
-
-    blockEl.style.position = 'fixed';
-    blockEl.style.width = `${targetWidth}px`;
-    blockEl.style.height = `${targetHeight}px`;
-    blockEl.style.gap = `${activeDrag.gap}px`;
-
-    // Initial position
-    blockEl.style.left = `${e.clientX - activeDrag.dragOffset.x}px`;
-    blockEl.style.top = `${e.clientY - activeDrag.dragOffset.y}px`;
-
-    // Capture pointer
-    blockEl.setPointerCapture(e.pointerId);
-
-    // Listen for movement and release
-    blockEl.addEventListener('pointermove', onPointerMove);
-    blockEl.addEventListener('pointerup', onPointerUp);
-    blockEl.addEventListener('pointercancel', onPointerUp);
+    // Use window for events to prevent loss of tracking during DOM manipulation
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', onPointerUp);
+    window.addEventListener('pointercancel', onPointerUp);
 }
 
 function onPointerMove(e) {
     if (!activeDrag.blockEl || e.pointerId !== activeDrag.pointerId) return;
-
     const blockEl = activeDrag.blockEl;
 
-    // Update visual position
-    blockEl.style.left = `${e.clientX - activeDrag.dragOffset.x}px`;
-    blockEl.style.top = `${e.clientY - activeDrag.dragOffset.y}px`;
+    if (!activeDrag.isDragging) {
+        const moveDist = Math.hypot(e.clientX - activeDrag.startX, e.clientY - activeDrag.startY);
+        if (moveDist > 8) {
+            activeDrag.isDragging = true;
+            AudioFX.playGrab();
+            
+            const shape = activeDrag.shape;
+            const cols = shape.matrix[0].length;
+            const rows = shape.matrix.length;
+            const targetWidth = cols * activeDrag.gridCellSize + (cols - 1) * activeDrag.gap;
+            const targetHeight = rows * activeDrag.gridCellSize + (rows - 1) * activeDrag.gap;
 
-    // Calculate hover / placement preview
-    checkPlacementValidity();
+            activeDrag.dragOffset = {
+                x: targetWidth / 2,
+                y: targetHeight / 2
+            };
+
+            blockEl.classList.remove('in-dock');
+            blockEl.classList.add('dragging');
+
+            document.body.appendChild(blockEl);
+
+            blockEl.style.position = 'fixed';
+            blockEl.style.width = `${targetWidth}px`;
+            blockEl.style.height = `${targetHeight}px`;
+            blockEl.style.gap = `${activeDrag.gap}px`;
+        } else {
+            return;
+        }
+    }
+
+    if (activeDrag.isDragging) {
+        let yOffset = 0;
+        // Eğer dokunmatik ekran ise, blok parmağın altında kalmasın diye "Fat Finger" offset'i uyguluyoruz (-80px)
+        if (e.pointerType === 'touch' || e.pointerType === 'pen') {
+            yOffset = -80;
+        }
+
+        blockEl.style.left = `${e.clientX - activeDrag.dragOffset.x}px`;
+        blockEl.style.top = `${e.clientY - activeDrag.dragOffset.y + yOffset}px`;
+        checkPlacementValidity();
+    }
 }
 
 function checkPlacementValidity() {
@@ -1112,6 +1195,7 @@ function tryPlaceSelectedBlock(gridR, gridC) {
         }
         state.score += shapeScore;
         updateMissionProgress('points', shapeScore);
+        updateMissionProgress('blocks', 1);
         updateScoreUI();
 
         const blockEl = blockDock.querySelector(`.block-shape[data-slot-index="${state.selectedBlockIndex}"]`);
@@ -1135,65 +1219,16 @@ function tryPlaceSelectedBlock(gridR, gridC) {
 function onPointerUp(e) {
     if (!activeDrag.blockEl || e.pointerId !== activeDrag.pointerId) return;
 
-    const { blockEl, shape, slotIndex, validPlacement, targetCells, originalSlot, startX, startY, startTime } = activeDrag;
+    const { blockEl, shape, slotIndex, validPlacement, targetCells, originalSlot, isDragging } = activeDrag;
 
-    // Clean up event listeners
-    blockEl.removeEventListener('pointermove', onPointerMove);
-    blockEl.removeEventListener('pointerup', onPointerUp);
-    blockEl.removeEventListener('pointercancel', onPointerUp);
+    window.removeEventListener('pointermove', onPointerMove);
+    window.removeEventListener('pointerup', onPointerUp);
+    window.removeEventListener('pointercancel', onPointerUp);
 
     clearGridHighlights();
 
-    // 1. Detect if this was a quick click/tap instead of a drag
-    const clickDuration = Date.now() - startTime;
-    const clickDistance = Math.hypot(e.clientX - startX, e.clientY - startY);
-
-    if (clickDuration < 220 && clickDistance < 10) {
-        // Tıklama algılandı, sürüklenen geçici büyük elemanı kaldır
-        blockEl.remove();
-
-        if (state.selectedBlockIndex !== slotIndex) {
-            // Yeni blok seçiliyor
-            selectBlock(slotIndex);
-            
-            // Orijinal slota küçük 22px boyutlarında temizce yeniden çiz ve selected sınıfı ekle
-            if (originalSlot) {
-                originalSlot.innerHTML = '';
-                renderBlockInSlot(shape, originalSlot, slotIndex);
-                const newBlockEl = originalSlot.querySelector('.block-shape');
-                if (newBlockEl) newBlockEl.classList.add('selected');
-            }
-        } else {
-            // Zaten seçiliydi: Döndür!
-            if (state.rotationRights <= 0) {
-                // Hak yoksa jokerle satın al
-                if (state.jokers > 0) {
-                    state.jokers--;
-                    localStorage.setItem('bomblok_jokers', state.jokers);
-                    state.rotationRights += 3;
-                    updateJokerButtonsUI();
-                    AudioFX.playReroll();
-                } else {
-                    AudioFX.playBuzzer();
-                    
-                    if (originalSlot) {
-                        originalSlot.innerHTML = '';
-                        renderBlockInSlot(shape, originalSlot, slotIndex);
-                        const newBlockEl = originalSlot.querySelector('.block-shape');
-                        if (newBlockEl) newBlockEl.classList.add('selected');
-                    }
-                    
-                    activeDrag = {
-                        blockEl: null, shape: null, slotIndex: null, pointerId: null,
-                        dragOffset: { x: 0, y: 0 }, gridCellSize: 0, gap: 6,
-                        validPlacement: false, targetCells: [], originalSlot: null,
-                        startX: 0, startY: 0, startTime: 0, offsetR: null, offsetC: null
-                    };
-                    return;
-                }
-            }
-
-            // Döndürme hakkı düş ve döndür
+    if (!isDragging) {
+        if (state.rotationRights > 0) {
             state.rotationRights--;
             updateScoreUI();
             AudioFX.playRotate();
@@ -1210,124 +1245,128 @@ function onPointerUp(e) {
 
             state.dockedBlocks[slotIndex] = shape;
 
-            // Tepsisine temiz çiz, ardından pürüzsüz dönüş transition'ı oynat!
             if (originalSlot) {
-                originalSlot.innerHTML = '';
-                renderBlockInSlot(shape, originalSlot, slotIndex);
-                const newBlockEl = originalSlot.querySelector('.block-shape');
-                if (newBlockEl) {
-                    newBlockEl.classList.add('selected', 'rotating-smooth');
-                    newBlockEl.addEventListener('transitionend', () => {
-                        newBlockEl.classList.remove('rotating-smooth');
-                        checkGameOver();
-                        updateJokerButtonsUI();
-                    }, { once: true });
+                blockEl.style.transition = 'transform 0.2s ease-in-out';
+                blockEl.style.transform = 'rotate(90deg)';
+                
+                setTimeout(() => {
+                    originalSlot.innerHTML = '';
+                    renderBlockInSlot(shape, originalSlot, slotIndex);
+                }, 200);
+            }
+        } else {
+            if (state.jokers > 0) {
+                state.jokers--;
+                localStorage.setItem('bomblok_jokers', state.jokers);
+                state.rotationRights += 1;
+                updateJokerButtonsUI();
+                AudioFX.playReroll();
+                
+                state.rotationRights--;
+                updateScoreUI();
+                AudioFX.playRotate();
+                
+                const rCount = shape.matrix.length;
+                shape.matrix = getRotatedMatrix(shape.matrix);
+                if (shape.bombCell) {
+                    const oldR = shape.bombCell.r;
+                    const oldC = shape.bombCell.c;
+                    shape.bombCell.r = oldC;
+                    shape.bombCell.c = rCount - 1 - oldR;
                 }
+                state.dockedBlocks[slotIndex] = shape;
+                
+                if (originalSlot) {
+                    blockEl.style.transition = 'transform 0.2s ease-in-out';
+                    blockEl.style.transform = 'rotate(90deg)';
+                    setTimeout(() => {
+                        originalSlot.innerHTML = '';
+                        renderBlockInSlot(shape, originalSlot, slotIndex);
+                    }, 200);
+                }
+            } else {
+                AudioFX.playBuzzer();
+                blockEl.classList.add('error-shake');
+                setTimeout(() => blockEl.classList.remove('error-shake'), 400);
             }
         }
-
-        // Reset active drag state
-        activeDrag = {
-            blockEl: null, shape: null, slotIndex: null, pointerId: null,
-            dragOffset: { x: 0, y: 0 }, gridCellSize: 0, gap: 6,
-            validPlacement: false, targetCells: [], originalSlot: null,
-            startX: 0, startY: 0, startTime: 0, offsetR: null, offsetC: null
-        };
-        return;
-    }
-
-    // 2. Sürükleme bırakıldıysa:
-    if (validPlacement && targetCells.length > 0) {
-        // Save state snapshot before placement for Undo
-        saveStateSnapshot();
-        const { offsetR, offsetC } = activeDrag;
-
-        // Place Block
-        targetCells.forEach(cell => {
-            const relativeR = cell.r - offsetR;
-            const relativeC = cell.c - offsetC;
-            const isBomb = shape.bombCell && shape.bombCell.r === relativeR && shape.bombCell.c === relativeC;
-
-            const cellColor = isBomb ? `${shape.color}-bomb` : shape.color;
-            state.grid[cell.r][cell.c] = cellColor;
-
-            cell.el.classList.add('filled', `filled-${shape.color}`);
-            if (isBomb) {
-                cell.el.classList.add('bomb');
-            }
-        });
-
-        // Add score (1 point per filled cell)
-        let shapeScore = targetCells.length;
-        if (state.isFeverActive) {
-            shapeScore *= 2;
-        }
-        state.score += shapeScore;
-        updateMissionProgress('points', shapeScore);
-        updateScoreUI();
-
-        // Clear block from dock
-        state.dockedBlocks[slotIndex] = null;
-        blockEl.remove();
-
-        // Play drop sound effect
-        AudioFX.playDrop();
-
-        // Clear selection just in case
-        deselectBlock();
-
-        // Perform line clears
-        checkAndClearLines();
-
-        // Check if dock is completely empty
-        const isDockEmpty = state.dockedBlocks.every(block => block === null);
-        if (isDockEmpty) {
-            generateDockBlocks();
-        }
-        updateJokerButtonsUI();
-
     } else {
-        // Sürükleme iptal edildiyse, geçici büyük elemanı silip tepsisine temiz 22px çiz!
-        blockEl.remove();
-        
-        if (originalSlot) {
-            originalSlot.innerHTML = '';
-            renderBlockInSlot(shape, originalSlot, slotIndex);
+        if (validPlacement && targetCells.length > 0) {
+            AudioFX.playDrop();
+            saveStateSnapshot();
             
-            // Eğer blok önceden seçiliyse selected sınıfı ekle
-            if (state.selectedBlockIndex === slotIndex) {
-                const newBlockEl = originalSlot.querySelector('.block-shape');
-                if (newBlockEl) newBlockEl.classList.add('selected');
+            targetCells.forEach(cell => {
+                const relativeR = cell.r - activeDrag.offsetR;
+                const relativeC = cell.c - activeDrag.offsetC;
+                const isBomb = shape.bombCell && shape.bombCell.r === relativeR && shape.bombCell.c === relativeC;
+                const cellColor = isBomb ? `${shape.color}-bomb` : shape.color;
+
+                state.grid[cell.r][cell.c] = cellColor;
+
+                cell.el.classList.add('filled', `filled-${shape.color}`);
+                if (isBomb) {
+                    cell.el.classList.add('bomb');
+                }
+            });
+
+            // Add score (1 point per filled cell)
+            let shapeScore = targetCells.length;
+            if (state.isFeverActive) {
+                shapeScore *= 2;
             }
+            state.score += shapeScore;
+            updateMissionProgress('points', shapeScore);
+            updateMissionProgress('blocks', 1);
+            updateScoreUI();
+
+            blockEl.remove();
+            state.dockedBlocks[slotIndex] = null;
+            checkAndClearLines();
+            
+            const isDockEmpty = state.dockedBlocks.every(b => b === null);
+            if (isDockEmpty) generateDockBlocks();
+            updateJokerButtonsUI();
+        } else {
+            AudioFX.playBuzzer();
+            blockEl.style.transition = 'all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+            const rect = originalSlot.getBoundingClientRect();
+            blockEl.style.left = `${rect.left}px`;
+            blockEl.style.top = `${rect.top}px`;
+            blockEl.style.transform = 'scale(1)';
+
+            setTimeout(() => {
+                blockEl.remove();
+                if (originalSlot) {
+                    originalSlot.innerHTML = '';
+                    renderBlockInSlot(shape, originalSlot, slotIndex);
+                }
+            }, 200);
         }
     }
 
-    // Reset active drag state
     activeDrag = {
-        blockEl: null,
-        shape: null,
-        slotIndex: null,
-        pointerId: null,
-        dragOffset: { x: 0, y: 0 },
-        gridCellSize: 0,
-        gap: 6,
-        validPlacement: false,
-        targetCells: [],
-        originalSlot: null,
-        startX: 0,
-        startY: 0,
-        startTime: 0,
-        offsetR: null,
-        offsetC: null
+        blockEl: null, shape: null, slotIndex: null, pointerId: null,
+        dragOffset: { x: 0, y: 0 }, gridCellSize: 0, gap: 6,
+        validPlacement: false, targetCells: [], originalSlot: null,
+        startX: 0, startY: 0, startTime: 0, offsetR: null, offsetC: null, isDragging: false
     };
 }
 
 // --- GÖREV / HEDEF SİSTEMİ (MISSION SYSTEM) ---
 const MISSION_POOL = [
-    { type: 'lines', text: 'Satır/Sütun Temizle', target: 8, icon: '💥' },
+    { type: 'lines', text: 'Satır/Sütun Temizle', target: 8, icon: '🌟' },
     { type: 'ice', text: 'Buz Kır', target: 6, icon: '🧊' },
     { type: 'bombs', text: 'Bomba Patlat', target: 3, icon: '💣' },
-    { type: 'points', text: 'Puan Topla', target: 400, icon: '💎' }
+    { type: 'points', text: 'Puan Topla', target: 400, icon: '💎' },
+    { type: 'combo', text: '3\'lü Kombo Yap', target: 1, icon: '⚡' },
+    { type: 'multiclear', text: 'Çoklu Kırış (2+)', target: 3, icon: '💥' },
+    { type: 'fever', text: 'Fever Modunu Başlat', target: 2, icon: '🔥' },
+    { type: 'blocks', text: 'Blok Yerleştir', target: 30, icon: '🧱' },
+    { type: 'rotate', text: 'Blok Döndür', target: 5, icon: '🔄' },
+    { type: 'defuse', text: 'Saatli Bomba İmha Et', target: 2, icon: '⏱️' },
+    { type: 'colormatch', text: 'Renk Çarpanı Yap', target: 2, icon: '🌈' },
+    { type: 'crossclear', text: 'Çapraz Kırış Yap', target: 1, icon: '⚔️' },
+    { type: 'stone', text: 'Taş Kır', target: 4, icon: '🪨' }
 ];
 
 function initMission() {
@@ -1386,23 +1425,26 @@ function completeMission() {
     // Play victory chime
     AudioFX.playMissionComplete();
 
-    // Show completion overlay
-    const overlay = document.getElementById('mission-complete-overlay');
-    if (overlay) {
-        overlay.classList.remove('hidden');
+    // Show embedded completion banner inside mission panel (smooth open)
+    const banner = document.getElementById('mission-complete-banner');
+    if (banner) {
+        banner.classList.add('show');
     }
 
-    // Hide after 2s and start a new mission
+    // Hide after 2.5s and start a new mission
     setTimeout(() => {
-        if (overlay) {
-            overlay.classList.add('hidden');
+        if (banner) {
+            banner.classList.remove('show');
         }
         initMission();
-    }, 2000);
+    }, 2500);
 }
 
 // --- FEVER MODE MECHANICS ---
 function activateFeverMode() {
+    if (!state.isFeverActive) {
+        updateMissionProgress('fever', 1);
+    }
     state.isFeverActive = true;
     state.feverTimeLeft = 10.0; // 10 seconds
 
@@ -1453,6 +1495,7 @@ function deactivateFeverMode() {
 
 // --- SCREEN SHAKE EFFECT ---
 let shakeTimeoutId = null;
+let activePopups = 0;
 
 function triggerScreenShake(intensity) {
     const container = document.querySelector('.game-container');
@@ -1482,7 +1525,8 @@ function showComboPopup(linesCleared, comboCount, isCrossClear = false) {
 
     const boardRect = gridBoard.getBoundingClientRect();
     const x = boardRect.left + boardRect.width / 2;
-    const y = boardRect.top + boardRect.height / 2;
+    const y = boardRect.top + boardRect.height / 2 - (activePopups * 45);
+    activePopups++;
 
     let isGold = false;
     let lines = [];
@@ -1530,7 +1574,128 @@ function showComboPopup(linesCleared, comboCount, isCrossClear = false) {
 
     setTimeout(() => {
         popup.remove();
+        activePopups = Math.max(0, activePopups - 1);
     }, 2500);
+}
+
+// --- COLOR MATCH MECHANIC ---
+function checkColorMatch(lineCells) {
+    const colorCounts = {};
+    let maxCount = 0;
+    
+    lineCells.forEach(cell => {
+        if (cell !== 0 && cell !== 'ice') {
+            const baseColor = typeof cell === 'string' ? cell.split('-')[0] : cell;
+            colorCounts[baseColor] = (colorCounts[baseColor] || 0) + 1;
+            if (colorCounts[baseColor] > maxCount) {
+                maxCount = colorCounts[baseColor];
+            }
+        }
+    });
+    
+    return maxCount >= 6; // 8 hücrenin en az 6'sı aynı renkse
+}
+
+function showFloatingText(text, color = '#00e5ff') {
+    const boardRect = gridBoard.getBoundingClientRect();
+    const el = document.createElement('div');
+    el.className = 'floating-text';
+    el.innerText = text;
+    el.style.color = color;
+    el.style.textShadow = `0 0 10px ${color}, 0 0 20px ${color}`;
+    
+    // Position slightly higher (-60px) so it doesn't overlap with HARİKA!
+    const x = boardRect.left + boardRect.width / 2;
+    const y = boardRect.top + boardRect.height / 2 - 60 - (activePopups * 45);
+    activePopups++;
+    
+    el.style.left = `${x}px`;
+    el.style.top = `${y}px`;
+    
+    document.body.appendChild(el);
+    
+    setTimeout(() => {
+        el.remove();
+        activePopups = Math.max(0, activePopups - 1);
+    }, 2500); // Matches float-up-fade CSS animation duration
+}
+
+// --- TIME BOMB MECHANICS ---
+function spawnTimeBomb() {
+    if (state.score < TIME_BOMB_SCORE_THRESHOLD) return;
+    
+    if (Math.random() > 0.10) return; // %10 ihtimal
+    
+    let emptyCells = [];
+    for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+            if (state.grid[r][c] === 0) {
+                emptyCells.push({ r, c });
+            }
+        }
+    }
+    
+    if (emptyCells.length > 0) {
+        const randCell = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+        const timer = 8 + Math.floor(Math.random() * 5); // 8-12 arası
+        state.grid[randCell.r][randCell.c] = 'timebomb';
+        state.timeBombs.push({ r: randCell.r, c: randCell.c, timer: timer });
+        
+        const cellEl = gridBoard.querySelector(`.grid-cell[data-row="${randCell.r}"][data-col="${randCell.c}"]`);
+        if (cellEl) {
+            cellEl.className = 'grid-cell filled filled-timebomb ice-spawn-anim';
+            cellEl.dataset.timer = timer;
+            setTimeout(() => { cellEl.classList.remove('ice-spawn-anim'); }, 500);
+        }
+        try { AudioFX.playBuzzer(); } catch(e) {}
+    }
+}
+
+function tickTimeBombs() {
+    for (let i = state.timeBombs.length - 1; i >= 0; i--) {
+        const bomb = state.timeBombs[i];
+        
+        // Bomba temizlendiyse listeden çıkar
+        if (state.grid[bomb.r][bomb.c] !== 'timebomb') {
+            state.timeBombs.splice(i, 1);
+            updateMissionProgress('defuse', 1);
+            continue;
+        }
+        
+        bomb.timer--;
+        
+        const cellEl = gridBoard.querySelector(`.grid-cell[data-row="${bomb.r}"][data-col="${bomb.c}"]`);
+        if (cellEl) {
+            cellEl.dataset.timer = bomb.timer;
+        }
+        
+        if (bomb.timer <= 0) {
+            explodeTimeBomb(bomb.r, bomb.c);
+            state.timeBombs.splice(i, 1);
+        }
+    }
+}
+
+function explodeTimeBomb(bombR, bombC) {
+    try { AudioFX.playBomb(); } catch(e) {}
+    triggerScreenShake('heavy');
+    
+    // O satırı komple taşa çevir
+    for (let c = 0; c < 8; c++) {
+        state.grid[bombR][c] = 'stone';
+        spawnParticles(bombR, c, 'gray');
+        const cellEl = gridBoard.querySelector(`.grid-cell[data-row="${bombR}"][data-col="${c}"]`);
+        if (cellEl) {
+            cellEl.className = 'grid-cell filled filled-stone';
+        }
+    }
+    showFloatingText("BOMBA PATLADI!", "#ff0044");
+}
+
+function endTurn() {
+    tickTimeBombs();
+    spawnTimeBomb();
+    checkGameOver();
 }
 
 // --- GRID CLEARING & PATLAMA MECHANICS ---
@@ -1561,11 +1726,30 @@ function checkAndClearLines() {
     }
 
     const isCrossClear = rowsToClear.length > 0 && colsToClear.length > 0;
+    if (isCrossClear) {
+        updateMissionProgress('crossclear', 1);
+    }
     const linesCleared = rowsToClear.length + colsToClear.length;
 
+    let colorMatchCount = 0;
     if (linesCleared > 0) {
+        rowsToClear.forEach(r => {
+            if (checkColorMatch(state.grid[r])) colorMatchCount++;
+        });
+        colsToClear.forEach(c => {
+            const colCells = state.grid.map(row => row[c]);
+            if (checkColorMatch(colCells)) colorMatchCount++;
+        });
+
         // Increment consecutive combo multiplier
         state.comboCount++;
+        if (state.comboCount >= 3) {
+            updateMissionProgress('combo', 1);
+        }
+
+        if (linesCleared >= 2) {
+            updateMissionProgress('multiclear', 1);
+        }
 
         // Track lines cleared mission progress
         updateMissionProgress('lines', linesCleared);
@@ -1577,6 +1761,8 @@ function checkAndClearLines() {
             for (let c = 0; c < 8; c++) {
                 if (rowsToClear.includes(r) || colsToClear.includes(c)) {
                     cellsToClear.push({ r, c, color: state.grid[r][c] });
+                    if (state.grid[r][c] === 'ice') updateMissionProgress('ice', 1);
+                    if (state.grid[r][c] === 'stone') updateMissionProgress('stone', 1);
                 }
             }
         }
@@ -1645,11 +1831,11 @@ function checkAndClearLines() {
                                     state.grid[nr][nc] = 0;
                                     spawnParticles(nr, nc, 'cyan');
                                     updateMissionProgress('ice', 1); // Track ice broken by bomb
-                                    const cellEl = gridBoard.querySelector(`.grid-cell[data-row="${nr}"][data-col="${nc}"]`);
-                                    if (cellEl) {
-                                        cellEl.className = 'grid-cell blasting';
-                                        setTimeout(() => { cellEl.className = 'grid-cell'; }, 400);
-                                    }
+                                } else if (cellColor === 'stone') {
+                                    // Break stone block with bomb
+                                    state.grid[nr][nc] = 0;
+                                    spawnParticles(nr, nc, 'gray');
+                                    updateMissionProgress('stone', 1);
                                 } else {
                                     // Regular block or another bomb
                                     const cellObj = { r: nr, c: nc, color: cellColor };
@@ -1686,8 +1872,16 @@ function checkAndClearLines() {
                         updateMissionProgress('ice', 1); // Track ice broken by adjacent clear
                         const cellEl = gridBoard.querySelector(`.grid-cell[data-row="${r}"][data-col="${c}"]`);
                         if (cellEl) {
-                            cellEl.className = 'grid-cell blasting';
-                            setTimeout(() => { cellEl.className = 'grid-cell'; }, 400);
+                            cellEl.classList.add('blasting');
+                            setTimeout(() => {
+                                cellEl.style.transition = 'none';
+                                if (state.grid[r][c] === 0) {
+                                    cellEl.className = 'grid-cell';
+                                } else {
+                                    cellEl.classList.remove('blasting', 'filled-ice');
+                                }
+                                requestAnimationFrame(() => requestAnimationFrame(() => cellEl.style.transition = ''));
+                            }, 400);
                         }
                     }
                 }
@@ -1718,12 +1912,45 @@ function checkAndClearLines() {
             cellsToClear.forEach(cell => {
                 const cellEl = gridBoard.querySelector(`.grid-cell[data-row="${cell.r}"][data-col="${cell.c}"]`);
                 if (cellEl) {
-                    cellEl.className = 'grid-cell'; // Resets classes completely
+                    cellEl.style.transition = 'none'; // Prevent scale-up flash
+                    if (state.grid[cell.r][cell.c] === 0) {
+                        cellEl.className = 'grid-cell'; // Resets classes completely
+                    } else {
+                        cellEl.classList.remove('blasting'); // Keeps the newly placed block classes
+                    }
+                    requestAnimationFrame(() => requestAnimationFrame(() => cellEl.style.transition = ''));
                 }
             });
 
+            // If any columns were cleared, spawn random ice block(s)
+            if (colsToClear.length > 0) {
+                for (let i = 0; i < colsToClear.length; i++) {
+                    const emptyCells = [];
+                    for (let r = 0; r < 8; r++) {
+                        for (let c = 0; c < 8; c++) {
+                            if (state.grid[r][c] === 0) {
+                                emptyCells.push({ r, c });
+                            }
+                        }
+                    }
+                    if (emptyCells.length > 0) {
+                        const randCell = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+                        state.grid[randCell.r][randCell.c] = 'ice';
+                        
+                        const cellEl = gridBoard.querySelector(`.grid-cell[data-row="${randCell.r}"][data-col="${randCell.c}"]`);
+                        if (cellEl) {
+                            cellEl.classList.add('filled', 'filled-ice', 'ice-spawn-anim');
+                            // Clean animation class after it finishes
+                            setTimeout(() => {
+                                cellEl.classList.remove('ice-spawn-anim');
+                            }, 500);
+                        }
+                    }
+                }
+            }
+
             // Check Game Over after board updates visually
-            checkGameOver();
+            endTurn();
         }, 400);
 
         // Combo score: (lines cleared squared * 10) multiplied by combo count + optional cross-clear massive bonus
@@ -1732,6 +1959,14 @@ function checkAndClearLines() {
 
         if (isCrossClear) {
             pointsAwarded += 150; // Devasa Cross-Blast Bonusu!
+        }
+        
+        if (colorMatchCount > 0) {
+            const multiplier = colorMatchCount * 3;
+            pointsAwarded *= multiplier;
+            showFloatingText(`🌈 COLOR MATCH x${multiplier}!`, '#00e5ff');
+            updateMissionProgress('colormatch', colorMatchCount);
+            try { AudioFX.playCrossClear(); } catch(e) {}
         }
 
         if (state.isFeverActive) {
@@ -1752,7 +1987,7 @@ function checkAndClearLines() {
         state.comboCount = 0;
 
         // Check Game Over directly
-        checkGameOver();
+        endTurn();
     }
 }
 
@@ -2049,9 +2284,10 @@ function animateAndRotateBlock(slotIndex, shape) {
 // Reset Game
 function resetGame() {
     state.grid = Array(8).fill(null).map(() => Array(8).fill(0));
+    state.timeBombs = [];
     state.score = 0;
     state.comboCount = 0;
-    state.rotationRights = 3;
+    state.rotationRights = 0;
     state.isGameOver = false;
     state.previousState = null;
     state.undoUsedThisGame = false;
@@ -2160,71 +2396,26 @@ if (rotationRightsBtn) {
         e.stopPropagation();
         AudioFX.init();
         
-        const isBlockSelected = state.selectedBlockIndex !== null;
-        
-        // Eğer döndürme hakkı varsa ve blok seçiliyse normal şekilde döndür
-        if (isBlockSelected && state.rotationRights > 0) {
-            const slotIndex = state.selectedBlockIndex;
-            const shape = state.dockedBlocks[slotIndex];
-            if (shape) {
-                state.rotationRights--;
-                updateScoreUI();
-                AudioFX.playRotate();
-                
-                const rCount = shape.matrix.length;
-                shape.matrix = getRotatedMatrix(shape.matrix);
-                
-                if (shape.bombCell) {
-                    const oldR = shape.bombCell.r;
-                    const oldC = shape.bombCell.c;
-                    shape.bombCell.r = oldC;
-                    shape.bombCell.c = rCount - 1 - oldR;
-                }
-                
-                state.dockedBlocks[slotIndex] = shape;
-                animateAndRotateBlock(slotIndex, shape);
-            }
-        } 
-        // Eğer döndürme hakkı yoksa VEYA blok seçili değilken tıklanıp "Top-up" yapılmak isteniyorsa:
-        else {
-            // Joker varsa 1 Joker harca ve +3 Döndürme Hakkı ekle!
-            if (state.jokers > 0) {
-                state.jokers--;
-                localStorage.setItem('bomblok_jokers', state.jokers);
-                state.rotationRights += 3;
-                
-                updateScoreUI();
-                updateJokerButtonsUI();
-                updateMissionUI();
-                AudioFX.playReroll(); // Satın alma sesi
-                
-                // Eğer tıklandığında bir blok seçiliyse, yeni alınan haktan 1 tane harcayarak onu hemen döndür!
-                if (isBlockSelected) {
-                    const slotIndex = state.selectedBlockIndex;
-                    const shape = state.dockedBlocks[slotIndex];
-                    if (shape) {
-                        state.rotationRights--; // 1 hak harca (kalan 2 olacak)
-                        updateScoreUI();
-                        AudioFX.playRotate();
-                        
-                        const rCount = shape.matrix.length;
-                        shape.matrix = getRotatedMatrix(shape.matrix);
-                        
-                        if (shape.bombCell) {
-                            const oldR = shape.bombCell.r;
-                            const oldC = shape.bombCell.c;
-                            shape.bombCell.r = oldC;
-                            shape.bombCell.c = rCount - 1 - oldR;
-                        }
-                        
-                        state.dockedBlocks[slotIndex] = shape;
-                        animateAndRotateBlock(slotIndex, shape);
-                    }
-                }
-            } else {
-                // Hak da yoksa joker de yoksa uyarı sesi çal
-                AudioFX.playBuzzer();
-            }
+        // Sadece joker harcayarak döndürme hakkı alma işlemi
+        if (state.jokers > 0) {
+            state.jokers--;
+            localStorage.setItem('bomblok_jokers', state.jokers);
+            state.rotationRights += 1;
+            
+            updateMissionProgress('rotate', 1);
+            
+            updateScoreUI();
+            updateJokerButtonsUI();
+            updateMissionUI();
+            AudioFX.playReroll(); // Satın alma sesi
+            
+            const btnRect = rotationRightsBtn.getBoundingClientRect();
+            spawnParticles(btnRect.left + btnRect.width / 2, btnRect.top + btnRect.height / 2, 'gold');
+        } else {
+            // Joker yoksa uyarı sesi ve sarsılma efekti
+            AudioFX.playBuzzer();
+            rotationRightsBtn.classList.add('shake');
+            setTimeout(() => rotationRightsBtn.classList.remove('shake'), 400);
         }
     });
 }

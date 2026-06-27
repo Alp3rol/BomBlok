@@ -1,0 +1,222 @@
+/* 🌟 BOMBLOK THEME SYSTEM 🌟 */
+
+/* 1. WOODCRAFT (Ahşap Zanaat) */
+body.theme-wood {
+    --bg-gradient: linear-gradient(135deg, #2b170c 0%, #3e2723 100%);
+    --panel-bg: rgba(93, 64, 55, 0.45);
+    --panel-border: rgba(141, 110, 99, 0.3);
+    
+    --cell-bg: rgba(62, 39, 35, 0.6);
+    --cell-border: rgba(141, 110, 99, 0.2);
+    --cell-active-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
+    --cell-radius: 4px;
+
+    --block-radius: 4px;
+    --block-border: 1px solid rgba(255,255,255,0.05);
+    --block-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0,0,0,0.3);
+
+    --bomb-bg: radial-gradient(circle at 35% 35%, #8d6e63 10%, #5d4037 50%, #3e2723 90%);
+    --bomb-border: 2px solid #3e2723;
+    --bomb-radius: 4px; /* Barut fıçısı hissiyatı için hafif yuvarlak köşeler */
+    
+    --ice-bg: rgba(255, 255, 255, 0.1);
+    --ice-border: 2px solid rgba(255, 255, 255, 0.3);
+    --ice-radius: 4px;
+
+    /* Muted painted wood colors */
+    --color-orange: #d35400;
+    --color-blue: #2980b9;
+    --color-green: #27ae60;
+    --color-yellow: #f39c12;
+    --color-purple: #8e44ad;
+    --color-pink: #c0392b;
+    --color-cyan: #16a085;
+}
+
+/* Realistic Wood Grain Overlay for Blocks */
+body.theme-wood .block-cell {
+    position: relative;
+    overflow: hidden;
+}
+
+body.theme-wood .block-cell::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.01 0.15" numOctaves="3" stitchTiles="stitch"/></filter><rect width="100" height="100" fill="transparent"/><rect width="100" height="100" filter="url(%23n)" opacity="0.35" style="mix-blend-mode: multiply;"/></svg>');
+    pointer-events: none;
+    border-radius: inherit;
+    box-shadow: inset 1px 1px 3px rgba(255,255,255,0.4), inset -2px -2px 5px rgba(0,0,0,0.6);
+    z-index: 1;
+}
+
+body.theme-wood .block-cell.bomb::before {
+    display: none; /* Do not apply wood grain to the bomb */
+}
+
+/* 2. SYNTHWAVE (Siberpunk / Neon Ağ) */
+body.theme-neon {
+    --bg-gradient: linear-gradient(135deg, #090a0f 0%, #041424 100%);
+    --panel-bg: rgba(0, 0, 0, 0.7);
+    --panel-border: rgba(0, 255, 255, 0.3);
+    --text-primary: #e0f2f1;
+    --accent: #00ffff;
+    
+    --cell-bg: rgba(0, 0, 0, 0.5);
+    --cell-border: rgba(0, 255, 255, 0.15);
+    --cell-radius: 2px;
+
+    --block-radius: 2px;
+    --block-border: 1.5px solid rgba(255, 255, 255, 0.9);
+    --block-shadow: 0 0 10px rgba(0, 255, 255, 0.6), inset 0 0 10px rgba(0, 255, 255, 0.3);
+
+    --bomb-bg: radial-gradient(circle at 50% 50%, #ff0055 10%, #660022 50%, #110000 90%);
+    --bomb-border: 2px solid #ff0055;
+    --bomb-radius: 50%;
+    --bomb-shadow: 0 0 20px #ff0055, inset 0 0 10px #ff0055;
+    
+    --ice-bg: repeating-linear-gradient(0deg, rgba(0,255,255,0.1), rgba(0,255,255,0.1) 2px, transparent 2px, transparent 4px);
+    --ice-border: 2px solid #00ffff;
+    --ice-radius: 2px;
+
+    /* Glow block colors */
+    --color-orange: rgba(255, 109, 0, 0.5);
+    --color-blue: rgba(0, 176, 255, 0.5);
+    --color-green: rgba(0, 230, 118, 0.5);
+    --color-yellow: rgba(255, 234, 0, 0.5);
+    --color-purple: rgba(213, 0, 249, 0.5);
+    --color-pink: rgba(245, 0, 87, 0.5);
+    --color-cyan: rgba(24, 255, 255, 0.5);
+}
+
+/* Add custom glow to neon blocks using a trick: */
+body.theme-neon .block-shape.orange .block-cell { border-color: #ff6d00; box-shadow: 0 0 12px #ff6d00, inset 0 0 10px #ff6d00; }
+body.theme-neon .block-shape.blue .block-cell { border-color: #00b0ff; box-shadow: 0 0 12px #00b0ff, inset 0 0 10px #00b0ff; }
+body.theme-neon .block-shape.green .block-cell { border-color: #00e676; box-shadow: 0 0 12px #00e676, inset 0 0 10px #00e676; }
+body.theme-neon .block-shape.yellow .block-cell { border-color: #ffea00; box-shadow: 0 0 12px #ffea00, inset 0 0 10px #ffea00; }
+body.theme-neon .block-shape.purple .block-cell { border-color: #d500f9; box-shadow: 0 0 12px #d500f9, inset 0 0 10px #d500f9; }
+body.theme-neon .block-shape.pink .block-cell { border-color: #f50057; box-shadow: 0 0 12px #f50057, inset 0 0 10px #f50057; }
+body.theme-neon .block-shape.cyan .block-cell { border-color: #18ffff; box-shadow: 0 0 12px #18ffff, inset 0 0 10px #18ffff; }
+
+
+/* 3. CANDY / PASTEL (Şeker Dükkanı) */
+body.theme-candy {
+    --bg-gradient: linear-gradient(135deg, #ffe0e9 0%, #b2ebf2 100%);
+    --panel-bg: rgba(255, 255, 255, 0.6);
+    --panel-border: rgba(255, 255, 255, 0.8);
+    --text-primary: #5d4037;
+    --text-secondary: #8d6e63;
+    --accent: #ff4081;
+
+    --cell-bg: rgba(255, 255, 255, 0.4);
+    --cell-border: rgba(255, 255, 255, 0.8);
+    --cell-radius: 50%;
+
+    --block-radius: 50%; /* Rounded Jelly Beans */
+    --block-border: 1px solid rgba(255,255,255,0.6);
+    --block-shadow: inset -4px -4px 8px rgba(0,0,0,0.1), inset 4px 4px 8px rgba(255,255,255,0.9), 0 4px 6px rgba(0,0,0,0.1);
+
+    --bomb-bg: radial-gradient(circle at 35% 35%, #ff80ab 10%, #f50057 50%, #c51162 90%);
+    --bomb-radius: 50%;
+    --bomb-border: 2px solid #fff;
+    --bomb-shadow: inset -3px -3px 8px rgba(0,0,0,0.2), inset 3px 3px 8px rgba(255,255,255,0.8), 0 0 10px rgba(255, 64, 129, 0.4);
+    
+    --ice-bg: rgba(255, 255, 255, 0.6);
+    --ice-border: 3px dotted #fff;
+    --ice-radius: 50%;
+}
+
+
+/* 4. COSMOS (Derin Uzay) */
+body.theme-cosmos {
+    --bg-gradient: radial-gradient(circle at 50% 50%, #1a0b2e 0%, #05010a 100%);
+    --panel-bg: rgba(10, 5, 20, 0.8);
+    --panel-border: rgba(138, 43, 226, 0.4);
+    --text-primary: #e6e6fa;
+    --accent: #8a2be2;
+
+    --cell-bg: rgba(20, 10, 40, 0.5);
+    --cell-border: rgba(138, 43, 226, 0.15);
+    --cell-radius: 2px;
+
+    --block-radius: 2px;
+    --block-border: 1px solid rgba(255,255,255,0.4);
+    --block-shadow: inset 0 0 15px rgba(255,255,255,0.3), 0 0 8px rgba(255, 255, 255, 0.2);
+
+    /* Kara Delik Bomba */
+    --bomb-bg: radial-gradient(circle at 50% 50%, #000000 30%, #4b0082 80%, #8a2be2 100%);
+    --bomb-radius: 4px;
+    --bomb-border: 2px solid #8a2be2;
+    --bomb-shadow: 0 0 20px #8a2be2, 0 0 40px #4b0082;
+    
+    /* Asteroit Buzu */
+    --ice-bg: rgba(176, 224, 230, 0.2);
+    --ice-border: 2px solid #b0e0e6;
+    --ice-radius: 2px;
+}
+
+/* Background Stars for Cosmos */
+body.theme-cosmos::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image: 
+        radial-gradient(1px 1px at 20px 30px, #eee, rgba(0,0,0,0)),
+        radial-gradient(1px 1px at 40px 70px, #fff, rgba(0,0,0,0)),
+        radial-gradient(1px 1px at 50px 160px, #ddd, rgba(0,0,0,0)),
+        radial-gradient(1px 1px at 90px 40px, #fff, rgba(0,0,0,0)),
+        radial-gradient(1px 1px at 130px 80px, #fff, rgba(0,0,0,0)),
+        radial-gradient(1px 1px at 160px 120px, #ddd, rgba(0,0,0,0));
+    background-repeat: repeat;
+    background-size: 200px 200px;
+    opacity: 0.5;
+    z-index: -1;
+    pointer-events: none;
+    animation: cosmos-stars 100s linear infinite;
+}
+
+@keyframes cosmos-stars {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(-200px); }
+}
+
+
+/* 5. RETRO 8-BIT (Arcade) */
+body.theme-retro {
+    --bg-gradient: #000000;
+    --panel-bg: #000000;
+    --panel-border: #ffffff;
+    --text-primary: #ffffff;
+    --accent: #00ff00;
+    
+    --cell-bg: #000000;
+    --cell-border: rgba(255, 255, 255, 0.3);
+    --cell-radius: 0px;
+
+    --block-radius: 0px;
+    --block-border: 1px solid #000;
+    --block-shadow: inset -4px -4px 0px rgba(0,0,0,0.4), inset 4px 4px 0px rgba(255,255,255,0.4);
+
+    --bomb-bg: #ff0000;
+    --bomb-radius: 0px;
+    --bomb-border: 2px solid #fff;
+    --bomb-shadow: inset -4px -4px 0px rgba(0,0,0,0.5), inset 4px 4px 0px #ffcccc;
+    
+    --ice-bg: #00ffff;
+    --ice-border: 2px dotted #fff;
+    --ice-radius: 0px;
+
+    --font-main: 'Courier New', Courier, monospace;
+}
+
+body.theme-retro .grid-board-container {
+    border-radius: 0;
+    box-shadow: none;
+    background: repeating-linear-gradient(
+        45deg,
+        #000,
+        #000 10px,
+        #111 10px,
+        #111 20px
+    );
+}

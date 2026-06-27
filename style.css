@@ -11,9 +11,27 @@
     --accent: #ff007f;
     --accent-glow: rgba(255, 0, 127, 0.4);
     
+    /* Cell Styling Variables */
     --cell-bg: rgba(18, 14, 36, 0.6);
     --cell-border: rgba(255, 255, 255, 0.03);
     --cell-active-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+    --cell-radius: 4px;
+
+    /* Block Styling Variables */
+    --block-radius: 6px;
+    --block-border: none;
+    --block-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), inset 0 1px 2px rgba(255, 255, 255, 0.2);
+
+    /* Bomb Styling Variables */
+    --bomb-bg: radial-gradient(circle at 35% 35%, #555555 10%, #222222 50%, #0a0a0a 90%);
+    --bomb-radius: 8px;
+    --bomb-border: 1.5px solid #ff3333;
+    --bomb-shadow: inset -3px -3px 8px rgba(0,0,0,0.9), inset 3px 3px 8px rgba(255,255,255,0.2), 0 0 10px rgba(255, 0, 0, 0.4);
+
+    /* Ice Styling Variables */
+    --ice-bg: rgba(150, 200, 255, 0.3);
+    --ice-border: 2px solid rgba(255, 255, 255, 0.5);
+    --ice-radius: 4px;
 
     /* Block colors */
     --color-orange: linear-gradient(135deg, #ff9f43 0%, #ff5252 100%);
@@ -33,6 +51,8 @@
     padding: 0;
     user-select: none;
     -webkit-user-select: none;
+    touch-action: none;
+    overscroll-behavior: none;
 }
 
 html, body {
@@ -235,7 +255,7 @@ button.control-card:disabled {
 .grid-cell {
     background-color: var(--cell-bg);
     border: 1px solid var(--cell-border);
-    border-radius: 8px;
+    border-radius: var(--cell-radius);
     position: relative;
     transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
     box-shadow: var(--cell-active-shadow);
@@ -333,7 +353,7 @@ button.control-card:disabled {
 }
 
 .block-shape.in-dock.selected {
-    transform: scale(0.92) translateY(-10px);
+    transform: scale(0.92);
     filter: drop-shadow(0 0 10px var(--accent)) drop-shadow(0 0 4px rgba(255, 0, 127, 0.6));
     animation: pulse-select 1.5s infinite alternate ease-in-out;
     z-index: 10;
@@ -341,26 +361,27 @@ button.control-card:disabled {
 
 @keyframes pulse-select {
     0% {
-        transform: scale(0.90) translateY(-8px);
+        transform: scale(0.90);
         filter: drop-shadow(0 0 8px var(--accent));
     }
     100% {
-        transform: scale(0.95) translateY(-12px);
+        transform: scale(0.95);
         filter: drop-shadow(0 0 15px var(--accent)) drop-shadow(0 0 6px rgba(255, 0, 127, 0.8));
     }
 }
 
 .block-shape.dragging {
     cursor: grabbing;
-    transform: scale(1) translateY(-40px); /* Lift block above finger/cursor */
+    transform: scale(1);
     z-index: 100;
     pointer-events: none; /* Let drag-over events pass through to grid */
     filter: drop-shadow(0 15px 15px rgba(0, 0, 0, 0.5));
 }
 
 .block-cell {
-    border-radius: 6px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), inset 0 1px 2px rgba(255, 255, 255, 0.2);
+    border-radius: var(--block-radius);
+    box-shadow: var(--block-shadow);
+    border: var(--block-border);
 }
 
 .block-shape.orange .block-cell { background: var(--color-orange); }
@@ -610,15 +631,18 @@ button.control-card:disabled {
 }
 
 .block-shape.in-dock.selected.rotating-smooth {
-    transform: scale(0.92) translateY(-10px) rotate(90deg) !important;
+    transform: scale(0.92) rotate(90deg) !important;
 }
 
 /* Ice Blocks & Bomb Cells Styles */
 .grid-cell.filled-ice {
-    background: linear-gradient(135deg, #b2ebf2 0%, #00acc1 100%) !important;
-    border: 1px solid #00e5ff !important;
-    box-shadow: inset 0 0 12px rgba(255, 255, 255, 0.6), 0 0 10px rgba(0, 188, 212, 0.3) !important;
+    background: var(--ice-bg) !important;
+    border: var(--ice-border) !important;
+    border-radius: var(--ice-radius) !important;
+    box-shadow: inset 0 0 15px rgba(255, 255, 255, 0.3) !important;
     position: relative;
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
 }
 
 .grid-cell.filled-ice::after {
@@ -631,18 +655,76 @@ button.control-card:disabled {
     filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.8));
 }
 
-.block-cell.bomb, .grid-cell.bomb {
+/* TIME BOMB & STONE MECHANICS */
+.grid-cell.filled-timebomb {
+    background: radial-gradient(circle at 50% 50%, #ff4d4d, #cc0000) !important;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.5), 0 0 10px rgba(255, 0, 0, 0.8) !important;
+    border: 2px solid #ffcccc !important;
     position: relative;
+    animation: timebomb-pulse 1s infinite alternate;
 }
 
-.block-cell.bomb::after, .grid-cell.bomb::after {
-    content: "💣";
+.grid-cell.filled-timebomb::after {
+    content: attr(data-timer);
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    font-size: 15px;
-    filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.5));
+    font-size: 20px;
+    font-weight: 900;
+    color: white;
+    text-shadow: 0 0 5px black, 0 0 10px black;
+}
+
+@keyframes timebomb-pulse {
+    0% { transform: scale(0.95); filter: brightness(1); }
+    100% { transform: scale(1.05); filter: brightness(1.3); }
+}
+
+.grid-cell.filled-stone {
+    background: #333 !important;
+    background-image: 
+        linear-gradient(135deg, transparent 40%, rgba(0,0,0,0.5) 45%, rgba(0,0,0,0.5) 55%, transparent 60%),
+        linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.1) 45%, rgba(255,255,255,0.1) 55%, transparent 60%) !important;
+    box-shadow: inset 0 0 15px rgba(0,0,0,0.9) !important;
+    border: 2px solid #111 !important;
+    position: relative;
+}
+
+.block-cell.bomb, .grid-cell.bomb {
+    position: relative;
+    background: var(--bomb-bg) !important;
+    border: var(--bomb-border) !important;
+    border-radius: var(--bomb-radius) !important;
+    box-shadow: var(--bomb-shadow) !important;
+    animation: bomb-warning-pulse 1s infinite alternate;
+}
+
+@keyframes bomb-warning-pulse {
+    0% {
+        box-shadow: inset 0 0 10px rgba(0,0,0,0.8), 0 0 5px rgba(255, 0, 0, 0.2);
+        border-color: #880000;
+    }
+    100% {
+        box-shadow: inset 0 0 10px rgba(0,0,0,0.8), 0 0 15px rgba(255, 0, 0, 0.8), inset 0 0 15px rgba(255,0,0,0.6);
+        border-color: #ff3333;
+    }
+}
+
+.block-cell.bomb::after, .grid-cell.bomb::after {
+    content: "\1F4A3";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 16px;
+    filter: drop-shadow(0 0 6px #ff0000);
+    animation: bomb-tick 0.5s infinite alternate cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes bomb-tick {
+    0% { transform: translate(-50%, -50%) scale(1); }
+    100% { transform: translate(-50%, -50%) scale(1.2) rotate(5deg); }
 }
 
 /* Theme Selector Styling */
@@ -768,6 +850,30 @@ body.theme-wood .block-cell {
     border-radius: 4px;
 }
 
+/* Wood Theme Blast Override */
+@keyframes wood-cell-blast {
+    0% {
+        transform: scale(1) rotate(0deg);
+        filter: brightness(1.2) sepia(0.5);
+    }
+    40% {
+        transform: scale(0.9) rotate(8deg) translateY(8px);
+        opacity: 1;
+        filter: brightness(0.9);
+    }
+    100% {
+        transform: scale(0.6) rotate(20deg) translateY(25px);
+        opacity: 0;
+        filter: brightness(0.5);
+    }
+}
+
+body.theme-wood .grid-cell.blasting {
+    animation: wood-cell-blast 0.4s cubic-bezier(0.55, 0.085, 0.68, 0.53) forwards;
+    z-index: 5;
+    border-color: transparent !important;
+}
+
 /* Theme: Retro Mode */
 body.theme-retro {
     --bg-gradient: linear-gradient(180deg, #020802 0%, #000000 100%);
@@ -819,6 +925,43 @@ body.theme-retro .block-cell {
 body.theme-retro .grid-cell.filled {
     border: 1px solid #ffffff;
     box-shadow: none;
+}
+
+/* Retro Theme Blast Override */
+@keyframes retro-cell-blast {
+    0% {
+        background-color: #ffffff;
+        border-color: #ffffff;
+        transform: scale(1);
+        opacity: 1;
+        box-shadow: 0 0 10px #ffffff;
+    }
+    25% {
+        background-color: #000000;
+        border-color: #00ff00;
+        transform: scale(1);
+        opacity: 1;
+        box-shadow: none;
+    }
+    50% {
+        background-color: #ffffff;
+        border-color: #ffffff;
+        transform: scale(1);
+        opacity: 1;
+        box-shadow: 0 0 10px #ffffff;
+    }
+    75%, 100% {
+        background-color: transparent;
+        border-color: rgba(0, 255, 0, 0.25);
+        box-shadow: none;
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+body.theme-retro .grid-cell.blasting {
+    animation: retro-cell-blast 0.4s step-end forwards;
+    z-index: 5;
 }
 body.theme-retro::before {
     content: " ";
@@ -1081,24 +1224,36 @@ body.theme-retro.fever-active .game-container::after {
     }
 }
 
-/* Fever Banner */
+/* Embedded Fever Banner */
 .fever-banner {
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
-    max-width: 360px;
+    height: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
-    margin: 0 auto;
-    transition: opacity 0.3s ease, visibility 0.3s ease;
-    z-index: 10;
-    flex-shrink: 0;
-    height: 30px; /* Sabit yükseklik alanı rezerve eder, kaymayı önler */
+    justify-content: center;
+    gap: 6px;
+    background: rgba(45, 17, 22, 0.95); /* reddish dark background */
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border: 2px solid #ff007f;
+    border-radius: 14px;
+    box-shadow: 0 0 15px rgba(255, 0, 127, 0.4), inset 0 0 20px rgba(255, 0, 127, 0.2);
+    box-sizing: border-box;
+    z-index: 9; /* Slightly below mission-complete-banner */
+    
+    opacity: 1;
+    transform: scale(1);
+    pointer-events: auto;
+    transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .fever-banner.hidden {
     opacity: 0;
-    visibility: hidden;
+    transform: scale(0.5);
     pointer-events: none;
 }
 
@@ -1229,6 +1384,61 @@ body.theme-retro .fever-bar-fill {
     100% { background-position: 200% 50%; }
 }
 
+/* Embedded Mission Complete Banner */
+.mission-complete-banner {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transform: scale(0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: rgba(22, 17, 45, 0.95);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border: 2px solid #ff007f;
+    border-radius: 14px;
+    box-shadow: 0 0 15px rgba(255, 0, 127, 0.4);
+    box-sizing: border-box;
+    z-index: 10;
+}
+
+.mission-complete-banner.show {
+    opacity: 1;
+    transform: scale(1);
+    pointer-events: auto;
+}
+
+.banner-icon {
+    font-size: 16px;
+    animation: bounce-reward 1s infinite alternate;
+}
+
+.banner-text {
+    font-size: 12px;
+    font-weight: 800;
+    color: #ff007f;
+    text-shadow: 0 0 10px rgba(255, 0, 127, 0.35);
+    letter-spacing: 0.5px;
+}
+
+/* Ice Spawn Animation */
+@keyframes ice-spawn {
+    0% { transform: scale(0.3); opacity: 0; filter: brightness(2); }
+    50% { transform: scale(1.1); filter: brightness(1.5); }
+    100% { transform: scale(1); opacity: 1; filter: brightness(1); }
+}
+
+.ice-spawn-anim {
+    animation: ice-spawn 0.5s ease-out forwards;
+}
+
 /* Retro theme overrides for Mission Panel */
 body.theme-retro .control-label {
     color: #00aa00;
@@ -1268,6 +1478,78 @@ body.theme-retro .mission-progress-fill {
     background: #00ff00;
     box-shadow: none;
     border-radius: 0;
+}
+
+body.theme-retro .mission-complete-banner {
+    background: #000;
+    border: 1.5px solid #00ff00;
+    border-radius: 0;
+}
+
+body.theme-retro .banner-text {
+    font-family: Courier New, monospace;
+}
+
+/* Wood theme overrides for Mission Panel */
+body.theme-wood .mission-panel {
+    background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="3" stitchTiles="stitch"/></filter><rect width="200" height="200" fill="%234e342e"/><rect width="200" height="200" filter="url(%23n)" opacity="0.4" style="mix-blend-mode: multiply;"/></svg>') !important;
+    border: 2px solid #3e2723;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.6), 0 4px 8px rgba(0,0,0,0.5);
+    border-radius: 8px;
+    animation: none;
+}
+
+body.theme-wood .mission-badge {
+    background: #3e2723;
+    border: 1px solid #2d1810;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    color: #efebe9;
+    border-radius: 4px;
+}
+
+body.theme-wood .mission-desc {
+    color: #efebe9;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+}
+
+body.theme-wood .mission-progress-bg {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid #2d1810;
+    border-radius: 2px;
+}
+
+body.theme-wood .mission-progress-fill {
+    background: linear-gradient(90deg, #5d4037, #8d6e63);
+    box-shadow: inset 0 0 5px rgba(255,255,255,0.1);
+    border-radius: 2px;
+    animation: none;
+}
+
+body.theme-wood .mission-complete-banner,
+body.theme-wood .fever-banner {
+    background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="3" stitchTiles="stitch"/></filter><rect width="200" height="200" fill="%233e2723"/><rect width="200" height="200" filter="url(%23n)" opacity="0.4" style="mix-blend-mode: multiply;"/></svg>') !important;
+    border: 2px solid #2d1810;
+    border-radius: 6px;
+    box-shadow: inset 0 0 15px rgba(0,0,0,0.8), 0 5px 15px rgba(0,0,0,0.5);
+}
+
+body.theme-wood .banner-text {
+    color: #efebe9;
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+}
+
+body.theme-wood .fever-title {
+    color: #ff5722;
+    text-shadow: 0 0 10px rgba(255, 87, 34, 0.6);
+}
+
+body.theme-wood .fever-bar-bg {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid #2d1810;
+}
+
+body.theme-wood .fever-bar-fill {
+    background: linear-gradient(90deg, #ff5722, #ffcc80);
 }
 
 /* Mission Complete Overlay */
