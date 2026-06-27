@@ -53,7 +53,14 @@ const state = {
     jokers: parseInt(localStorage.getItem('bomblok_jokers'), 10) || 0,
     previousState: null,
     undoUsedThisGame: false,
-    rerollUsedThisGame: false
+    rerollUsedThisGame: false,
+    // --- Gelişmiş Görev Takip Değişkenleri ---
+    missionMoves: 0,
+    movesSinceClear: 0,
+    consecutiveClears: 0,
+    usedRotationsInMission: 0,
+    missionTimerId: null,
+    missionTimeLeft: 0
 };
 
 // DOM Elements
@@ -1230,6 +1237,7 @@ function onPointerUp(e) {
     if (!isDragging) {
         if (state.rotationRights > 0) {
             state.rotationRights--;
+            state.usedRotationsInMission++;
             updateScoreUI();
             AudioFX.playRotate();
 
@@ -1263,6 +1271,7 @@ function onPointerUp(e) {
                 AudioFX.playReroll();
                 
                 state.rotationRights--;
+                state.usedRotationsInMission++;
                 updateScoreUI();
                 AudioFX.playRotate();
                 
@@ -1354,31 +1363,75 @@ function onPointerUp(e) {
 
 // --- GÖREV / HEDEF SİSTEMİ (MISSION SYSTEM) ---
 const MISSION_POOL = [
-    { type: 'lines', text: 'Satır/Sütun Temizle', target: 8, icon: '🌟' },
-    { type: 'ice', text: 'Buz Kır', target: 6, icon: '🧊' },
-    { type: 'bombs', text: 'Bomba Patlat', target: 3, icon: '💣' },
-    { type: 'points', text: 'Puan Topla', target: 400, icon: '💎' },
-    { type: 'combo', text: '3\'lü Kombo Yap', target: 1, icon: '⚡' },
-    { type: 'multiclear', text: 'Çoklu Kırış (2+)', target: 3, icon: '💥' },
-    { type: 'fever', text: 'Fever Modunu Başlat', target: 2, icon: '🔥' },
-    { type: 'blocks', text: 'Blok Yerleştir', target: 30, icon: '🧱' },
-    { type: 'rotate', text: 'Blok Döndür', target: 5, icon: '🔄' },
-    { type: 'defuse', text: 'Saatli Bomba İmha Et', target: 2, icon: '⏱️' },
-    { type: 'colormatch', text: 'Renk Çarpanı Yap', target: 2, icon: '🌈' },
-    { type: 'crossclear', text: 'Çapraz Kırış Yap', target: 1, icon: '⚔️' },
-    { type: 'stone', text: 'Taş Kır', target: 4, icon: '🪨' }
+    { type: 'lines', text: 'Satır/Sütun Temizle', target: () => Math.floor(Math.random() * 8) + 5, icon: '📏' }, // 5-12
+    { type: 'ice', text: 'Buz Kır', target: () => Math.floor(Math.random() * 5) + 4, icon: '❄️' }, // 4-8
+    { type: 'bombs', text: 'Bomba Patlat', target: () => Math.floor(Math.random() * 4) + 2, icon: '💣' }, // 2-5
+    { type: 'points', text: 'Puan Topla', target: () => (Math.floor(Math.random() * 6) + 3) * 100, icon: '💯' }, // 300-800
+    { type: 'combo', text: '3\'lü Kombo Yap', target: () => Math.floor(Math.random() * 2) + 1, icon: '🔥' }, // 1-2
+    { type: 'multiclear', text: 'Çoklu Kırım (2+)', target: () => Math.floor(Math.random() * 3) + 2, icon: '⚡' }, // 2-4
+    { type: 'fever', text: 'Fever Modunu Başlat', target: () => Math.floor(Math.random() * 2) + 1, icon: '🌟' }, // 1-2
+    { type: 'blocks', text: 'Blok Yerleştir', target: () => (Math.floor(Math.random() * 5) + 2) * 10, icon: '🧱' }, // 20-60
+    { type: 'rotate', text: 'Blok Döndür', target: () => Math.floor(Math.random() * 6) + 3, icon: '🔄' }, // 3-8
+    { type: 'defuse', text: 'Saatli Bomba İmha Et', target: () => Math.floor(Math.random() * 3) + 1, icon: '⏱️' }, // 1-3
+    { type: 'colormatch', text: 'Renk Çarpanı Yap', target: () => Math.floor(Math.random() * 3) + 2, icon: '🌈' }, // 2-4
+    { type: 'crossclear', text: 'Çapraz Kırım Yap', target: () => Math.floor(Math.random() * 2) + 1, icon: '❌' }, // 1-2
+    { type: 'stone', text: 'Taş Kır', target: () => Math.floor(Math.random() * 5) + 3, icon: '🪨' }, // 3-7
+    // --- YENİ VE GELİŞMİŞ GÖREVLER ---
+    { type: 'tamisabet', text: '3x3 Alan Kır', target: () => Math.floor(Math.random() * 2) + 1, icon: '🎯' },
+    { type: 'sinirdevriyesi', text: 'Üst/Alt Satır Kır', target: () => Math.floor(Math.random() * 2) + 1, icon: '🛡️' },
+    { type: 'serikatil', text: 'Arka Arkaya 3 Hamlede Kırım', target: () => 1, icon: '🗡️' },
+    { type: 'buzkirangemisi', text: 'Tek Hamlede 3+ Buz Kır', target: () => Math.floor(Math.random() * 2) + 1, icon: '🚢' },
+    { type: 'bombaimhauzmani', text: 'Tek Hamlede 2+ Bomba Patlat', target: () => 1, icon: '🧑‍🚒' },
+    { type: 'daralanda', text: 'Kırım Yapmadan 10 Blok', target: () => 10, icon: '🗜️' },
+    { type: 'meydanokuma', text: '5 Hamlede 3 Satır Kır', target: () => 3, icon: '🏆' },
+    { type: 'katikurallar', text: '0 Döndürme İle 5 Satır', target: () => 5, icon: '📏' },
+    { type: 'renklidiyet', text: 'Mavi Blok Patlatmadan 3 Satır', target: () => 3, icon: '🎨' },
+    { type: 'kosekapmaca', text: '4 Köşeyi Doldur', target: () => 1, icon: '🔲' },
+    { type: 'tetrisefsanesi', text: 'Sadece I Bloğu İle Kırım', target: () => Math.floor(Math.random() * 2) + 1, icon: '🏛️' },
+    { type: 'boslukbirakmasanati', text: '3x3 Ortası Boş Şekil', target: () => 1, icon: '🍩' },
+    { type: 'hiztesti', text: '30 Saniyede 5 Satır Kır', target: () => 5, icon: '⏱️' },
+    { type: 'saatlibombapanigi', text: '15 Hamlede 3 Bomba İmha', target: () => 3, icon: '🆘' }
 ];
 
 function initMission() {
+    if (state.missionTimerId) {
+        clearInterval(state.missionTimerId);
+        state.missionTimerId = null;
+    }
+
     const randomMissionTemplate = MISSION_POOL[Math.floor(Math.random() * MISSION_POOL.length)];
     state.currentMission = {
         type: randomMissionTemplate.type,
         text: randomMissionTemplate.text,
-        target: randomMissionTemplate.target,
+        target: typeof randomMissionTemplate.target === 'function' ? randomMissionTemplate.target() : randomMissionTemplate.target,
         icon: randomMissionTemplate.icon,
         current: 0,
         completed: false
     };
+
+    // Reset trackers
+    state.missionMoves = 0;
+    state.usedRotationsInMission = 0;
+
+    if (state.currentMission.type === 'hiztesti') {
+        state.missionTimeLeft = 30; // 30 seconds
+        state.missionTimerId = setInterval(() => {
+            if (!state.isGameOver && !state.currentMission.completed) {
+                state.missionTimeLeft--;
+                updateMissionUI();
+                if (state.missionTimeLeft <= 0) {
+                    try { AudioFX.playBuzzer(); } catch(e) {}
+                    showFloatingText('Zaman Doldu! Yeni Görev', '#ff3333');
+                    initMission(); // Restart with new mission
+                }
+            }
+        }, 1000);
+    }
+
+    if (state.currentMission.type === 'saatlibombapanigi') {
+        for(let i=0; i<3; i++) spawnTimeBomb();
+    }
+
     updateMissionUI();
 }
 
@@ -1407,7 +1460,12 @@ function updateMissionUI() {
     if (!state.currentMission) return;
 
     if (missionDescEl) {
-        missionDescEl.textContent = `${state.currentMission.icon} ${state.currentMission.text}: ${state.currentMission.current}/${state.currentMission.target}`;
+        let extraText = '';
+        if (state.currentMission.type === 'hiztesti') extraText = ` [⏱️ ${state.missionTimeLeft}s]`;
+        if (state.currentMission.type === 'meydanokuma') extraText = ` [🏁 Kalan: ${5 - state.missionMoves}]`;
+        if (state.currentMission.type === 'saatlibombapanigi') extraText = ` [🏁 Kalan: ${15 - state.missionMoves}]`;
+
+        missionDescEl.textContent = `${state.currentMission.icon} ${state.currentMission.text}: ${state.currentMission.current}/${state.currentMission.target}${extraText}`;
     }
 
     if (missionProgressFillEl) {
@@ -1659,6 +1717,9 @@ function tickTimeBombs() {
         if (state.grid[bomb.r][bomb.c] !== 'timebomb') {
             state.timeBombs.splice(i, 1);
             updateMissionProgress('defuse', 1);
+            if (state.currentMission && state.currentMission.type === 'saatlibombapanigi') {
+                updateMissionProgress('saatlibombapanigi', 1);
+            }
             continue;
         }
         
@@ -1701,8 +1762,11 @@ function endTurn() {
 // --- GRID CLEARING & PATLAMA MECHANICS ---
 
 function checkAndClearLines() {
+    state.missionMoves++;
     let rowsToClear = [];
     let colsToClear = [];
+    let iceBrokenThisMove = 0;
+    let bombsExplodedThisMove = 0;
 
     // 1. Check rows
     for (let r = 0; r < 8; r++) {
@@ -1760,9 +1824,19 @@ function checkAndClearLines() {
         for (let r = 0; r < 8; r++) {
             for (let c = 0; c < 8; c++) {
                 if (rowsToClear.includes(r) || colsToClear.includes(c)) {
-                    cellsToClear.push({ r, c, color: state.grid[r][c] });
-                    if (state.grid[r][c] === 'ice') updateMissionProgress('ice', 1);
-                    if (state.grid[r][c] === 'stone') updateMissionProgress('stone', 1);
+                    const cellColor = state.grid[r][c];
+                    
+                    // Taş bloklar satır/sütun kırılmasından etkilenmez, SADECE bombalarla kırılır.
+                    if (cellColor === 'stone') {
+                        continue;
+                    }
+
+                    cellsToClear.push({ r, c, color: cellColor });
+                    
+                    if (cellColor === 'ice') {
+                        updateMissionProgress('ice', 1);
+                        iceBrokenThisMove++;
+                    }
                 }
             }
         }
@@ -1811,6 +1885,7 @@ function checkAndClearLines() {
 
                 // Track bomb explosion mission progress
                 updateMissionProgress('bombs', 1);
+                bombsExplodedThisMove++;
 
                 // Explode a 3x3 area
                 for (let dr = -1; dr <= 1; dr++) {
@@ -1831,6 +1906,7 @@ function checkAndClearLines() {
                                     state.grid[nr][nc] = 0;
                                     spawnParticles(nr, nc, 'cyan');
                                     updateMissionProgress('ice', 1); // Track ice broken by bomb
+                                    iceBrokenThisMove++;
                                 } else if (cellColor === 'stone') {
                                     // Break stone block with bomb
                                     state.grid[nr][nc] = 0;
@@ -1870,6 +1946,7 @@ function checkAndClearLines() {
                         state.grid[r][c] = 0;
                         spawnParticles(r, c, 'cyan');
                         updateMissionProgress('ice', 1); // Track ice broken by adjacent clear
+                        iceBrokenThisMove++;
                         const cellEl = gridBoard.querySelector(`.grid-cell[data-row="${r}"][data-col="${c}"]`);
                         if (cellEl) {
                             cellEl.classList.add('blasting');
@@ -1982,12 +2059,104 @@ function checkAndClearLines() {
             localStorage.setItem('bomblok_best', state.bestScore);
             updateScoreUI();
         }
-    } else {
-        // No lines cleared in this move, reset consecutive combo count
-        state.comboCount = 0;
 
-        // Check Game Over directly
-        endTurn();
+        // --- NEW MISSIONS TRACKING (Clear happened) ---
+        state.movesSinceClear = 0;
+        state.consecutiveClears++;
+
+        if (state.currentMission) {
+            const mType = state.currentMission.type;
+            if (mType === 'tamisabet' && linesCleared >= 3) updateMissionProgress('tamisabet', 1);
+            if (mType === 'sinirdevriyesi' && (rowsToClear.includes(0) || rowsToClear.includes(7))) updateMissionProgress('sinirdevriyesi', 1);
+            if (mType === 'serikatil' && state.consecutiveClears >= 3) updateMissionProgress('serikatil', 1);
+            if (mType === 'buzkirangemisi' && iceBrokenThisMove >= 3) updateMissionProgress('buzkirangemisi', 1);
+            if (mType === 'bombaimhauzmani' && bombsExplodedThisMove >= 2) updateMissionProgress('bombaimhauzmani', 1);
+            if (mType === 'meydanokuma') updateMissionProgress('meydanokuma', linesCleared);
+            if (mType === 'katikurallar' && state.usedRotationsInMission === 0) updateMissionProgress('katikurallar', linesCleared);
+            if (mType === 'hiztesti') updateMissionProgress('hiztesti', linesCleared);
+            
+            if (mType === 'renklidiyet') {
+                const hasBlue = cellsToClear.some(c => String(c.color).includes('blue'));
+                if (!hasBlue) updateMissionProgress('renklidiyet', linesCleared);
+            }
+
+            if (mType === 'tetrisefsanesi' && activeDrag && activeDrag.shape) {
+                const rCount = activeDrag.shape.matrix.length;
+                const cCount = activeDrag.shape.matrix[0].length;
+                if ((rCount >= 3 && cCount === 1) || (rCount === 1 && cCount >= 3)) {
+                    updateMissionProgress('tetrisefsanesi', 1);
+                }
+            }
+        }
+    } else {
+        // No lines cleared in this move
+        state.comboCount = 0;
+        state.movesSinceClear++;
+        state.consecutiveClears = 0;
+
+        if (state.currentMission && state.currentMission.type === 'daralanda') {
+            updateMissionProgress('daralanda', 1);
+        }
+    }
+
+    // Check all constraints and end turn
+    checkMissionConstraints();
+    endTurn();
+}
+
+// Function to validate non-clear constraints
+function checkMissionConstraints() {
+    if (!state.currentMission || state.currentMission.completed) return;
+    const mType = state.currentMission.type;
+
+    if (mType === 'meydanokuma' && state.missionMoves >= 5) {
+        showFloatingText('Hamle Bitti! Görev Sıfırlandı', '#ff3333');
+        initMission();
+    }
+    
+    if (mType === 'saatlibombapanigi' && state.missionMoves >= 15) {
+        showFloatingText('Hamle Bitti! Görev Sıfırlandı', '#ff3333');
+        initMission();
+    }
+
+    if (mType === 'daralanda' && state.movesSinceClear === 0) {
+        if (state.currentMission.current > 0) {
+            state.currentMission.current = 0;
+            updateMissionUI();
+            showFloatingText('Kırım Yaptın! Seri Sıfırlandı', '#ffaa00');
+        }
+    }
+
+    if (mType === 'kosekapmaca') {
+        const corners = [state.grid[0][0], state.grid[0][7], state.grid[7][0], state.grid[7][7]];
+        if (corners.every(c => c !== 0)) {
+            updateMissionProgress('kosekapmaca', 1);
+        }
+    }
+
+    if (mType === 'boslukbirakmasanati') {
+        let found = false;
+        for (let r=1; r<7; r++) {
+            for (let c=1; c<7; c++) {
+                if (state.grid[r][c] === 0) {
+                    let allFull = true;
+                    for (let dr=-1; dr<=1; dr++) {
+                        for (let dc=-1; dc<=1; dc++) {
+                            if (dr===0 && dc===0) continue;
+                            if (state.grid[r+dr][c+dc] === 0) {
+                                allFull = false;
+                                break;
+                            }
+                        }
+                        if (!allFull) break;
+                    }
+                    if (allFull) found = true;
+                }
+            }
+        }
+        if (found) {
+            updateMissionProgress('boslukbirakmasanati', 1);
+        }
     }
 }
 
