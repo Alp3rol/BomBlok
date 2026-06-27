@@ -1770,7 +1770,9 @@ function checkAndClearLines() {
 
     // 1. Check rows
     for (let r = 0; r < 8; r++) {
-        if (state.grid[r].every(cell => cell !== 0)) {
+        const isFull = state.grid[r].every(cell => cell !== 0);
+        const isAllStone = state.grid[r].every(cell => cell === 'stone');
+        if (isFull && !isAllStone) {
             rowsToClear.push(r);
         }
     }
@@ -1778,13 +1780,17 @@ function checkAndClearLines() {
     // 2. Check columns
     for (let c = 0; c < 8; c++) {
         let colFull = true;
+        let allStone = true;
         for (let r = 0; r < 8; r++) {
             if (state.grid[r][c] === 0) {
                 colFull = false;
                 break;
             }
+            if (state.grid[r][c] !== 'stone') {
+                allStone = false;
+            }
         }
-        if (colFull) {
+        if (colFull && !allStone) {
             colsToClear.push(c);
         }
     }
@@ -1907,11 +1913,31 @@ function checkAndClearLines() {
                                     spawnParticles(nr, nc, 'cyan');
                                     updateMissionProgress('ice', 1); // Track ice broken by bomb
                                     iceBrokenThisMove++;
+
+                                    const cellEl = gridBoard.querySelector(`.grid-cell[data-row="${nr}"][data-col="${nc}"]`);
+                                    if (cellEl) {
+                                        cellEl.classList.add('blasting');
+                                        setTimeout(() => {
+                                            cellEl.style.transition = 'none';
+                                            cellEl.className = 'grid-cell';
+                                            requestAnimationFrame(() => requestAnimationFrame(() => cellEl.style.transition = ''));
+                                        }, 400);
+                                    }
                                 } else if (cellColor === 'stone') {
                                     // Break stone block with bomb
                                     state.grid[nr][nc] = 0;
                                     spawnParticles(nr, nc, 'gray');
                                     updateMissionProgress('stone', 1);
+
+                                    const cellEl = gridBoard.querySelector(`.grid-cell[data-row="${nr}"][data-col="${nc}"]`);
+                                    if (cellEl) {
+                                        cellEl.classList.add('blasting');
+                                        setTimeout(() => {
+                                            cellEl.style.transition = 'none';
+                                            cellEl.className = 'grid-cell';
+                                            requestAnimationFrame(() => requestAnimationFrame(() => cellEl.style.transition = ''));
+                                        }, 400);
+                                    }
                                 } else {
                                     // Regular block or another bomb
                                     const cellObj = { r: nr, c: nc, color: cellColor };
