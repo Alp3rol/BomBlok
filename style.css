@@ -96,16 +96,17 @@ body {
 }
 
 .game-logo {
-    height: 90px;
+    height: 40px;
     width: auto;
     object-fit: contain;
     filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.4));
+    transform: scale(1.7);
+    transform-origin: left center;
     transition: transform 0.2s ease;
-    margin: -15px 0;
 }
 
 .game-logo:hover {
-    transform: scale(1.05);
+    transform: scale(1.8);
 }
 
 .header-controls {
