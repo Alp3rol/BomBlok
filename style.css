@@ -105,6 +105,33 @@ body {
     text-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
+.title-bomb {
+    display: inline-block;
+    vertical-align: middle;
+    width: 20px;
+    height: 20px;
+    background: radial-gradient(circle at 35% 35%, #555555 10%, #222222 50%, #0a0a0a 90%);
+    border-radius: 50%;
+    margin: 0 1px;
+    border: 1.5px solid #ff3333;
+    box-shadow: inset -2px -2px 4px rgba(0,0,0,0.9), inset 2px 2px 4px rgba(255,255,255,0.2), 0 0 5px rgba(255, 0, 0, 0.4);
+    position: relative;
+    top: -2px;
+}
+
+.title-bomb::before {
+    content: '';
+    position: absolute;
+    top: -4px;
+    right: 0px;
+    width: 4px;
+    height: 4px;
+    background: #ffaa00;
+    border-radius: 50%;
+    box-shadow: 0 0 4px #ff0000, 0 0 8px #ffaa00;
+    animation: bomb-warning-pulse 0.5s infinite alternate;
+}
+
 .accent-text {
     background: linear-gradient(135deg, #ff007f 0%, #7f00ff 100%);
     -webkit-background-clip: text;
