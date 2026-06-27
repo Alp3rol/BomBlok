@@ -747,6 +747,10 @@ function spawnIceBlocks() {
 }
 
 // Initialize Grid Board HTML
+let dragRAF = null;
+let currentDragX = 0;
+let currentDragY = 0;
+
 function initGrid() {
     gridBoard.innerHTML = '';
     for (let r = 0; r < 8; r++) {
@@ -964,6 +968,9 @@ function onPointerMove(e) {
             blockEl.style.width = `${targetWidth}px`;
             blockEl.style.height = `${targetHeight}px`;
             blockEl.style.gap = `${activeDrag.gap}px`;
+            blockEl.style.left = '0px';
+            blockEl.style.top = '0px';
+            blockEl.style.willChange = 'transform';
         } else {
             return;
         }
@@ -976,9 +983,18 @@ function onPointerMove(e) {
             yOffset = -80;
         }
 
-        blockEl.style.left = `${e.clientX - activeDrag.dragOffset.x}px`;
-        blockEl.style.top = `${e.clientY - activeDrag.dragOffset.y + yOffset}px`;
-        checkPlacementValidity();
+        currentDragX = e.clientX - activeDrag.dragOffset.x;
+        currentDragY = e.clientY - activeDrag.dragOffset.y + yOffset;
+
+        if (!dragRAF) {
+            dragRAF = requestAnimationFrame(() => {
+                if (activeDrag.isDragging && activeDrag.blockEl) {
+                    activeDrag.blockEl.style.transform = `translate3d(${currentDragX}px, ${currentDragY}px, 0)`;
+                    checkPlacementValidity();
+                }
+                dragRAF = null;
+            });
+        }
     }
 }
 
@@ -1287,7 +1303,7 @@ function onPointerUp(e) {
                 
                 if (originalSlot) {
                     blockEl.style.transition = 'transform 0.2s ease-in-out';
-                    blockEl.style.transform = 'rotate(90deg)';
+                    blockEl.style.transform = `translate3d(${currentDragX}px, ${currentDragY}px, 0) rotate(90deg)`;
                     setTimeout(() => {
                         originalSlot.innerHTML = '';
                         renderBlockInSlot(shape, originalSlot, slotIndex);
@@ -1337,11 +1353,9 @@ function onPointerUp(e) {
             updateJokerButtonsUI();
         } else {
             AudioFX.playBuzzer();
-            blockEl.style.transition = 'all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+            blockEl.style.transition = 'transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
             const rect = originalSlot.getBoundingClientRect();
-            blockEl.style.left = `${rect.left}px`;
-            blockEl.style.top = `${rect.top}px`;
-            blockEl.style.transform = 'scale(1)';
+            blockEl.style.transform = `translate3d(${rect.left}px, ${rect.top}px, 0) scale(1)`;
 
             setTimeout(() => {
                 blockEl.remove();

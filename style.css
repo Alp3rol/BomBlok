@@ -1728,3 +1728,14 @@ body.theme-retro .joker-button:disabled {
     border-color: #004400;
     color: #004400;
 }
+
+/* MOBILE PERFORMANCE OPTIMIZATIONS */
+@media (max-width: 768px) {
+    * {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+    }
+    .game-container::after, .game-board, .info-panel, .controls-panel, .mission-panel, .popup-content {
+        box-shadow: none !important;
+    }
+}
