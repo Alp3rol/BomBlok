@@ -117,6 +117,12 @@ body {
     box-shadow: inset -2px -2px 4px rgba(0,0,0,0.9), inset 2px 2px 4px rgba(255,255,255,0.2), 0 0 5px rgba(255, 0, 0, 0.4);
     position: relative;
     top: -2px;
+    animation: title-bomb-anim 1s infinite ease-in-out;
+}
+
+@keyframes title-bomb-anim {
+    0%, 100% { transform: scale(1) rotate(-5deg); }
+    50% { transform: scale(1.15) rotate(5deg); }
 }
 
 .title-bomb::before {
