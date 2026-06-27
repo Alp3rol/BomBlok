@@ -95,18 +95,20 @@ body {
     flex-shrink: 0;
 }
 
-.game-logo {
-    height: 40px;
-    width: auto;
-    object-fit: contain;
-    filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.4));
-    transform: scale(1.7);
-    transform-origin: left center;
-    transition: transform 0.2s ease;
+.game-title {
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    background: linear-gradient(135deg, #ffffff 0%, #a49fc6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
-.game-logo:hover {
-    transform: scale(1.8);
+.accent-text {
+    background: linear-gradient(135deg, #ff007f 0%, #7f00ff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
 .header-controls {
