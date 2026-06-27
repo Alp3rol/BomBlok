@@ -962,14 +962,15 @@ function onPointerMove(e) {
             blockEl.classList.remove('in-dock');
             blockEl.classList.add('dragging');
 
+            // Move to body but keep visual position based on original dock slot
+            const origRect = activeDrag.originalSlot.getBoundingClientRect();
             document.body.appendChild(blockEl);
-
             blockEl.style.position = 'fixed';
             blockEl.style.width = `${targetWidth}px`;
             blockEl.style.height = `${targetHeight}px`;
             blockEl.style.gap = `${activeDrag.gap}px`;
-            blockEl.style.left = '0px';
-            blockEl.style.top = '0px';
+            // Set initial transform so the block appears at the dock location
+            blockEl.style.transform = `translate3d(${origRect.left}px, ${origRect.top}px, 0)`;
             blockEl.style.willChange = 'transform';
         } else {
             return;

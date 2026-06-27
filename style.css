@@ -342,6 +342,7 @@ button.control-card:disabled {
     box-shadow: var(--panel-glow);
     backdrop-filter: blur(15px);
     -webkit-backdrop-filter: blur(15px);
+    flex-shrink: 0;
 }
 
 .block-dock {
@@ -379,8 +380,12 @@ button.control-card:disabled {
     display: grid;
     cursor: grab;
     touch-action: none;
-    transition: transform 0.15s cubic-bezier(0.25, 1, 0.5, 1);
+    transition: none;
     transform-origin: center center;
+}
+
+.block-shape.dragging {
+    transition: transform 0.15s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 .block-shape.in-dock {
@@ -390,8 +395,9 @@ button.control-card:disabled {
 .block-shape.in-dock.selected {
     transform: scale(0.92);
     filter: drop-shadow(0 0 10px var(--accent)) drop-shadow(0 0 4px rgba(255, 0, 127, 0.6));
-    animation: pulse-select 1.5s infinite alternate ease-in-out;
+    /* Animation removed to prevent falling effect */
     z-index: 10;
+    animation: none;
 }
 
 @keyframes pulse-select {
