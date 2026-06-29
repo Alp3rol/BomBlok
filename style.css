@@ -43,6 +43,9 @@
     --color-cyan: linear-gradient(135deg, #48dbfb 0%, #0abde3 100%);
 
     --font-main: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    
+    /* Layout heights to subtract from viewport height to fit grid */
+    --non-grid-height: 410px;
 }
 
 * {
@@ -84,6 +87,7 @@ body {
     position: relative;
     overflow: hidden;
     gap: 6px;
+    border-radius: 20px;
 }
 
 /* Header */
@@ -93,30 +97,34 @@ body {
     justify-content: space-between;
     align-items: center;
     flex-shrink: 0;
+    gap: 8px;
 }
 
 .game-title {
-    font-size: 28px;
+    font-size: clamp(18px, 5.5vw, 28px);
     font-weight: 800;
-    letter-spacing: 2px;
+    letter-spacing: 1px;
+    white-space: nowrap;
     background: linear-gradient(135deg, #ffffff 0%, #a49fc6 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     text-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
 }
 
 .title-bomb {
     display: inline-block;
     vertical-align: middle;
-    width: 20px;
-    height: 20px;
+    width: clamp(14px, 4vw, 20px);
+    height: clamp(14px, 4vw, 20px);
     background: radial-gradient(circle at 35% 35%, #555555 10%, #222222 50%, #0a0a0a 90%);
     border-radius: 50%;
     margin: 0 1px;
     border: 1.5px solid #ff3333;
     box-shadow: inset -2px -2px 4px rgba(0,0,0,0.9), inset 2px 2px 4px rgba(255,255,255,0.2), 0 0 5px rgba(255, 0, 0, 0.4);
     position: relative;
-    top: -2px;
+    top: -1px;
     animation: title-bomb-anim 1s infinite ease-in-out;
 }
 
@@ -260,8 +268,8 @@ button.control-card:disabled {
 /* Grid Board */
 .grid-board-container {
     width: 100%;
-    max-width: calc(100dvh - 250px);
-    max-height: calc(100dvh - 250px);
+    max-width: calc(100dvh - var(--non-grid-height));
+    max-height: calc(100dvh - var(--non-grid-height));
     aspect-ratio: 1 / 1;
     flex-shrink: 1;
     min-height: 0;
@@ -545,6 +553,9 @@ button.control-card:disabled {
 
 /* Responsive Scaling */
 @media (max-height: 700px) {
+    :root {
+        --non-grid-height: 330px;
+    }
     .game-container {
         padding: 8px 12px;
         gap: 4px;
@@ -564,6 +575,9 @@ button.control-card:disabled {
 }
 
 @media (max-height: 600px) {
+    :root {
+        --non-grid-height: 290px;
+    }
     .game-container {
         padding: 4px 8px;
         gap: 2px;
@@ -1281,7 +1295,7 @@ body.theme-retro.fever-active .game-container::after {
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
     border: 2px solid #ff007f;
-    border-radius: 14px;
+    border-radius: inherit;
     box-shadow: 0 0 15px rgba(255, 0, 127, 0.4), inset 0 0 20px rgba(255, 0, 127, 0.2);
     box-sizing: border-box;
     z-index: 9; /* Slightly below mission-complete-banner */
@@ -1444,7 +1458,7 @@ body.theme-retro .fever-bar-fill {
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
     border: 2px solid #ff007f;
-    border-radius: 14px;
+    border-radius: inherit;
     box-shadow: 0 0 15px rgba(255, 0, 127, 0.4);
     box-sizing: border-box;
     z-index: 10;
@@ -1570,7 +1584,7 @@ body.theme-wood .mission-complete-banner,
 body.theme-wood .fever-banner {
     background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="3" stitchTiles="stitch"/></filter><rect width="200" height="200" fill="%233e2723"/><rect width="200" height="200" filter="url(%23n)" opacity="0.4" style="mix-blend-mode: multiply;"/></svg>') !important;
     border: 2px solid #2d1810;
-    border-radius: 6px;
+    border-radius: inherit;
     box-shadow: inset 0 0 15px rgba(0,0,0,0.8), 0 5px 15px rgba(0,0,0,0.5);
 }
 
@@ -1743,7 +1757,16 @@ body.theme-retro .joker-button:disabled {
         backdrop-filter: none !important;
         -webkit-backdrop-filter: none !important;
     }
-    .game-container::after, .game-board, .info-panel, .controls-panel, .mission-panel, .popup-content {
+    .game-board, .info-panel, .controls-panel, .mission-panel, .popup-content {
         box-shadow: none !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .game-container {
+        border-radius: 0;
+    }
+    .game-container::after {
+        border-radius: 0;
     }
 }
