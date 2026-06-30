@@ -1,3 +1,8 @@
+// ⚠️  DEPRECATED — Bu yama dosyası app.js'in eski sürümüne aittir.
+// Mevcut app.js, pointer event'leri window seviyesinde dinliyor (blockEl yerine).
+// Bu scripti çalıştırırsanız drag-and-drop sistemi BOZULUR.
+// Güvenli şekilde silinebilir.
+
 const fs = require('fs');
 
 let code = fs.readFileSync('app.js', 'utf8');
