@@ -18,14 +18,17 @@
             <div class="header-controls">
                 <button id="leaderboard-btn" class="help-button" title="Leaderboard">🏆</button>
                 <button id="help-btn" class="help-button" title="Nasıl Oynanır?">?</button>
-                <select id="theme-select" class="theme-select" title="Tema Değiştir">
-                    <option value="dark">🌙 Karanlık</option>
-                    <option value="neon">⚡ Neon</option>
-                    <option value="wood">🪵 Ahşap</option>
-                    <option value="candy">🍭 Şeker</option>
-                    <option value="cosmos">🌌 Uzay</option>
-                    <option value="retro">👾 Retro</option>
-                </select>
+                <div id="theme-dropdown" class="theme-dropdown" title="Tema Değiştir">
+                    <button id="theme-btn" class="theme-btn" type="button" aria-haspopup="listbox" aria-expanded="false">🌙 Karanlık</button>
+                    <div id="theme-menu" class="theme-menu hidden" role="listbox" aria-label="Tema Seç">
+                        <button class="theme-item" type="button" data-theme="dark">🌙 Karanlık</button>
+                        <button class="theme-item" type="button" data-theme="neon">⚡ Neon</button>
+                        <button class="theme-item" type="button" data-theme="wood">🪵 Ahşap</button>
+                        <button class="theme-item" type="button" data-theme="candy">🍭 Şeker</button>
+                        <button class="theme-item" type="button" data-theme="cosmos">🌌 Uzay</button>
+                        <button class="theme-item" type="button" data-theme="retro">👾 Retro</button>
+                    </div>
+                </div>
                 <button id="sound-btn" class="sound-button" title="Sesi Kapat/Aç">🔊</button>
             </div>
         </header>
@@ -194,6 +197,14 @@
                 </div>
                 <div id="leaderboard-status" class="leaderboard-status">Yükleniyor...</div>
                 <div id="leaderboard-list" class="leaderboard-list"></div>
+                <div id="nickname-panel" class="nickname-panel">
+                    <div class="nickname-label">Rumuz</div>
+                    <div class="nickname-row">
+                        <input id="nickname-input" class="nickname-input" type="text" maxlength="16" placeholder="2-16 karakter" autocomplete="off" />
+                        <button id="nickname-save-btn" class="nickname-save-btn" type="button">Kaydet</button>
+                    </div>
+                    <div id="nickname-hint" class="nickname-hint">Skor göndermek için rumuz gerekli.</div>
+                </div>
                 <button id="submit-score-btn" class="modal-start-btn">Skoru Gönder</button>
                 <p class="lb-note">Not: Rumuz (nickname) yerel olarak kaydedilir.</p>
             </div>

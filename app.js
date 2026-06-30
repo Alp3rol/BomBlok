@@ -106,7 +106,9 @@ const gameOverScreen = document.getElementById('game-over-screen');
 const finalScoreEl = document.getElementById('final-score');
 const restartBtn = document.getElementById('restart-btn');
 const soundBtn = document.getElementById('sound-btn');
-const themeSelectEl = document.getElementById('theme-select');
+const themeDropdownEl = document.getElementById('theme-dropdown');
+const themeBtnEl = document.getElementById('theme-btn');
+const themeMenuEl = document.getElementById('theme-menu');
 const helpBtn = document.getElementById('help-btn');
 const helpModal = document.getElementById('help-modal');
 const helpCloseBtn = document.getElementById('help-close-btn');
@@ -124,17 +126,85 @@ const leaderboardListEl = document.getElementById('leaderboard-list');
 const lbTabWeekly = document.getElementById('lb-tab-weekly');
 const lbTabGlobal = document.getElementById('lb-tab-global');
 const submitScoreBtn = document.getElementById('submit-score-btn');
+const nicknamePanelEl = document.getElementById('nickname-panel');
+const nicknameInputEl = document.getElementById('nickname-input');
+const nicknameSaveBtnEl = document.getElementById('nickname-save-btn');
+const nicknameHintEl = document.getElementById('nickname-hint');
+
+// --- iOS VIEWPORT HEIGHT FIX ---
+// iOS Safari'de 100vh/100dvh, adres çubuğu yüzünden alt barın görünmemesine yol açabiliyor.
+// CSS tarafında `--app-vh` kullanıyoruz: height: calc(var(--app-vh, 1vh) * 100)
+function syncAppVh() {
+    const h = (window.visualViewport && window.visualViewport.height) ? window.visualViewport.height : window.innerHeight;
+    document.documentElement.style.setProperty('--app-vh', `${h * 0.01}px`);
+}
+syncAppVh();
+window.addEventListener('resize', syncAppVh);
+if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', syncAppVh);
+    window.visualViewport.addEventListener('scroll', syncAppVh);
+}
 
 // --- THEME MANAGER ---
+const THEME_LABELS = {
+    dark: '🌙 Karanlık',
+    neon: '⚡ Neon',
+    wood: '🪵 Ahşap',
+    candy: '🍭 Şeker',
+    cosmos: '🌌 Uzay',
+    retro: '👾 Retro'
+};
+
+function setThemeButtonLabel(themeName) {
+    if (!themeBtnEl) return;
+    themeBtnEl.textContent = THEME_LABELS[themeName] || themeName;
+}
+
+function closeThemeMenu() {
+    if (!themeMenuEl || !themeBtnEl) return;
+    if (themeMenuEl.classList.contains('hidden')) return;
+    themeMenuEl.classList.add('hidden');
+    themeBtnEl.setAttribute('aria-expanded', 'false');
+}
+
+function toggleThemeMenu() {
+    if (!themeMenuEl || !themeBtnEl) return;
+    const willOpen = themeMenuEl.classList.contains('hidden');
+    if (willOpen) {
+        themeMenuEl.classList.remove('hidden');
+        themeBtnEl.setAttribute('aria-expanded', 'true');
+    } else {
+        closeThemeMenu();
+    }
+}
+
 const ThemeManager = {
     current: localStorage.getItem('block_blast_theme') || 'dark',
 
     init() {
         this.setTheme(this.current);
-        if (themeSelectEl) {
-            themeSelectEl.value = this.current;
-            themeSelectEl.addEventListener('change', (e) => {
-                this.setTheme(e.target.value);
+        setThemeButtonLabel(this.current);
+
+        if (themeBtnEl && themeMenuEl) {
+            themeBtnEl.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleThemeMenu();
+            });
+
+            themeMenuEl.addEventListener('click', (e) => {
+                const item = e.target.closest('.theme-item');
+                if (!item) return;
+                const themeName = item.getAttribute('data-theme');
+                if (!themeName) return;
+                this.setTheme(themeName);
+                closeThemeMenu();
+            });
+
+            // Dışarı tıklayınca kapat
+            document.addEventListener('click', () => closeThemeMenu());
+            // Escape ile kapat
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') closeThemeMenu();
             });
         }
     },
@@ -148,6 +218,8 @@ const ThemeManager = {
 
         // Add new theme class
         document.body.classList.add(`theme-${themeName}`);
+
+        setThemeButtonLabel(themeName);
 
         // Re-align canvas size
         setTimeout(resizeCanvas, 50);
@@ -2520,11 +2592,37 @@ const Leaderboard = {
                 await this.submitCurrentScore();
             });
         }
+
+        // Nickname UI (prompt yerine)
+        if (nicknameSaveBtnEl) {
+            nicknameSaveBtnEl.addEventListener('click', () => {
+                const nick = this.readNicknameFromInput();
+                if (!nick) {
+                    this.setStatus('Rumuz 2-16 karakter olmalı.');
+                    if (nicknameInputEl) nicknameInputEl.focus();
+                    return;
+                }
+                state.nickname = nick;
+                localStorage.setItem('bomblok_nickname', nick);
+                this.updateNicknameUI();
+                this.setStatus(`Rumuz kaydedildi: ${nick}`);
+            });
+        }
+
+        if (nicknameInputEl) {
+            nicknameInputEl.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (nicknameSaveBtnEl) nicknameSaveBtnEl.click();
+                }
+            });
+        }
     },
 
     open() {
         if (!leaderboardModal) return;
         leaderboardModal.classList.remove('hidden');
+        this.updateNicknameUI();
         this.refresh();
     },
 
@@ -2590,17 +2688,42 @@ const Leaderboard = {
     },
 
     async ensureNickname() {
-        let nick = (state.nickname || '').trim();
-        if (nick.length >= 2 && nick.length <= 16) return nick;
+        const nick =
+            this.normalizeNick(state.nickname) ||
+            this.readNicknameFromInput();
+        if (nick) return nick;
 
-        const input = window.prompt('Rumuzunu gir (2-16 karakter):', nick || '');
-        if (!input) return null;
-        nick = input.trim().slice(0, 16);
-        if (nick.length < 2) return null;
+        this.setStatus('Skor göndermek için rumuz gerekli (2-16 karakter).');
+        this.updateNicknameUI();
+        if (nicknamePanelEl) nicknamePanelEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        if (nicknameInputEl) nicknameInputEl.focus();
+        return null;
+    },
 
-        state.nickname = nick;
-        localStorage.setItem('bomblok_nickname', nick);
+    normalizeNick(value) {
+        let nick = (value || '').toString().trim();
+        // çok agresif olmadan: ardışık boşlukları tek boşluğa indir
+        nick = nick.replace(/\s+/g, ' ');
+        nick = nick.slice(0, 16);
+        if (nick.length < 2 || nick.length > 16) return null;
         return nick;
+    },
+
+    readNicknameFromInput() {
+        if (!nicknameInputEl) return null;
+        return this.normalizeNick(nicknameInputEl.value);
+    },
+
+    updateNicknameUI() {
+        if (!nicknameInputEl) return;
+        const nick = this.normalizeNick(state.nickname) || '';
+        // Kullanıcı daha önce yazdıysa inputu ezmeyelim (sadece boşsa doldur)
+        if (!nicknameInputEl.value) nicknameInputEl.value = nick;
+        if (nicknameHintEl) {
+            nicknameHintEl.textContent = nick
+                ? `Kayıtlı rumuz: ${nick}`
+                : 'Skor göndermek için rumuz gerekli.';
+        }
     },
 
     async submitCurrentScore() {

@@ -58,9 +58,16 @@
     overscroll-behavior: none;
 }
 
+html {
+    /* iOS Safari bazı durumlarda fontları büyütüp kırpabiliyor (özellikle yatayda) */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+}
+
 html, body {
-    height: 100dvh;
-    height: 100vh; /* fallback */
+    /* iOS Safari'de 100vh/100dvh adres çubuğu yüzünden alt barı gizleyebiliyor.
+       JS, --app-vh değişkenini güncelliyor; yoksa normal 1vh fallback. */
+    height: calc(var(--app-vh, 1vh) * 100);
 }
 
 body {
@@ -78,8 +85,7 @@ body {
 .game-container {
     width: 100%;
     max-width: 480px;
-    height: 100vh; /* fallback */
-    height: 100dvh;
+    height: calc(var(--app-vh, 1vh) * 100);
     padding: calc(12px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));
     display: flex;
     flex-direction: column;
@@ -111,6 +117,9 @@ body {
     text-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     display: flex;
     align-items: center;
+    flex: 1 1 auto;
+    min-width: 0;
+    line-height: 1;
 }
 
 .title-bomb {
@@ -156,6 +165,62 @@ body {
     display: flex;
     gap: 8px;
     align-items: center;
+    flex: 0 0 auto;
+}
+
+/* Çok dar ekranlarda (örn iPhone) title kırılmasın diye kontrolleri biraz sıkıştır */
+@media (max-width: 420px) {
+    .header-controls { gap: 6px; }
+    .theme-dropdown { max-width: 120px; }
+    .theme-btn { max-width: 120px; font-size: 12px; padding: 6px 8px; margin-right: 0; }
+    .theme-menu { min-width: 170px; }
+    .game-title { font-size: clamp(16px, 5.2vw, 28px); }
+}
+
+/* Skor kartları: daha kompakt (özellikle iPhone gibi dar ekranlar) */
+@media (max-width: 420px) {
+    .scoreboard-row { gap: 6px; }
+    .score-card { padding: 5px 7px; border-radius: 10px; }
+    .score-label { font-size: 8.5px; margin-bottom: 1px; letter-spacing: 0.7px; }
+    .score-value { font-size: 17px; }
+
+    /* XP: kart yüksekliğini büyütmesin (kırmızı alandaki boşluğu kaldırır) */
+    .xp-text { display: none; }
+    .xp-bar-bg {
+        position: absolute;
+        left: 7px;
+        right: 7px;
+        bottom: 6px;
+        margin-top: 0;
+        height: 4px;
+        pointer-events: none;
+    }
+}
+
+/* Header: iPhone gibi dar ekranlarda taşmayı azalt (yapıyı bozmadan sadece boyut küçült) */
+@media (max-width: 420px) {
+    .game-header { gap: 6px; }
+    .game-title { letter-spacing: 0.5px; line-height: 1; }
+    .accent-text { display: inline-flex; align-items: center; line-height: 1; }
+    .title-bomb { top: 0; }
+
+    .help-button {
+        width: 34px;
+        height: 34px;
+        font-size: 16px;
+    }
+    .sound-button {
+        width: 34px;
+        height: 34px;
+        font-size: 15px;
+        margin-right: 0;
+    }
+    .theme-select {
+        font-size: 12px;
+        padding: 6px 8px;
+        margin-right: 0;
+        max-width: 120px;
+    }
 }
 
 .scoreboard-row {
@@ -177,6 +242,7 @@ body {
     text-align: center;
     box-shadow: var(--panel-glow);
     min-width: 0;
+    position: relative; /* Mobilde XP barını absolute yerleştirmek için */
 }
 
 .score-label {
@@ -811,6 +877,95 @@ button.control-card:disabled {
     background: #17102b;
     color: #ffffff;
 }
+
+/* Custom Theme Dropdown (native select yerine) */
+.theme-dropdown {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+.theme-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--panel-border);
+    border-radius: 12px;
+    color: var(--text-primary);
+    padding: 8px 12px;
+    font-size: 14px;
+    cursor: pointer;
+    box-shadow: var(--panel-glow);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    outline: none;
+    font-family: var(--font-main);
+    white-space: nowrap;
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.theme-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+    transform: scale(1.06);
+    box-shadow: var(--panel-glow), 0 0 15px var(--accent-glow);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.theme-btn:active {
+    transform: scale(0.95);
+}
+
+.theme-menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    min-width: 100%;
+    background: rgba(10, 8, 22, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
+    /* İç boşluğu azalt: yazılar butonun hemen altına gelsin */
+    padding: 6px 0;
+    box-shadow: 0 18px 50px rgba(0,0,0,0.55), 0 0 18px rgba(255, 0, 127, 0.12);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    z-index: 1200;
+}
+
+.theme-menu.hidden {
+    display: none;
+}
+
+.theme-item {
+    width: 100%;
+    text-align: left;
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--text-primary);
+    /* Buton padding'i ile hizalı (8px 12px) */
+    padding: 8px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-family: var(--font-main);
+    font-weight: 700;
+    line-height: 1.1;
+    white-space: nowrap;
+    transition: background 0.18s ease, transform 0.18s ease, border-color 0.18s ease;
+}
+
+.theme-item:hover {
+    background: linear-gradient(135deg, rgba(255, 0, 127, 0.18), rgba(0, 210, 211, 0.12));
+    border-color: rgba(255, 255, 255, 0.14);
+    transform: translateY(-1px);
+}
+
+.theme-item:active {
+    transform: translateY(0);
+}
+
+body.theme-neon .theme-menu { background: rgba(5, 5, 16, 0.9); }
+body.theme-wood .theme-menu { background: rgba(30, 20, 12, 0.9); }
+body.theme-retro .theme-menu { background: rgba(14, 14, 18, 0.9); }
 
 /* Screen Shake Keyframes & Classes */
 @keyframes shake-mild {
@@ -1773,13 +1928,18 @@ body.theme-retro .joker-button:disabled {
 
 /* --- XP / LEVEL UI --- */
 .xp-bar-bg {
-    width: 100%;
+    /* Seviye kartında ekstra yükseklik oluşturmasın: layout yerine kart içine otursun */
+    position: absolute;
+    left: 10px;
+    right: 10px;
+    bottom: 6px;
     height: 6px;
     background: rgba(255, 255, 255, 0.06);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 999px;
     overflow: hidden;
-    margin-top: 6px;
+    margin-top: 0;
+    pointer-events: none;
 }
 
 .xp-bar-fill {
@@ -1791,12 +1951,13 @@ body.theme-retro .joker-button:disabled {
 }
 
 .xp-text {
-    display: block;
-    margin-top: 4px;
-    font-size: 10px;
-    font-weight: 700;
-    color: var(--text-secondary);
-    letter-spacing: 0.5px;
+    /* Kartların yüksekliğini artırdığı için her yerde kaldırıyoruz */
+    display: none;
+}
+
+/* Dar ekranlarda barı biraz inceltelim (görsel olarak daha kompakt) */
+@media (max-width: 420px) {
+    .xp-bar-bg { left: 7px; right: 7px; bottom: 4px; height: 4px; }
 }
 
 /* --- LEADERBOARD --- */
@@ -1838,6 +1999,84 @@ body.theme-retro .joker-button:disabled {
     display: flex;
     flex-direction: column;
     gap: 8px;
+}
+
+/* Nickname Panel (Leaderboard içinde) */
+.nickname-panel {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 14px;
+    padding: 10px 12px;
+    margin-top: 10px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+}
+
+.nickname-label {
+    font-size: 10px;
+    font-weight: 800;
+    color: var(--text-secondary);
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+}
+
+.nickname-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.nickname-input {
+    flex: 1;
+    min-width: 0;
+    height: 40px;
+    padding: 0 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(0, 0, 0, 0.22);
+    color: var(--text-primary);
+    outline: none;
+    font-family: var(--font-main);
+    font-weight: 700;
+}
+
+.nickname-input::placeholder {
+    color: rgba(255, 255, 255, 0.35);
+    font-weight: 700;
+}
+
+.nickname-input:focus {
+    border-color: rgba(255, 0, 127, 0.45);
+    box-shadow: 0 0 0 3px rgba(255, 0, 127, 0.14);
+}
+
+.nickname-save-btn {
+    flex: 0 0 auto;
+    height: 40px;
+    padding: 0 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: linear-gradient(135deg, rgba(255, 0, 127, 0.35), rgba(127, 0, 255, 0.25));
+    color: #ffffff;
+    font-family: var(--font-main);
+    font-weight: 900;
+    cursor: pointer;
+    transition: transform 0.18s ease, filter 0.18s ease;
+}
+
+.nickname-save-btn:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.08);
+}
+
+.nickname-save-btn:active {
+    transform: translateY(0);
+}
+
+.nickname-hint {
+    margin-top: 6px;
+    font-size: 11px;
+    color: var(--text-secondary);
 }
 
 .lb-row {
