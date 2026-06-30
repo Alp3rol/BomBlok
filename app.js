@@ -36,6 +36,25 @@ const SHAPES = [
 
 const TIME_BOMB_SCORE_THRESHOLD = 0; // TODO: İleride 1000'e çekilecek
 
+const PROGRESSION_RESET_VERSION = '2026-06-30-reset-1';
+
+function applyProgressResetIfNeeded() {
+    const appliedVersion = localStorage.getItem('bomblok_progress_reset_version');
+    if (appliedVersion === PROGRESSION_RESET_VERSION) return;
+
+    [
+        'bomblok_best',
+        'block_blast_best',
+        'bomblok_level',
+        'bomblok_xp',
+        'bomblok_jokers'
+    ].forEach((key) => localStorage.removeItem(key));
+
+    localStorage.setItem('bomblok_progress_reset_version', PROGRESSION_RESET_VERSION);
+}
+
+applyProgressResetIfNeeded();
+
 // --- ZORLUK EĞRİSİ (DIFFICULTY CURVE) ---
 function getDifficultyParams() {
     const lvl = Math.max(1, state.level || 1);
