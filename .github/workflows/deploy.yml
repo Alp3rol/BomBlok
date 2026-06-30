@@ -24,6 +24,28 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      # Leaderboard config dosyası repo'ya konmaz; deploy sırasında GitHub Actions secret'larından üretilir.
+      # Repo Secrets (Settings -> Secrets and variables -> Actions):
+      # - SUPABASE_URL
+      # - SUPABASE_ANON_KEY   (anon public key)
+      - name: Create supabase-config.js (from secrets)
+        shell: bash
+        run: |
+          if [ -n "${{ secrets.SUPABASE_URL }}" ] && [ -n "${{ secrets.SUPABASE_ANON_KEY }}" ]; then
+            cat > supabase-config.js << 'EOF'
+          // Bu dosya GitHub Actions sırasında üretilir. Repo'ya eklenmez.
+          window.SUPABASE_URL = "${{ secrets.SUPABASE_URL }}";
+          window.SUPABASE_ANON_KEY = "${{ secrets.SUPABASE_ANON_KEY }}";
+          EOF
+          else
+            cat > supabase-config.js << 'EOF'
+          // Supabase secret'ları ayarlı değil. Leaderboard devre dışı.
+          window.SUPABASE_URL = "";
+          window.SUPABASE_ANON_KEY = "";
+          EOF
+          fi
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact

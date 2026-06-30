@@ -36,12 +36,46 @@ const SHAPES = [
 
 const TIME_BOMB_SCORE_THRESHOLD = 0; // TODO: İleride 1000'e çekilecek
 
+// --- ZORLUK EĞRİSİ (DIFFICULTY CURVE) ---
+function getDifficultyParams() {
+    const lvl = Math.max(1, state.level || 1);
+
+    // Timebomb: seviye yükseldikçe daha sık ve daha kısa sayaç
+    const timeBombChance = Math.min(0.25, 0.08 + (lvl - 1) * 0.01); // %8 -> %25
+    const timerMin = Math.max(4, 8 - Math.floor((lvl - 1) / 4));
+    const timerMax = Math.max(timerMin + 2, 12 - Math.floor((lvl - 1) / 3));
+
+    // Timebomb'un oyuna giriş eşiği: seviye yükseldikçe daha erken başlasın
+    const timeBombScoreThreshold = Math.max(150, 600 - (lvl - 1) * 40);
+
+    // Başlangıç buz sayısı: seviye ile artar
+    const initialIceMin = Math.min(10, 3 + Math.floor((lvl - 1) / 4));
+    const initialIceMax = Math.min(12, 5 + Math.floor((lvl - 1) / 3));
+
+    // Kolon kırımlarında ekstra buz (max 2)
+    const iceSpawnMultiplier = Math.min(2, 1 + Math.floor((lvl - 1) / 8));
+
+    return {
+        lvl,
+        timeBombChance,
+        timerMin,
+        timerMax,
+        timeBombScoreThreshold,
+        initialIceMin,
+        initialIceMax,
+        iceSpawnMultiplier
+    };
+}
+
 // Game State
 const state = {
     grid: Array(8).fill(null).map(() => Array(8).fill(0)), // 0 = empty, string (e.g., 'blue') = color of filled block
     timeBombs: [],
     score: 0,
     bestScore: parseInt(localStorage.getItem('bomblok_best') || localStorage.getItem('block_blast_best') || '0', 10),
+    level: parseInt(localStorage.getItem('bomblok_level') || '1', 10),
+    xp: parseInt(localStorage.getItem('bomblok_xp') || '0', 10),
+    nickname: localStorage.getItem('bomblok_nickname') || '',
     dockedBlocks: [null, null, null], // Holds current shapes on dock
     isGameOver: false,
     comboCount: 0, // Track consecutive clears!
@@ -79,6 +113,17 @@ const helpCloseBtn = document.getElementById('help-close-btn');
 const modalStartBtn = document.getElementById('modal-start-btn');
 const feverBanner = document.getElementById('fever-banner');
 const feverBarFill = document.getElementById('fever-bar-fill');
+const playerLevelEl = document.getElementById('player-level');
+const xpBarFillEl = document.getElementById('xp-bar-fill');
+const xpTextEl = document.getElementById('xp-text');
+const leaderboardBtn = document.getElementById('leaderboard-btn');
+const leaderboardModal = document.getElementById('leaderboard-modal');
+const leaderboardCloseBtn = document.getElementById('leaderboard-close-btn');
+const leaderboardStatusEl = document.getElementById('leaderboard-status');
+const leaderboardListEl = document.getElementById('leaderboard-list');
+const lbTabWeekly = document.getElementById('lb-tab-weekly');
+const lbTabGlobal = document.getElementById('lb-tab-global');
+const submitScoreBtn = document.getElementById('submit-score-btn');
 
 // --- THEME MANAGER ---
 const ThemeManager = {
@@ -102,7 +147,6 @@ const ThemeManager = {
         document.body.classList.remove('theme-dark', 'theme-neon', 'theme-wood', 'theme-candy', 'theme-cosmos', 'theme-retro');
 
         // Add new theme class
-        document.body.classList.add(`theme-${themeName}`);
         document.body.classList.add(`theme-${themeName}`);
 
         // Re-align canvas size
@@ -540,7 +584,9 @@ const COLOR_MAP = {
     yellow: '#feca57',
     purple: '#a55eea',
     pink: '#ff9ff3',
-    cyan: '#48dbfb'
+    cyan: '#48dbfb',
+    gold: '#ffd700',
+    gray: '#9e9e9e'
 };
 
 let particles = [];
@@ -711,6 +757,23 @@ function spawnParticles(gridR, gridC, colorName) {
     }
 }
 
+// İstemci (viewport) koordinatlarına göre partikül patlaması (UI butonları vb. için)
+function spawnParticlesAtScreen(clientX, clientY, colorName) {
+    if (!canvas || !ctx) return;
+    const canvasRect = canvas.getBoundingClientRect();
+    const x = clientX - canvasRect.left;
+    const y = clientY - canvasRect.top;
+    if (x < 0 || y < 0 || x > canvasRect.width || y > canvasRect.height) return;
+
+    for (let i = 0; i < 25; i++) {
+        particles.push(new Particle(x, y, colorName));
+    }
+    if (!isLoopRunning) {
+        isLoopRunning = true;
+        requestAnimationFrame(particleTick);
+    }
+}
+
 function particleTick() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -735,13 +798,15 @@ window.addEventListener('resize', resizeCanvas);
 
 // Spawn random ice block obstacles on the board
 function spawnIceBlocks() {
-    let iceCount = 3 + Math.floor(Math.random() * 3); // 3 to 5 ice blocks
-    while (iceCount > 0) {
+    const diff = getDifficultyParams();
+    const iceCount = diff.initialIceMin + Math.floor(Math.random() * (diff.initialIceMax - diff.initialIceMin + 1));
+    let remaining = iceCount;
+    while (remaining > 0) {
         const r = Math.floor(Math.random() * 8);
         const c = Math.floor(Math.random() * 8);
         if (state.grid[r][c] === 0) {
             state.grid[r][c] = 'ice';
-            iceCount--;
+            remaining--;
         }
     }
 }
@@ -1050,10 +1115,11 @@ function checkPlacementValidity() {
         if (offsetR !== null) break;
     }
 
-    // 2. Validate placement if we found a valid grid offset
+    // 2. Validate / preview placement if we found a valid grid offset
     if (offsetR !== null && offsetC !== null) {
         let fits = true;
         const proposedCells = [];
+        const invalidCells = [];
 
         for (let r = 0; r < rows; r++) {
             for (let c = 0; c < cols; c++) {
@@ -1067,17 +1133,17 @@ function checkPlacementValidity() {
                         break;
                     }
 
-                    // Already occupied
-                    if (state.grid[targetR][targetC] !== 0) {
-                        fits = false;
-                        break;
-                    }
-
                     const cellEl = gridBoard.querySelector(`.grid-cell[data-row="${targetR}"][data-col="${targetC}"]`);
-                    proposedCells.push({ r: targetR, c: targetC, el: cellEl });
+                    const isOccupied = state.grid[targetR][targetC] !== 0;
+                    if (isOccupied) {
+                        fits = false;
+                        invalidCells.push({ r: targetR, c: targetC, el: cellEl });
+                    } else {
+                        proposedCells.push({ r: targetR, c: targetC, el: cellEl });
+                    }
                 }
             }
-            if (!fits) break;
+            if (!fits && invalidCells.length === 0) break;
         }
 
         if (fits) {
@@ -1089,6 +1155,14 @@ function checkPlacementValidity() {
             // Apply highlight class to candidate grid cells
             proposedCells.forEach(cell => {
                 cell.el.classList.add('highlight-valid');
+            });
+        } else {
+            // Daha iyi preview: kısmen geçerli hücreleri yeşil, dolu olanları kırmızı göster
+            proposedCells.forEach(cell => {
+                if (cell.el) cell.el.classList.add('highlight-valid');
+            });
+            invalidCells.forEach(cell => {
+                if (cell.el) cell.el.classList.add('highlight-invalid');
             });
         }
     }
@@ -1142,17 +1216,23 @@ function showPreviewForSelectedBlock(gridR, gridC) {
 
     let fits = true;
     const proposedCells = [];
+    const invalidCells = [];
     for (let r = 0; r < rows; r++) {
         for (let c = 0; c < cols; c++) {
             if (shape.matrix[r][c] === 1) {
                 const targetR = offsetR + r;
                 const targetC = offsetC + c;
-                if (targetR < 0 || targetR >= 8 || targetC < 0 || targetC >= 8 || state.grid[targetR][targetC] !== 0) {
+                if (targetR < 0 || targetR >= 8 || targetC < 0 || targetC >= 8) {
                     fits = false;
                     break;
                 }
                 const cellEl = gridBoard.querySelector(`.grid-cell[data-row="${targetR}"][data-col="${targetC}"]`);
-                proposedCells.push(cellEl);
+                if (state.grid[targetR][targetC] !== 0) {
+                    fits = false;
+                    invalidCells.push(cellEl);
+                } else {
+                    proposedCells.push(cellEl);
+                }
             }
         }
         if (!fits) break;
@@ -1161,6 +1241,13 @@ function showPreviewForSelectedBlock(gridR, gridC) {
     if (fits) {
         proposedCells.forEach(el => {
             if (el) el.classList.add('highlight-valid');
+        });
+    } else {
+        proposedCells.forEach(el => {
+            if (el) el.classList.add('highlight-valid');
+        });
+        invalidCells.forEach(el => {
+            if (el) el.classList.add('highlight-invalid');
         });
     }
 }
@@ -1319,9 +1406,9 @@ function onPointerUp(e) {
                     }, 200);
                 }
             } else {
-                AudioFX.playBuzzer();
-                blockEl.classList.add('error-shake');
-                setTimeout(() => blockEl.classList.remove('error-shake'), 400);
+                // Döndürme hakkı yoksa: bloğu seç (tıkla-yerleştir akışını kullanabilsin)
+                try { AudioFX.playGrab(); } catch (err) {}
+                selectBlock(slotIndex);
             }
         }
     } else {
@@ -1352,6 +1439,8 @@ function onPointerUp(e) {
             updateMissionProgress('points', shapeScore);
             updateMissionProgress('blocks', 1);
             updateScoreUI();
+        addXp(shapeScore);
+            addXp(shapeScore);
 
             blockEl.remove();
             state.dockedBlocks[slotIndex] = null;
@@ -1703,9 +1792,10 @@ function showFloatingText(text, color = '#00e5ff') {
 
 // --- TIME BOMB MECHANICS ---
 function spawnTimeBomb() {
-    if (state.score < TIME_BOMB_SCORE_THRESHOLD) return;
+    const diff = getDifficultyParams();
+    if (state.score < diff.timeBombScoreThreshold) return;
     
-    if (Math.random() > 0.10) return; // %10 ihtimal
+    if (Math.random() > diff.timeBombChance) return;
     
     let emptyCells = [];
     for (let r = 0; r < 8; r++) {
@@ -1718,7 +1808,7 @@ function spawnTimeBomb() {
     
     if (emptyCells.length > 0) {
         const randCell = emptyCells[Math.floor(Math.random() * emptyCells.length)];
-        const timer = 8 + Math.floor(Math.random() * 5); // 8-12 arası
+        const timer = diff.timerMin + Math.floor(Math.random() * (diff.timerMax - diff.timerMin + 1));
         state.grid[randCell.r][randCell.c] = 'timebomb';
         state.timeBombs.push({ r: randCell.r, c: randCell.c, timer: timer });
         
@@ -2050,7 +2140,9 @@ function checkAndClearLines() {
 
             // If any columns were cleared, spawn random ice block(s)
             if (colsToClear.length > 0) {
-                for (let i = 0; i < colsToClear.length; i++) {
+                const diff = getDifficultyParams();
+                const spawnCount = colsToClear.length * diff.iceSpawnMultiplier;
+                for (let i = 0; i < spawnCount; i++) {
                     const emptyCells = [];
                     for (let r = 0; r < 8; r++) {
                         for (let c = 0; c < 8; c++) {
@@ -2102,6 +2194,9 @@ function checkAndClearLines() {
         state.score += pointsAwarded;
         updateMissionProgress('points', pointsAwarded); // Track points gathered mission progress
         updateScoreUI();
+        // XP: kırımlar + patlamalar + buz/taş kırımları (aşırı büyümesin diye ölçekli)
+        const xpGain = Math.min(250, Math.floor(pointsAwarded / 25) + linesCleared * 15 + bombsExplodedThisMove * 10 + iceBrokenThisMove * 5);
+        addXp(xpGain);
 
         if (state.score > state.bestScore) {
             state.bestScore = state.score;
@@ -2150,7 +2245,11 @@ function checkAndClearLines() {
 
     // Check all constraints and end turn
     checkMissionConstraints();
-    endTurn();
+    // Çift endTurn çağrısını engelle:
+    // Satır/sütun kırımı olduysa endTurn() animasyon sonrası setTimeout içinde çağrılıyor.
+    if (linesCleared === 0) {
+        endTurn();
+    }
 }
 
 // Function to validate non-clear constraints
@@ -2319,6 +2418,233 @@ function updateScoreUI() {
     if (rotRightsEl) {
         rotRightsEl.textContent = state.rotationRights;
     }
+}
+
+// --- SEVİYE & XP ---
+function getXpToNext(level) {
+    // Basit eğri: her seviye biraz daha fazla XP ister
+    return 120 + (level - 1) * 60;
+}
+
+function syncProgressionUI() {
+    const lvl = Math.max(1, state.level || 1);
+    const xpNeeded = getXpToNext(lvl);
+    const xp = Math.max(0, state.xp || 0);
+    const pct = xpNeeded > 0 ? Math.min(100, (xp / xpNeeded) * 100) : 0;
+
+    if (playerLevelEl) playerLevelEl.textContent = String(lvl);
+    if (xpBarFillEl) xpBarFillEl.style.width = `${pct}%`;
+    if (xpTextEl) xpTextEl.textContent = `${xp}/${xpNeeded} XP`;
+}
+
+function saveProgression() {
+    localStorage.setItem('bomblok_level', String(state.level));
+    localStorage.setItem('bomblok_xp', String(state.xp));
+}
+
+function addXp(amount) {
+    if (!amount || amount <= 0) return;
+    state.xp += Math.floor(amount);
+
+    let leveledUp = false;
+    while (state.xp >= getXpToNext(state.level)) {
+        state.xp -= getXpToNext(state.level);
+        state.level += 1;
+        leveledUp = true;
+        // küçük ödül: level atlayınca 1 joker
+        state.jokers += 1;
+        localStorage.setItem('bomblok_jokers', state.jokers);
+        showFloatingText(`SEVİYE ATLADIN! (${state.level}) +1 JOKER`, '#00ffcc');
+    }
+
+    if (leveledUp) {
+        // zorluk eğrisi seviye ile güncellendiği için ek bir şey yapmaya gerek yok
+    }
+
+    saveProgression();
+    syncProgressionUI();
+    updateJokerButtonsUI();
+}
+
+// --- LEADERBOARD (SUPABASE) ---
+function getISOWeekKey(date = new Date()) {
+    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    const dayNum = d.getUTCDay() || 7; // 1..7 (Mon..Sun)
+    d.setUTCDate(d.getUTCDate() + 4 - dayNum); // Perşembe referansı
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+    return `${d.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`;
+}
+
+const Leaderboard = {
+    client: null,
+    enabled: false,
+    view: 'weekly', // weekly | global
+
+    init() {
+        const url = window.SUPABASE_URL;
+        const key = window.SUPABASE_ANON_KEY;
+        const hasConfig =
+            typeof url === 'string' && url.startsWith('https://') && !url.includes('YOUR_PROJECT_REF') &&
+            typeof key === 'string' && key.length > 20 && !key.includes('YOUR_SUPABASE_ANON_KEY');
+
+        if (window.supabase && hasConfig) {
+            try {
+                this.client = window.supabase.createClient(url, key);
+                this.enabled = true;
+            } catch (e) {
+                this.enabled = false;
+            }
+        }
+
+        if (leaderboardBtn && leaderboardModal) {
+            leaderboardBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.open();
+            });
+        }
+        if (leaderboardCloseBtn && leaderboardModal) {
+            leaderboardCloseBtn.addEventListener('click', () => this.close());
+        }
+        if (leaderboardModal) {
+            leaderboardModal.addEventListener('click', (e) => {
+                if (e.target === leaderboardModal) this.close();
+            });
+        }
+
+        if (lbTabWeekly) lbTabWeekly.addEventListener('click', () => this.setView('weekly'));
+        if (lbTabGlobal) lbTabGlobal.addEventListener('click', () => this.setView('global'));
+
+        if (submitScoreBtn) {
+            submitScoreBtn.addEventListener('click', async () => {
+                await this.submitCurrentScore();
+            });
+        }
+    },
+
+    open() {
+        if (!leaderboardModal) return;
+        leaderboardModal.classList.remove('hidden');
+        this.refresh();
+    },
+
+    close() {
+        if (!leaderboardModal) return;
+        leaderboardModal.classList.add('hidden');
+    },
+
+    setView(view) {
+        this.view = view;
+        if (lbTabWeekly) lbTabWeekly.classList.toggle('active', view === 'weekly');
+        if (lbTabGlobal) lbTabGlobal.classList.toggle('active', view === 'global');
+        this.refresh();
+    },
+
+    setStatus(text) {
+        if (leaderboardStatusEl) leaderboardStatusEl.textContent = text;
+    },
+
+    render(rows) {
+        if (!leaderboardListEl) return;
+        if (!rows || rows.length === 0) {
+            leaderboardListEl.innerHTML = '';
+            this.setStatus('Henüz kayıt yok.');
+            return;
+        }
+
+        leaderboardListEl.innerHTML = rows.map((r, idx) => {
+            const name = (r.nickname || '???').toString().slice(0, 20);
+            const score = Number(r.score || 0);
+            return `
+                <div class="lb-row">
+                    <div class="lb-rank">#${idx + 1}</div>
+                    <div class="lb-name">${escapeHtml(name)}</div>
+                    <div class="lb-score">${score}</div>
+                </div>
+            `;
+        }).join('');
+        this.setStatus(this.view === 'weekly' ? 'Haftalık en iyiler' : 'Global en iyiler');
+    },
+
+    async refresh() {
+        if (!this.enabled || !this.client) {
+            this.setStatus('Supabase ayarlı değil. `supabase-config.js` dosyasını doldur.');
+            if (leaderboardListEl) leaderboardListEl.innerHTML = '';
+            if (submitScoreBtn) submitScoreBtn.disabled = true;
+            return;
+        }
+
+        if (submitScoreBtn) submitScoreBtn.disabled = false;
+        this.setStatus('Yükleniyor...');
+        try {
+            const weekKey = getISOWeekKey();
+            let q = this.client.from('scores').select('nickname, score, created_at');
+            if (this.view === 'weekly') q = q.eq('week_key', weekKey);
+            const { data, error } = await q.order('score', { ascending: false }).limit(20);
+            if (error) throw error;
+            this.render(data);
+        } catch (err) {
+            this.setStatus('Yüklenemedi. İnternet / RLS ayarlarını kontrol et.');
+            if (leaderboardListEl) leaderboardListEl.innerHTML = '';
+        }
+    },
+
+    async ensureNickname() {
+        let nick = (state.nickname || '').trim();
+        if (nick.length >= 2 && nick.length <= 16) return nick;
+
+        const input = window.prompt('Rumuzunu gir (2-16 karakter):', nick || '');
+        if (!input) return null;
+        nick = input.trim().slice(0, 16);
+        if (nick.length < 2) return null;
+
+        state.nickname = nick;
+        localStorage.setItem('bomblok_nickname', nick);
+        return nick;
+    },
+
+    async submitCurrentScore() {
+        if (!this.enabled || !this.client) {
+            this.setStatus('Supabase ayarlı değil. Önce `supabase-config.js` doldur.');
+            return;
+        }
+
+        const nick = await this.ensureNickname();
+        if (!nick) {
+            this.setStatus('Rumuz geçersiz.');
+            return;
+        }
+
+        const score = Number(state.score || 0);
+        if (!Number.isFinite(score) || score <= 0) {
+            this.setStatus('Skor 0 iken gönderilemez.');
+            return;
+        }
+
+        this.setStatus('Gönderiliyor...');
+        try {
+            const payload = {
+                nickname: nick,
+                score,
+                week_key: getISOWeekKey()
+            };
+            const { error } = await this.client.from('scores').insert(payload);
+            if (error) throw error;
+            this.setStatus('Skor gönderildi!');
+            await this.refresh();
+        } catch (err) {
+            this.setStatus('Gönderilemedi. RLS/policy veya interneti kontrol et.');
+        }
+    }
+};
+
+function escapeHtml(str) {
+    return String(str)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
 }
 
 // --- JOKER MECHANICS: UNDO & REROLL ---
@@ -2518,6 +2844,7 @@ function resetGame() {
     initGrid();
     generateDockBlocks();
     updateJokerButtonsUI();
+    syncProgressionUI();
 }
 
 // Event Listeners
@@ -2586,6 +2913,8 @@ document.querySelectorAll('.dock-slot').forEach((slot, index) => {
 
 // Boot the game
 ThemeManager.init(); // Initialize Theme Manager
+Leaderboard.init();
+syncProgressionUI();
 state.grid = Array(8).fill(null).map(() => Array(8).fill(0));
 spawnIceBlocks(); // Spawn initial ice blocks
 initGrid();
@@ -2628,7 +2957,7 @@ if (rotationRightsBtn) {
             AudioFX.playReroll(); // Satın alma sesi
             
             const btnRect = rotationRightsBtn.getBoundingClientRect();
-            spawnParticles(btnRect.left + btnRect.width / 2, btnRect.top + btnRect.height / 2, 'gold');
+            spawnParticlesAtScreen(btnRect.left + btnRect.width / 2, btnRect.top + btnRect.height / 2, 'gold');
         } else {
             // Joker yoksa uyarı sesi ve sarsılma efekti
             AudioFX.playBuzzer();

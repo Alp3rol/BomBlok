@@ -16,6 +16,7 @@
         <header class="game-header">
             <h1 class="game-title">B<span class="title-bomb"></span>M <span class="accent-text">BL<span class="title-bomb"></span>K</span></h1>
             <div class="header-controls">
+                <button id="leaderboard-btn" class="help-button" title="Leaderboard">🏆</button>
                 <button id="help-btn" class="help-button" title="Nasıl Oynanır?">?</button>
                 <select id="theme-select" class="theme-select" title="Tema Değiştir">
                     <option value="dark">🌙 Karanlık</option>
@@ -38,6 +39,14 @@
             <div class="score-card">
                 <span class="score-label">EN YÜKSEK</span>
                 <span id="best-score" class="score-value">0</span>
+            </div>
+            <div class="score-card" title="Seviye & XP">
+                <span class="score-label">SEVİYE</span>
+                <span id="player-level" class="score-value">1</span>
+                <div class="xp-bar-bg">
+                    <div id="xp-bar-fill" class="xp-bar-fill" style="width: 0%;"></div>
+                </div>
+                <span id="xp-text" class="xp-text">0/0 XP</span>
             </div>
         </section>
 
@@ -173,6 +182,27 @@
         </div>
     </div>
 
+    <!-- Leaderboard Modal -->
+    <div id="leaderboard-modal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <button class="modal-close-btn" id="leaderboard-close-btn">&times;</button>
+            <h2 class="modal-title">Leaderboard</h2>
+            <div class="modal-content">
+                <div class="leaderboard-tabs">
+                    <button id="lb-tab-weekly" class="lb-tab active">Haftalık</button>
+                    <button id="lb-tab-global" class="lb-tab">Global</button>
+                </div>
+                <div id="leaderboard-status" class="leaderboard-status">Yükleniyor...</div>
+                <div id="leaderboard-list" class="leaderboard-list"></div>
+                <button id="submit-score-btn" class="modal-start-btn">Skoru Gönder</button>
+                <p class="lb-note">Not: Rumuz (nickname) yerel olarak kaydedilir.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Supabase (leaderboard için) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
