@@ -594,6 +594,30 @@ button.control-card:disabled {
     text-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
 }
 
+.game-over-save-panel {
+    width: 100%;
+    margin-bottom: 16px;
+    padding: 12px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+    text-align: left;
+}
+
+.game-over-save-status {
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.game-over-save-panel .nickname-input {
+    width: 100%;
+}
+
+.game-over-save-btn {
+    margin-top: 12px;
+}
+
 .restart-button {
     background: linear-gradient(135deg, #ff007f 0%, #7f00ff 100%);
     border: none;

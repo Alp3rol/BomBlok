@@ -149,6 +149,10 @@ const nicknamePanelEl = document.getElementById('nickname-panel');
 const nicknameInputEl = document.getElementById('nickname-input');
 const nicknameSaveBtnEl = document.getElementById('nickname-save-btn');
 const nicknameHintEl = document.getElementById('nickname-hint');
+const gameOverSaveStatusEl = document.getElementById('game-over-save-status');
+const gameOverNicknameInputEl = document.getElementById('game-over-nickname-input');
+const gameOverSaveBtnEl = document.getElementById('game-over-save-btn');
+const gameOverNicknameHintEl = document.getElementById('game-over-nickname-hint');
 
 // --- iOS VIEWPORT HEIGHT FIX ---
 // iOS Safari'de 100vh/100dvh, adres çubuğu yüzünden alt barın görünmemesine yol açabiliyor.
@@ -2486,6 +2490,7 @@ function checkGameOver() {
     if (!anyBlockFits) {
         state.isGameOver = true;
         deactivateFeverMode();
+        resetLevelProgression();
 
         // Play game over tune
         AudioFX.playGameOver();
@@ -2494,6 +2499,9 @@ function checkGameOver() {
         setTimeout(() => {
             finalScoreEl.textContent = state.score;
             gameOverScreen.classList.remove('hidden');
+            if (typeof Leaderboard !== 'undefined' && Leaderboard.prepareGameOverUI) {
+                Leaderboard.prepareGameOverUI();
+            }
         }, 600);
 
         console.log('Game Over! No shapes can fit.');
@@ -2531,6 +2539,16 @@ function syncProgressionUI() {
 function saveProgression() {
     localStorage.setItem('bomblok_level', String(state.level));
     localStorage.setItem('bomblok_xp', String(state.xp));
+}
+
+function resetLevelProgression() {
+    state.level = 1;
+    state.xp = 0;
+    state.jokers = 0;
+    saveProgression();
+    localStorage.setItem('bomblok_jokers', '0');
+    syncProgressionUI();
+    updateJokerButtonsUI();
 }
 
 function addXp(amount) {
@@ -2608,23 +2626,28 @@ const Leaderboard = {
 
         if (submitScoreBtn) {
             submitScoreBtn.addEventListener('click', async () => {
-                await this.submitCurrentScore();
+                await this.submitCurrentScore('modal');
+            });
+        }
+
+        if (gameOverSaveBtnEl) {
+            gameOverSaveBtnEl.addEventListener('click', async () => {
+                await this.submitCurrentScore('gameover');
             });
         }
 
         // Nickname UI (prompt yerine)
         if (nicknameSaveBtnEl) {
             nicknameSaveBtnEl.addEventListener('click', () => {
-                const nick = this.readNicknameFromInput();
+                const nick = this.readNicknameFromInput('modal');
                 if (!nick) {
-                    this.setStatus('Rumuz 2-16 karakter olmalı.');
+                    this.setStatus('Rumuz 2-16 karakter olmalı.', 'modal');
                     if (nicknameInputEl) nicknameInputEl.focus();
                     return;
                 }
-                state.nickname = nick;
-                localStorage.setItem('bomblok_nickname', nick);
+                this.persistNickname(nick);
                 this.updateNicknameUI();
-                this.setStatus(`Rumuz kaydedildi: ${nick}`);
+                this.setStatus(`Rumuz kaydedildi: ${nick}`, 'modal');
             });
         }
 
@@ -2633,6 +2656,15 @@ const Leaderboard = {
                 if (e.key === 'Enter') {
                     e.preventDefault();
                     if (nicknameSaveBtnEl) nicknameSaveBtnEl.click();
+                }
+            });
+        }
+
+        if (gameOverNicknameInputEl) {
+            gameOverNicknameInputEl.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (gameOverSaveBtnEl) gameOverSaveBtnEl.click();
                 }
             });
         }
@@ -2657,8 +2689,18 @@ const Leaderboard = {
         this.refresh();
     },
 
-    setStatus(text) {
-        if (leaderboardStatusEl) leaderboardStatusEl.textContent = text;
+    setStatus(text, target = 'modal') {
+        if ((target === 'modal' || target === 'both') && leaderboardStatusEl) {
+            leaderboardStatusEl.textContent = text;
+        }
+        if ((target === 'gameover' || target === 'both') && gameOverSaveStatusEl) {
+            gameOverSaveStatusEl.textContent = text;
+        }
+    },
+
+    setSubmitEnabled(enabled) {
+        if (submitScoreBtn) submitScoreBtn.disabled = !enabled;
+        if (gameOverSaveBtnEl) gameOverSaveBtnEl.disabled = !enabled;
     },
 
     render(rows) {
@@ -2685,14 +2727,15 @@ const Leaderboard = {
 
     async refresh() {
         if (!this.enabled || !this.client) {
-            this.setStatus('Supabase ayarlı değil. `supabase-config.js` dosyasını doldur.');
+            this.setStatus('Supabase ayarlı değil. `supabase-config.js` dosyasını doldur.', 'modal');
+            this.setStatus('Online skor kapalı. Supabase ayarı gerekli.', 'gameover');
             if (leaderboardListEl) leaderboardListEl.innerHTML = '';
-            if (submitScoreBtn) submitScoreBtn.disabled = true;
+            this.setSubmitEnabled(false);
             return;
         }
 
-        if (submitScoreBtn) submitScoreBtn.disabled = false;
-        this.setStatus('Yükleniyor...');
+        this.setSubmitEnabled(true);
+        this.setStatus('Yükleniyor...', 'modal');
         try {
             const weekKey = getISOWeekKey();
             let q = this.client.from('scores').select('nickname, score, created_at');
@@ -2701,21 +2744,30 @@ const Leaderboard = {
             if (error) throw error;
             this.render(data);
         } catch (err) {
-            this.setStatus('Yüklenemedi. İnternet / RLS ayarlarını kontrol et.');
+            this.setStatus('Yüklenemedi. İnternet / RLS ayarlarını kontrol et.', 'modal');
             if (leaderboardListEl) leaderboardListEl.innerHTML = '';
         }
     },
 
-    async ensureNickname() {
+    async ensureNickname(source = 'modal') {
         const nick =
-            this.normalizeNick(state.nickname) ||
-            this.readNicknameFromInput();
-        if (nick) return nick;
+            this.readNicknameFromInput(source) ||
+            this.readNicknameFromInput(source === 'gameover' ? 'modal' : 'gameover') ||
+            this.normalizeNick(state.nickname);
 
-        this.setStatus('Skor göndermek için rumuz gerekli (2-16 karakter).');
+        if (nick) {
+            this.persistNickname(nick);
+            this.updateNicknameUI();
+            return nick;
+        }
+
+        this.setStatus('Skor göndermek için rumuz gerekli (2-16 karakter).', source);
         this.updateNicknameUI();
-        if (nicknamePanelEl) nicknamePanelEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-        if (nicknameInputEl) nicknameInputEl.focus();
+        if (source === 'modal' && nicknamePanelEl) {
+            nicknamePanelEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        }
+        const targetInput = source === 'gameover' ? gameOverNicknameInputEl : nicknameInputEl;
+        if (targetInput) targetInput.focus();
         return null;
     },
 
@@ -2728,42 +2780,63 @@ const Leaderboard = {
         return nick;
     },
 
-    readNicknameFromInput() {
-        if (!nicknameInputEl) return null;
-        return this.normalizeNick(nicknameInputEl.value);
+    readNicknameFromInput(source = 'modal') {
+        const input = source === 'gameover' ? gameOverNicknameInputEl : nicknameInputEl;
+        if (!input) return null;
+        return this.normalizeNick(input.value);
+    },
+
+    persistNickname(nick) {
+        state.nickname = nick;
+        localStorage.setItem('bomblok_nickname', nick);
     },
 
     updateNicknameUI() {
-        if (!nicknameInputEl) return;
         const nick = this.normalizeNick(state.nickname) || '';
-        // Kullanıcı daha önce yazdıysa inputu ezmeyelim (sadece boşsa doldur)
-        if (!nicknameInputEl.value) nicknameInputEl.value = nick;
+        if (nicknameInputEl && !nicknameInputEl.value) nicknameInputEl.value = nick;
+        if (gameOverNicknameInputEl && !gameOverNicknameInputEl.value) gameOverNicknameInputEl.value = nick;
         if (nicknameHintEl) {
             nicknameHintEl.textContent = nick
                 ? `Kayıtlı rumuz: ${nick}`
                 : 'Skor göndermek için rumuz gerekli.';
         }
+        if (gameOverNicknameHintEl) {
+            gameOverNicknameHintEl.textContent = nick
+                ? `Kayıtlı rumuz: ${nick}`
+                : 'Skor göndermek için rumuz gerekli.';
+        }
     },
 
-    async submitCurrentScore() {
+    prepareGameOverUI() {
+        this.updateNicknameUI();
         if (!this.enabled || !this.client) {
-            this.setStatus('Supabase ayarlı değil. Önce `supabase-config.js` doldur.');
+            this.setSubmitEnabled(false);
+            this.setStatus('Online skor kapalı. Supabase ayarı gerekli.', 'gameover');
+            return;
+        }
+        this.setSubmitEnabled(true);
+        this.setStatus('Skorunu şimdi leaderboard’a gönderebilirsin.', 'gameover');
+    },
+
+    async submitCurrentScore(source = 'modal') {
+        if (!this.enabled || !this.client) {
+            this.setStatus('Supabase ayarlı değil. Önce `supabase-config.js` doldur.', source);
             return;
         }
 
-        const nick = await this.ensureNickname();
+        const nick = await this.ensureNickname(source);
         if (!nick) {
-            this.setStatus('Rumuz geçersiz.');
+            this.setStatus('Rumuz geçersiz.', source);
             return;
         }
 
         const score = Number(state.score || 0);
         if (!Number.isFinite(score) || score <= 0) {
-            this.setStatus('Skor 0 iken gönderilemez.');
+            this.setStatus('Skor 0 iken gönderilemez.', source);
             return;
         }
 
-        this.setStatus('Gönderiliyor...');
+        this.setStatus('Gönderiliyor...', source);
         try {
             const payload = {
                 nickname: nick,
@@ -2772,10 +2845,10 @@ const Leaderboard = {
             };
             const { error } = await this.client.from('scores').insert(payload);
             if (error) throw error;
-            this.setStatus('Skor gönderildi!');
             await this.refresh();
+            this.setStatus('Skor gönderildi!', source);
         } catch (err) {
-            this.setStatus('Gönderilemedi. RLS/policy veya interneti kontrol et.');
+            this.setStatus('Gönderilemedi. RLS/policy veya interneti kontrol et.', source);
         }
     }
 };
