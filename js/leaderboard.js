@@ -173,9 +173,24 @@ export const Leaderboard = {
             const weekKey = getISOWeekKey();
             let q = this.client.from('scores').select('nickname, score, created_at');
             if (this.view === 'weekly') q = q.eq('week_key', weekKey);
-            const { data, error } = await q.order('score', { ascending: false }).limit(20);
+            
+            // Fetch more records to ensure we have enough unique users after deduplication
+            const { data, error } = await q.order('score', { ascending: false }).limit(200);
             if (error) throw error;
-            this.render(data);
+            
+            // Deduplicate by nickname (case-insensitive)
+            const uniqueUsers = new Map();
+            data.forEach(row => {
+                const name = (row.nickname || '???').toString().trim().toLowerCase();
+                // Since data is already ordered by score DESC, the first occurrence is the highest
+                if (!uniqueUsers.has(name)) {
+                    uniqueUsers.set(name, row); 
+                }
+            });
+            
+            // Take the top 20 unique users
+            const deduplicatedData = Array.from(uniqueUsers.values()).slice(0, 20);
+            this.render(deduplicatedData);
         } catch (err) {
             this.setStatus('Yüklenemedi. İnternet / RLS ayarlarını kontrol et.', 'modal');
             if (leaderboardListEl) leaderboardListEl.innerHTML = '';
