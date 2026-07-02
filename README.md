@@ -25,7 +25,6 @@ BomBlok, klasik blok yerleştirme mantığını alıp onu daha dinamik bir oyun 
   <img src="./assets/bomblok-readme-preview.png" alt="BomBlok oyun ekranı önizlemesi" width="420" />
 </div>
 
-> 🎥 İstersen bir sonraki adımda buna ek olarak kısa bir `GIF` önizleme alanı da hazırlayabilirim.
 
 ## ✨ Neden BomBlok
 
