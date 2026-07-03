@@ -2,8 +2,8 @@ import { state, gridBoard } from './state.js';
 import { SHAPES, getDifficultyParams } from './config.js';
 import { updateScoreUI } from './mechanics.js';
 
-let _showPreview = null;
-let _tryPlace = null;
+var _showPreview = null;
+var _tryPlace = null;
 
 export function registerGridCallbacks(showPreview, tryPlace) {
     _showPreview = showPreview;
