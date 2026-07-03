@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="112" fill="#2d2d2d"/>
+  
+  <!-- Kırmızı blok -->
+  <rect x="120" y="160" width="100" height="100" rx="20" fill="#ff5252"/>
+  
+  <!-- Mavi blok -->
+  <rect x="292" y="160" width="100" height="100" rx="20" fill="#448aff"/>
+  
+  <!-- Yeşil blok -->
+  <rect x="120" y="292" width="100" height="100" rx="20" fill="#69f0ae"/>
+  
+  <!-- Bomba (Siyah blok) -->
+  <rect x="292" y="292" width="100" height="100" rx="20" fill="#000000"/>
+  <path d="M 342 292 Q 342 260 370 240" stroke="#ffeb3b" stroke-width="8" fill="none" stroke-linecap="round"/>
+  <circle cx="370" cy="240" r="12" fill="#ff5722"/>
+  <circle cx="370" cy="240" r="6" fill="#ffeb3b"/>
+</svg>

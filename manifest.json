@@ -1,0 +1,17 @@
+{
+  "name": "BomBlok",
+  "short_name": "BomBlok",
+  "description": "Block Blast with bombs and themes",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#2d2d2d",
+  "theme_color": "#2d2d2d",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
