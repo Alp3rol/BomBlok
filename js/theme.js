@@ -9,7 +9,7 @@ export const THEME_LABELS = {
     candy: '🍭 Şeker',
     cosmos: '🌌 Uzay',
     retro: '👾 Retro',
-    seasons: '🍂 Mevsimler'
+    seasons: 'Mevsimler'
 };
 
 function setThemeButtonLabel(themeName) {
