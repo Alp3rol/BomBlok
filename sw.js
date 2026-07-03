@@ -1,10 +1,10 @@
-const CACHE_NAME = 'bomblok-cache-v1';
+const CACHE_NAME = 'bomblok-cache-v2';
 const urlsToCache = [
   './',
   './index.html',
   './style.css',
   './themes.css',
-  './icon.svg',
+  './icon.png',
   './js/main.js',
   './js/state.js',
   './js/grid.js',
