@@ -250,8 +250,8 @@ body.theme-seasons {
     --text-secondary: #2d6a4f;
     --accent: #ff9800;
     
-    --cell-bg: rgba(255, 255, 255, 0.5);
-    --cell-border: rgba(255, 255, 255, 0.8);
+    --cell-bg: rgba(255, 255, 255, 0.15);
+    --cell-border: rgba(255, 255, 255, 0.35);
     --cell-radius: 8px;
 
     --block-radius: 8px;
