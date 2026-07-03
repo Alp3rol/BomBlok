@@ -71,7 +71,7 @@ export const ThemeManager = {
         localStorage.setItem('block_blast_theme', themeName);
 
         // Remove existing theme classes
-        document.body.classList.remove('theme-dark', 'theme-neon', 'theme-wood', 'theme-candy', 'theme-cosmos', 'theme-retro');
+        document.body.classList.remove('theme-dark', 'theme-neon', 'theme-wood', 'theme-candy', 'theme-cosmos', 'theme-retro', 'theme-seasons');
 
         // Add new theme class
         document.body.classList.add(`theme-${themeName}`);
