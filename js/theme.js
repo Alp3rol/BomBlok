@@ -8,7 +8,8 @@ export const THEME_LABELS = {
     wood: '🪵 Ahşap',
     candy: '🍭 Şeker',
     cosmos: '🌌 Uzay',
-    retro: '👾 Retro'
+    retro: '👾 Retro',
+    seasons: '🍂 Mevsimler'
 };
 
 function setThemeButtonLabel(themeName) {
