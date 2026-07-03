@@ -489,9 +489,10 @@ export function checkAndClearLines() {
         }
 
         // Trigger particle blast for each cell
+        const particleMultiplier = state.feverMode ? 2.5 : (1 + state.comboCount * 0.2);
         cellsToClear.forEach(cell => {
             const colorName = typeof cell.color === 'string' ? cell.color.split('-')[0] : 'orange';
-            spawnParticles(cell.r, cell.c, colorName);
+            spawnParticles(cell.r, cell.c, colorName, particleMultiplier);
         });
 
         // Mark cells as empty in grid state immediately to allow placements

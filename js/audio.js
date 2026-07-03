@@ -124,20 +124,96 @@ export const AudioFX = {
     playClear(comboCount = 1) {
         this.play((ctx) => {
             const now = ctx.currentTime;
-            // Warm pentatonic notes
+            
+            const isNeon = document.body.classList.contains('theme-neon');
+            const isCandy = document.body.classList.contains('theme-candy');
+            const isWood = document.body.classList.contains('theme-wood');
+            const isSeasons = document.body.classList.contains('theme-seasons');
+
+            const duration = 0.15;
+            
+            if (isNeon) {
+                // Zapping / Electric sound
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150 * comboCount, now);
+                osc.frequency.exponentialRampToValueAtTime(800 + comboCount * 100, now + duration);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+                osc.start(now);
+                osc.stop(now + duration);
+                return;
+            } 
+            
+            if (isCandy) {
+                // Bubble pop sound
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400 + comboCount * 50, now);
+                osc.frequency.exponentialRampToValueAtTime(800 + comboCount * 50, now + duration * 0.5);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+                osc.start(now);
+                osc.stop(now + duration);
+                return;
+            }
+            
+            if (isWood) {
+                // Thud / wooden crack
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                const filter = ctx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(300 + comboCount * 20, now);
+                osc.connect(gain);
+                gain.connect(filter);
+                filter.connect(ctx.destination);
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(100, now);
+                osc.frequency.exponentialRampToValueAtTime(40, now + duration);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+                osc.start(now);
+                osc.stop(now + duration);
+                return;
+            }
+            
+            if (isSeasons) {
+                // Gentle chime / wind sound
+                const notes = [523.25, 659.25, 783.99, 1046.50];
+                const baseIndex = Math.min(comboCount - 1, notes.length - 2);
+                [notes[baseIndex], notes[baseIndex+1]].forEach((freq, idx) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.05);
+                    gain.gain.setValueAtTime(0.1, now + idx * 0.05);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + duration * 1.5);
+                    osc.start(now + idx * 0.05);
+                    osc.stop(now + duration * 1.5 + idx * 0.05);
+                });
+                return;
+            }
+
+            // Default warm pentatonic notes
             const notes = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 587.33, 659.25, 783.99];
             const baseIndex = Math.min(comboCount - 1, notes.length - 2);
 
             const f1 = notes[baseIndex];
             const f2 = notes[baseIndex + 1];
 
-            // Soft lowpass filter to remove any high-frequency transients/clicks
             const filter = ctx.createBiquadFilter();
             filter.type = 'lowpass';
             filter.frequency.setValueAtTime(750, now);
             filter.connect(ctx.destination);
-
-            const duration = 0.12; // very short decay
 
             [f1, f2].forEach((freq, idx) => {
                 const osc = ctx.createOscillator();
