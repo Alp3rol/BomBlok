@@ -170,40 +170,9 @@ const newOnPointerUp = `function onPointerUp(e) {
                 }, 200);
             }
         } else {
-            if (state.jokers > 0) {
-                state.jokers--;
-                localStorage.setItem('bomblok_jokers', state.jokers);
-                state.rotationRights += 1;
-                updateJokerButtonsUI();
-                AudioFX.playReroll();
-                
-                state.rotationRights--;
-                updateScoreUI();
-                AudioFX.playRotate();
-                
-                const rCount = shape.matrix.length;
-                shape.matrix = getRotatedMatrix(shape.matrix);
-                if (shape.bombCell) {
-                    const oldR = shape.bombCell.r;
-                    const oldC = shape.bombCell.c;
-                    shape.bombCell.r = oldC;
-                    shape.bombCell.c = rCount - 1 - oldR;
-                }
-                state.dockedBlocks[slotIndex] = shape;
-                
-                if (originalSlot) {
-                    blockEl.style.transition = 'transform 0.2s ease-in-out';
-                    blockEl.style.transform = 'rotate(90deg)';
-                    setTimeout(() => {
-                        originalSlot.innerHTML = '';
-                        renderBlockInSlot(shape, originalSlot, slotIndex);
-                    }, 200);
-                }
-            } else {
-                AudioFX.playBuzzer();
-                blockEl.classList.add('error-shake');
-                setTimeout(() => blockEl.classList.remove('error-shake'), 400);
-            }
+            AudioFX.playBuzzer();
+            blockEl.classList.add('error-shake');
+            setTimeout(() => blockEl.classList.remove('error-shake'), 400);
         }
     } else {
         if (validPlacement && targetCells.length > 0) {

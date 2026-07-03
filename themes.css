@@ -89,14 +89,35 @@ body.theme-neon {
     --color-cyan: rgba(24, 255, 255, 0.5);
 }
 
+body.theme-neon::before {
+    content: "";
+    position: fixed;
+    top: 40%;
+    left: -50%;
+    width: 200%;
+    height: 120%;
+    background-image: 
+        linear-gradient(rgba(255, 0, 255, 0.4) 2px, transparent 2px),
+        linear-gradient(90deg, rgba(0, 255, 255, 0.4) 2px, transparent 2px);
+    background-size: 50px 50px;
+    transform: perspective(500px) rotateX(70deg);
+    z-index: -1;
+    animation: neon-grid-move 2s linear infinite;
+}
+
+@keyframes neon-grid-move {
+    0% { background-position: 0 0; }
+    100% { background-position: 0 50px; }
+}
+
 /* Add custom glow to neon blocks using a trick: */
-body.theme-neon .block-shape.orange .block-cell { border-color: #ff6d00; box-shadow: 0 0 12px #ff6d00, inset 0 0 10px #ff6d00; }
-body.theme-neon .block-shape.blue .block-cell { border-color: #00b0ff; box-shadow: 0 0 12px #00b0ff, inset 0 0 10px #00b0ff; }
-body.theme-neon .block-shape.green .block-cell { border-color: #00e676; box-shadow: 0 0 12px #00e676, inset 0 0 10px #00e676; }
-body.theme-neon .block-shape.yellow .block-cell { border-color: #ffea00; box-shadow: 0 0 12px #ffea00, inset 0 0 10px #ffea00; }
-body.theme-neon .block-shape.purple .block-cell { border-color: #d500f9; box-shadow: 0 0 12px #d500f9, inset 0 0 10px #d500f9; }
-body.theme-neon .block-shape.pink .block-cell { border-color: #f50057; box-shadow: 0 0 12px #f50057, inset 0 0 10px #f50057; }
-body.theme-neon .block-shape.cyan .block-cell { border-color: #18ffff; box-shadow: 0 0 12px #18ffff, inset 0 0 10px #18ffff; }
+body.theme-neon .block-shape.orange .block-cell { border-color: #ff6d00; box-shadow: 0 0 15px #ff6d00, inset 0 0 10px #ff6d00; }
+body.theme-neon .block-shape.blue .block-cell { border-color: #00b0ff; box-shadow: 0 0 15px #00b0ff, inset 0 0 10px #00b0ff; }
+body.theme-neon .block-shape.green .block-cell { border-color: #00e676; box-shadow: 0 0 15px #00e676, inset 0 0 10px #00e676; }
+body.theme-neon .block-shape.yellow .block-cell { border-color: #ffea00; box-shadow: 0 0 15px #ffea00, inset 0 0 10px #ffea00; }
+body.theme-neon .block-shape.purple .block-cell { border-color: #d500f9; box-shadow: 0 0 15px #d500f9, inset 0 0 10px #d500f9; }
+body.theme-neon .block-shape.pink .block-cell { border-color: #f50057; box-shadow: 0 0 15px #f50057, inset 0 0 10px #f50057; }
+body.theme-neon .block-shape.cyan .block-cell { border-color: #18ffff; box-shadow: 0 0 15px #18ffff, inset 0 0 10px #18ffff; }
 
 
 /* 3. CANDY / PASTEL (Şeker Dükkanı) */
@@ -219,4 +240,67 @@ body.theme-retro .grid-board-container {
         #111 10px,
         #111 20px
     );
+}
+
+/* 6. MEVSIMLER (Seasons) */
+body.theme-seasons {
+    --panel-bg: rgba(255, 255, 255, 0.4);
+    --panel-border: rgba(255, 255, 255, 0.6);
+    --text-primary: #1b4332;
+    --text-secondary: #2d6a4f;
+    --accent: #ff9800;
+    
+    --cell-bg: rgba(255, 255, 255, 0.5);
+    --cell-border: rgba(255, 255, 255, 0.8);
+    --cell-radius: 8px;
+
+    --block-radius: 8px;
+    --block-border: 1px solid rgba(255, 255, 255, 0.7);
+    --block-shadow: inset 0 2px 4px rgba(255,255,255,0.6), 0 2px 6px rgba(0,0,0,0.15);
+
+    --bomb-bg: radial-gradient(circle at 35% 35%, #ff5722 10%, #d84315 50%, #bf360c 90%);
+    --bomb-border: 2px solid #ffcc80;
+    --bomb-radius: 8px;
+    --bomb-shadow: 0 0 10px rgba(255,87,34,0.5);
+    
+    --ice-bg: rgba(224, 247, 250, 0.6);
+    --ice-border: 2px solid #80deea;
+    --ice-radius: 8px;
+    
+    background: linear-gradient(135deg, #a8e063, #56ab2f, #ffe259, #ffa751, #e52d27, #b31217, #e0eafc, #cfdef3) !important;
+    background-size: 800% 800% !important;
+    animation: seasons-gradient-move 30s ease infinite !important;
+}
+
+@keyframes seasons-gradient-move {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Snow/Leaf particles via radial-gradient trick */
+body.theme-seasons::before {
+    content: "";
+    position: fixed;
+    top: -200px;
+    left: 0;
+    width: 100%;
+    height: 150%;
+    pointer-events: none;
+    z-index: -1;
+    background-image: 
+        radial-gradient(4px 4px at 20px 30px, rgba(255,255,255,0.8), transparent),
+        radial-gradient(5px 5px at 40px 70px, rgba(255,255,255,0.9), transparent),
+        radial-gradient(3px 3px at 50px 160px, rgba(255,255,255,0.7), transparent),
+        radial-gradient(6px 6px at 90px 40px, rgba(255,255,255,0.8), transparent),
+        radial-gradient(4px 4px at 130px 80px, rgba(255,255,255,0.6), transparent),
+        radial-gradient(5px 5px at 160px 120px, rgba(255,255,255,0.9), transparent);
+    background-repeat: repeat;
+    background-size: 200px 200px;
+    animation: seasons-particles 15s linear infinite;
+}
+
+@keyframes seasons-particles {
+    0% { transform: translateY(0) translateX(0); }
+    100% { transform: translateY(200px) translateX(30px); }
 }
