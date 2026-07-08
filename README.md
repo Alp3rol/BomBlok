@@ -92,7 +92,19 @@ Belirli koşullarda devreye giren `Fever Mode`, kısa süreli yüksek tempolu bi
 ├── index.html
 ├── style.css
 ├── themes.css
-├── app.js
+├── manifest.json
+├── sw.js
+├── js/
+│   ├── main.js          # Girdi (pointer/drag-drop) ve yerleştirme akışı
+│   ├── state.js         # Merkezi oyun durumu
+│   ├── grid.js          # Tahta ve dock render/üretim mantığı
+│   ├── mechanics.js     # Temizleme, bomba, fever, XP, joker mantığı
+│   ├── missions.js      # Görev havuzu ve takibi
+│   ├── config.js        # Şekiller ve zorluk eğrisi
+│   ├── audio.js         # Web Audio API tabanlı prosedürel ses
+│   ├── particles.js     # Canvas parçacık efektleri
+│   ├── theme.js         # Tema seçimi ve kalıcılığı
+│   └── leaderboard.js   # Supabase online skor tablosu
 ├── supabase-config.example.js
 ├── SUPABASE_SETUP.md
 └── .github/workflows/deploy.yml

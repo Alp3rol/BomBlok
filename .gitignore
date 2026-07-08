@@ -8,4 +8,5 @@ package-lock.json
 # IDE / Editor files
 .vscode/
 .idea/
+.claude/
 .DS_Store

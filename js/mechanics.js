@@ -1,8 +1,9 @@
 import { state, gridBoard, currentScoreEl, bestScoreEl, blockDock, gameOverScreen, finalScoreEl, feverBanner, feverBarFill, playerLevelEl, xpBarFillEl, xpTextEl } from './state.js';
-import { SHAPES, getDifficultyParams, COLOR_MAP } from './config.js';
+import { getDifficultyParams, COLOR_MAP } from './config.js';
 import { AudioFX } from './audio.js';
 import { spawnParticles, spawnParticlesAtScreen } from './particles.js';
-import { initGrid, clearGridHighlights, renderBlockInSlot, generateDockBlocks, redrawDock } from './grid.js';
+import { initGrid, clearGridHighlights, renderBlockInSlot, generateDockBlocks, redrawDock, generateRandomShape, getCellElement } from './grid.js';
+import { getRotatedMatrix, checkColorMatch, detectFullLines } from './rules.js';
 import { initMission, updateMissionProgress, updateMissionUI, checkMissionConstraints } from './missions.js';
 import { Leaderboard } from './leaderboard.js';
 import { selectBlock, deselectBlock } from './main.js';
@@ -142,22 +143,7 @@ export function showComboPopup(linesCleared, comboCount, isCrossClear = false) {
     }, 2500);
 }
 
-export function checkColorMatch(lineCells) {
-    const colorCounts = {};
-    let maxCount = 0;
-    
-    lineCells.forEach(cell => {
-        if (cell !== 0 && cell !== 'ice') {
-            const baseColor = typeof cell === 'string' ? cell.split('-')[0] : cell;
-            colorCounts[baseColor] = (colorCounts[baseColor] || 0) + 1;
-            if (colorCounts[baseColor] > maxCount) {
-                maxCount = colorCounts[baseColor];
-            }
-        }
-    });
-    
-    return maxCount >= 6; // 8 hücrenin en az 6'sı aynı renkse
-}
+export { checkColorMatch };
 
 export function showFloatingText(text, color = '#00e5ff') {
     const boardRect = gridBoard.getBoundingClientRect();
@@ -204,7 +190,7 @@ export function spawnTimeBomb() {
         state.grid[randCell.r][randCell.c] = 'timebomb';
         state.timeBombs.push({ r: randCell.r, c: randCell.c, timer: timer });
         
-        const cellEl = gridBoard.querySelector(`.grid-cell[data-row="${randCell.r}"][data-col="${randCell.c}"]`);
+        const cellEl = getCellElement(randCell.r, randCell.c);
         if (cellEl) {
             cellEl.className = 'grid-cell filled filled-timebomb ice-spawn-anim';
             cellEl.dataset.timer = timer;
@@ -230,7 +216,7 @@ export function tickTimeBombs() {
         
         bomb.timer--;
         
-        const cellEl = gridBoard.querySelector(`.grid-cell[data-row="${bomb.r}"][data-col="${bomb.c}"]`);
+        const cellEl = getCellElement(bomb.r, bomb.c);
         if (cellEl) {
             cellEl.dataset.timer = bomb.timer;
         }
@@ -250,7 +236,7 @@ export function explodeTimeBomb(bombR, bombC) {
     for (let c = 0; c < 8; c++) {
         state.grid[bombR][c] = 'stone';
         spawnParticles(bombR, c, 'gray');
-        const cellEl = gridBoard.querySelector(`.grid-cell[data-row="${bombR}"][data-col="${c}"]`);
+        const cellEl = getCellElement(bombR, c);
         if (cellEl) {
             cellEl.className = 'grid-cell filled filled-stone';
         }
@@ -260,37 +246,10 @@ export function explodeTimeBomb(bombR, bombC) {
 
 export function checkAndClearLines() {
     state.missionMoves++;
-    let rowsToClear = [];
-    let colsToClear = [];
     let iceBrokenThisMove = 0;
     let bombsExplodedThisMove = 0;
 
-    // 1. Check rows
-    for (let r = 0; r < 8; r++) {
-        const isFull = state.grid[r].every(cell => cell !== 0);
-        const isAllStone = state.grid[r].every(cell => cell === 'stone');
-        if (isFull && !isAllStone) {
-            rowsToClear.push(r);
-        }
-    }
-
-    // 2. Check columns
-    for (let c = 0; c < 8; c++) {
-        let colFull = true;
-        let allStone = true;
-        for (let r = 0; r < 8; r++) {
-            if (state.grid[r][c] === 0) {
-                colFull = false;
-                break;
-            }
-            if (state.grid[r][c] !== 'stone') {
-                allStone = false;
-            }
-        }
-        if (colFull && !allStone) {
-            colsToClear.push(c);
-        }
-    }
+    const { rowsToClear, colsToClear } = detectFullLines(state.grid);
 
     const isCrossClear = rowsToClear.length > 0 && colsToClear.length > 0;
     if (isCrossClear) {
@@ -411,7 +370,7 @@ export function checkAndClearLines() {
                                     updateMissionProgress('ice', 1); // Track ice broken by bomb
                                     iceBrokenThisMove++;
 
-                                    const cellEl = gridBoard.querySelector(`.grid-cell[data-row="${nr}"][data-col="${nc}"]`);
+                                    const cellEl = getCellElement(nr, nc);
                                     if (cellEl) {
                                         cellEl.classList.add('blasting');
                                         setTimeout(() => {
@@ -426,7 +385,7 @@ export function checkAndClearLines() {
                                     spawnParticles(nr, nc, 'gray');
                                     updateMissionProgress('stone', 1);
 
-                                    const cellEl = gridBoard.querySelector(`.grid-cell[data-row="${nr}"][data-col="${nc}"]`);
+                                    const cellEl = getCellElement(nr, nc);
                                     if (cellEl) {
                                         cellEl.classList.add('blasting');
                                         setTimeout(() => {
@@ -470,7 +429,7 @@ export function checkAndClearLines() {
                         spawnParticles(r, c, 'cyan');
                         updateMissionProgress('ice', 1); // Track ice broken by adjacent clear
                         iceBrokenThisMove++;
-                        const cellEl = gridBoard.querySelector(`.grid-cell[data-row="${r}"][data-col="${c}"]`);
+                        const cellEl = getCellElement(r, c);
                         if (cellEl) {
                             cellEl.classList.add('blasting');
                             setTimeout(() => {
@@ -502,7 +461,7 @@ export function checkAndClearLines() {
 
         // Play CSS animation on grid cell elements
         cellsToClear.forEach(cell => {
-            const cellEl = gridBoard.querySelector(`.grid-cell[data-row="${cell.r}"][data-col="${cell.c}"]`);
+            const cellEl = getCellElement(cell.r, cell.c);
             if (cellEl) {
                 cellEl.classList.add('blasting');
             }
@@ -511,7 +470,7 @@ export function checkAndClearLines() {
         // Clean classes and styles from DOM after animation completes (400ms)
         setTimeout(() => {
             cellsToClear.forEach(cell => {
-                const cellEl = gridBoard.querySelector(`.grid-cell[data-row="${cell.r}"][data-col="${cell.c}"]`);
+                const cellEl = getCellElement(cell.r, cell.c);
                 if (cellEl) {
                     cellEl.style.transition = 'none'; // Prevent scale-up flash
                     if (state.grid[cell.r][cell.c] === 0) {
@@ -540,7 +499,7 @@ export function checkAndClearLines() {
                         const randCell = emptyCells[Math.floor(Math.random() * emptyCells.length)];
                         state.grid[randCell.r][randCell.c] = 'ice';
                         
-                        const cellEl = gridBoard.querySelector(`.grid-cell[data-row="${randCell.r}"][data-col="${randCell.c}"]`);
+                        const cellEl = getCellElement(randCell.r, randCell.c);
                         if (cellEl) {
                             cellEl.classList.add('filled', 'filled-ice', 'ice-spawn-anim');
                             // Clean animation class after it finishes
@@ -643,17 +602,7 @@ export function endTurn() {
     checkGameOver();
 }
 
-export function getRotatedMatrix(matrix) {
-    const rCount = matrix.length;
-    const cCount = matrix[0].length;
-    const rotated = Array(cCount).fill(null).map(() => Array(rCount).fill(0));
-    for (let r = 0; r < rCount; r++) {
-        for (let c = 0; c < cCount; c++) {
-            rotated[c][rCount - 1 - r] = matrix[r][c];
-        }
-    }
-    return rotated;
-}
+export { getRotatedMatrix };
 
 export function canShapeFit(shape) {
     if (!shape) return false;
@@ -904,35 +853,9 @@ export function rerollDockBlocks() {
     state.rerollUsedThisGame = true;
 
     // Generate new blocks for remaining slots
-    const slots = document.querySelectorAll('.dock-slot');
     state.dockedBlocks.forEach((block, index) => {
         if (block !== null) {
-            // Generate new random shape
-            let randomShapeIndex = Math.floor(Math.random() * SHAPES.length);
-            let shape = JSON.parse(JSON.stringify(SHAPES[randomShapeIndex]));
-
-            // Reduce 1x1 single block frequency
-            if (shape.matrix.length === 1 && shape.matrix[0].length === 1) {
-                if (Math.random() < 0.95) {
-                    const nonSingleShapes = SHAPES.filter(s => !(s.matrix.length === 1 && s.matrix[0].length === 1));
-                    shape = JSON.parse(JSON.stringify(nonSingleShapes[Math.floor(Math.random() * nonSingleShapes.length)]));
-                }
-            }
-
-            // 25% chance for bomb
-            if (Math.random() < 0.25) {
-                const solidCells = [];
-                for (let r = 0; r < shape.matrix.length; r++) {
-                    for (let c = 0; c < shape.matrix[r].length; c++) {
-                        if (shape.matrix[r][c] === 1) solidCells.push({ r, c });
-                    }
-                }
-                if (solidCells.length > 0) {
-                    shape.bombCell = solidCells[Math.floor(Math.random() * solidCells.length)];
-                }
-            }
-
-            state.dockedBlocks[index] = shape;
+            state.dockedBlocks[index] = generateRandomShape();
         }
     });
 

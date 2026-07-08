@@ -10,6 +10,15 @@ export function registerGridCallbacks(showPreview, tryPlace) {
     _tryPlace = tryPlace;
 }
 
+// Cache of grid cell DOM elements, indexed [row][col], rebuilt each time initGrid() runs.
+// Avoids repeated `gridBoard.querySelector('.grid-cell[data-row=...][data-col=...]')` scans,
+// which get costly on low-end phones once several cells are touched per move (line clears, bomb chains).
+let cellElements = [];
+
+export function getCellElement(r, c) {
+    return cellElements[r] ? cellElements[r][c] : null;
+}
+
 // Spawn random ice block obstacles on the board
 export function spawnIceBlocks() {
     const diff = getDifficultyParams(state.level);
@@ -28,12 +37,14 @@ export function spawnIceBlocks() {
 // Initialize Grid Board HTML
 export function initGrid() {
     gridBoard.innerHTML = '';
+    cellElements = Array.from({ length: 8 }, () => Array(8).fill(null));
     for (let r = 0; r < 8; r++) {
         for (let c = 0; c < 8; c++) {
             const cell = document.createElement('div');
             cell.classList.add('grid-cell');
             cell.dataset.row = r;
             cell.dataset.col = c;
+            cellElements[r][c] = cell;
 
             const cellState = state.grid[r][c];
             if (cellState !== 0) {
@@ -78,6 +89,41 @@ export function initGrid() {
     updateScoreUI();
 }
 
+// Pick a random shape, reducing 1x1 singles and rolling a chance to attach a bomb cell
+export function generateRandomShape() {
+    // Pick a random shape from SHAPES
+    let randomShapeIndex = Math.floor(Math.random() * SHAPES.length);
+    let shape = JSON.parse(JSON.stringify(SHAPES[randomShapeIndex]));
+
+    // Reduce 1x1 single block frequency by redrawing 95% of the time
+    if (shape.matrix.length === 1 && shape.matrix[0].length === 1) {
+        if (Math.random() < 0.95) {
+            const nonSingleShapes = SHAPES.filter(s => !(s.matrix.length === 1 && s.matrix[0].length === 1));
+            const newRandomIndex = Math.floor(Math.random() * nonSingleShapes.length);
+            shape = JSON.parse(JSON.stringify(nonSingleShapes[newRandomIndex]));
+        }
+    }
+
+    // 25% chance to contain a bomb cell
+    if (Math.random() < 0.25) {
+        const solidCells = [];
+        const matrix = shape.matrix;
+        for (let r = 0; r < matrix.length; r++) {
+            for (let c = 0; c < matrix[r].length; c++) {
+                if (matrix[r][c] === 1) {
+                    solidCells.push({ r, c });
+                }
+            }
+        }
+        if (solidCells.length > 0) {
+            const randCell = solidCells[Math.floor(Math.random() * solidCells.length)];
+            shape.bombCell = randCell;
+        }
+    }
+
+    return shape;
+}
+
 // Generate 3 random shapes and place them in the dock
 export function generateDockBlocks() {
     state.dockedBlocks = [];
@@ -86,36 +132,7 @@ export function generateDockBlocks() {
     slots.forEach((slot, index) => {
         slot.innerHTML = '';
 
-        // Pick a random shape from SHAPES
-        let randomShapeIndex = Math.floor(Math.random() * SHAPES.length);
-        let shape = JSON.parse(JSON.stringify(SHAPES[randomShapeIndex]));
-
-        // Reduce 1x1 single block frequency by redrawing 95% of the time
-        if (shape.matrix.length === 1 && shape.matrix[0].length === 1) {
-            if (Math.random() < 0.95) {
-                const nonSingleShapes = SHAPES.filter(s => !(s.matrix.length === 1 && s.matrix[0].length === 1));
-                const newRandomIndex = Math.floor(Math.random() * nonSingleShapes.length);
-                shape = JSON.parse(JSON.stringify(nonSingleShapes[newRandomIndex]));
-            }
-        }
-
-        // 25% chance to contain a bomb cell
-        if (Math.random() < 0.25) {
-            const solidCells = [];
-            const matrix = shape.matrix;
-            for (let r = 0; r < matrix.length; r++) {
-                for (let c = 0; c < matrix[r].length; c++) {
-                    if (matrix[r][c] === 1) {
-                        solidCells.push({ r, c });
-                    }
-                }
-            }
-            if (solidCells.length > 0) {
-                const randCell = solidCells[Math.floor(Math.random() * solidCells.length)];
-                shape.bombCell = randCell;
-            }
-        }
-
+        const shape = generateRandomShape();
         state.dockedBlocks[index] = shape;
 
         // Render block shape

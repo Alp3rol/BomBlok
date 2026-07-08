@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bomblok-cache-v2';
+const CACHE_NAME = 'bomblok-cache-v3';
 const urlsToCache = [
   './',
   './index.html',
@@ -12,7 +12,8 @@ const urlsToCache = [
   './js/particles.js',
   './js/audio.js',
   './js/theme.js',
-  './js/input.js',
+  './js/config.js',
+  './js/missions.js',
   './js/leaderboard.js',
   './manifest.json'
 ];

@@ -3,7 +3,7 @@ import { applyProgressResetIfNeeded } from './config.js';
 import { AudioFX } from './audio.js';
 import { ThemeManager } from './theme.js';
 import { resizeCanvas, spawnParticlesAtScreen } from './particles.js';
-import { initGrid, clearGridHighlights, spawnIceBlocks, renderBlockInSlot, generateDockBlocks, redrawDock, registerGridCallbacks } from './grid.js';
+import { initGrid, clearGridHighlights, spawnIceBlocks, renderBlockInSlot, generateDockBlocks, redrawDock, registerGridCallbacks, getCellElement } from './grid.js';
 import { initMission, updateMissionProgress, updateMissionUI } from './missions.js';
 import { Leaderboard } from './leaderboard.js';
 import { updateScoreUI, addXp, syncProgressionUI, deactivateFeverMode, checkAndClearLines, saveStateSnapshot, performUndo, rerollDockBlocks, updateJokerButtonsUI, getRotatedMatrix, animateAndRotateBlock, activateFeverMode, checkGameOver, resetLevelProgression } from './mechanics.js';
@@ -166,7 +166,7 @@ export function checkPlacementValidity() {
                         break;
                     }
 
-                    const cellEl = gridBoard.querySelector(`.grid-cell[data-row="${targetR}"][data-col="${targetC}"]`);
+                    const cellEl = getCellElement(targetR, targetC);
                     const isOccupied = state.grid[targetR][targetC] !== 0;
                     if (isOccupied) {
                         fits = false;
@@ -322,25 +322,30 @@ export function deselectBlock() {
     clearGridHighlights();
 }
 
+// Find the row/col of the shape's first solid cell, used as the drag anchor point
+function findShapeAnchor(shape) {
+    const rows = shape.matrix.length;
+    const cols = shape.matrix[0].length;
+    for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+            if (shape.matrix[r][c] === 1) {
+                return { r, c };
+            }
+        }
+    }
+    return { r: 0, c: 0 };
+}
+
 export function showPreviewForSelectedBlock(gridR, gridC) {
     clearGridHighlights();
     if (state.selectedBlockIndex === null || state.isGameOver) return;
     const shape = state.dockedBlocks[state.selectedBlockIndex];
     if (!shape) return;
 
-    let anchorR = null, anchorC = null;
     const rows = shape.matrix.length;
     const cols = shape.matrix[0].length;
-    for (let r = 0; r < rows; r++) {
-        for (let c = 0; c < cols; c++) {
-            if (shape.matrix[r][c] === 1) {
-                anchorR = r;
-                anchorC = c;
-                break;
-            }
-        }
-        if (anchorR !== null) break;
-    }
+    const anchor = findShapeAnchor(shape);
+    const anchorR = anchor.r, anchorC = anchor.c;
 
     const offsetR = gridR - anchorR;
     const offsetC = gridC - anchorC;
@@ -357,7 +362,7 @@ export function showPreviewForSelectedBlock(gridR, gridC) {
                     fits = false;
                     break;
                 }
-                const cellEl = gridBoard.querySelector(`.grid-cell[data-row="${targetR}"][data-col="${targetC}"]`);
+                const cellEl = getCellElement(targetR, targetC);
                 if (state.grid[targetR][targetC] !== 0) {
                     fits = false;
                     invalidCells.push(cellEl);
@@ -388,22 +393,12 @@ export function tryPlaceSelectedBlock(gridR, gridC) {
     const shape = state.dockedBlocks[state.selectedBlockIndex];
     if (!shape) return;
 
-    let anchorR = null, anchorC = null;
     const rows = shape.matrix.length;
     const cols = shape.matrix[0].length;
-    for (let r = 0; r < rows; r++) {
-        for (let c = 0; c < cols; c++) {
-            if (shape.matrix[r][c] === 1) {
-                anchorR = r;
-                anchorC = c;
-                break;
-            }
-        }
-        if (anchorR !== null) break;
-    }
+    const anchor = findShapeAnchor(shape);
 
-    const offsetR = gridR - anchorR;
-    const offsetC = gridC - anchorC;
+    const offsetR = gridR - anchor.r;
+    const offsetC = gridC - anchor.c;
 
     let fits = true;
     const proposedCells = [];
@@ -416,7 +411,7 @@ export function tryPlaceSelectedBlock(gridR, gridC) {
                     fits = false;
                     break;
                 }
-                const cellEl = gridBoard.querySelector(`.grid-cell[data-row="${targetR}"][data-col="${targetC}"]`);
+                const cellEl = getCellElement(targetR, targetC);
                 proposedCells.push({ r: targetR, c: targetC, el: cellEl });
             }
         }

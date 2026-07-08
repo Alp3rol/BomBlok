@@ -1,0 +1,10 @@
+{
+  "name": "bomblok",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "BomBlok - block puzzle oyunu",
+  "scripts": {
+    "test": "node --test tests/*.test.js"
+  }
+}

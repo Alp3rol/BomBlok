@@ -1,5 +1,6 @@
 import { COLOR_MAP } from './config.js';
 import { gridBoard } from './state.js';
+import { getCellElement } from './grid.js';
 
 // --- CANVAS-BASED NEON PARTICLE SYSTEM ---
 const canvas = document.getElementById('effects-canvas');
@@ -220,7 +221,7 @@ export function resizeCanvas() {
 }
 
 export function spawnParticles(gridR, gridC, colorName, multiplier = 1) {
-    const cellEl = gridBoard.querySelector(`.grid-cell[data-row="${gridR}"][data-col="${gridC}"]`);
+    const cellEl = getCellElement(gridR, gridC);
     if (!cellEl) return;
 
     const cellRect = cellEl.getBoundingClientRect();
