@@ -3,7 +3,7 @@ import { applyProgressResetIfNeeded } from './config.js';
 import { AudioFX } from './audio.js';
 import { ThemeManager } from './theme.js';
 import { resizeCanvas, spawnParticlesAtScreen } from './particles.js';
-import { initGrid, clearGridHighlights, spawnIceBlocks, renderBlockInSlot, generateDockBlocks, redrawDock, registerGridCallbacks, getCellElement } from './grid.js';
+import { initGrid, clearGridHighlights, spawnIceBlocks, renderBlockInSlot, generateDockBlocks, redrawDock, registerGridCallbacks, getCellElement, trackHighlight } from './grid.js';
 import { initMission, updateMissionProgress, updateMissionUI } from './missions.js';
 import { Leaderboard } from './leaderboard.js';
 import { updateScoreUI, addXp, syncProgressionUI, deactivateFeverMode, checkAndClearLines, saveStateSnapshot, performUndo, rerollDockBlocks, updateJokerButtonsUI, getRotatedMatrix, animateAndRotateBlock, activateFeverMode, checkGameOver, resetLevelProgression } from './mechanics.js';
@@ -188,14 +188,21 @@ export function checkPlacementValidity() {
             // Apply highlight class to candidate grid cells
             proposedCells.forEach(cell => {
                 cell.el.classList.add('highlight-valid');
+                trackHighlight(cell.el);
             });
         } else {
             // Daha iyi preview: kısmen geçerli hücreleri yeşil, dolu olanları kırmızı göster
             proposedCells.forEach(cell => {
-                if (cell.el) cell.el.classList.add('highlight-valid');
+                if (cell.el) {
+                    cell.el.classList.add('highlight-valid');
+                    trackHighlight(cell.el);
+                }
             });
             invalidCells.forEach(cell => {
-                if (cell.el) cell.el.classList.add('highlight-invalid');
+                if (cell.el) {
+                    cell.el.classList.add('highlight-invalid');
+                    trackHighlight(cell.el);
+                }
             });
         }
     }
@@ -376,14 +383,23 @@ export function showPreviewForSelectedBlock(gridR, gridC) {
 
     if (fits) {
         proposedCells.forEach(el => {
-            if (el) el.classList.add('highlight-valid');
+            if (el) {
+                el.classList.add('highlight-valid');
+                trackHighlight(el);
+            }
         });
     } else {
         proposedCells.forEach(el => {
-            if (el) el.classList.add('highlight-valid');
+            if (el) {
+                el.classList.add('highlight-valid');
+                trackHighlight(el);
+            }
         });
         invalidCells.forEach(el => {
-            if (el) el.classList.add('highlight-invalid');
+            if (el) {
+                el.classList.add('highlight-invalid');
+                trackHighlight(el);
+            }
         });
     }
 }

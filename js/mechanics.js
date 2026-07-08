@@ -336,6 +336,11 @@ export function checkAndClearLines() {
         cellsToClear.forEach(cell => explodedCells.add(`${cell.r},${cell.c}`));
 
         let hasBombExploded = false;
+        // Obstacle cells (ice/stone) broken by bomb chains are collected here instead of being
+        // animated inline, so all particle-position reads happen before any class-list writes —
+        // interleaving reads/writes per cell forces a synchronous layout recalculation on every
+        // iteration ("layout thrashing"), which is a major stutter source on low-end phones.
+        const brokenObstacles = [];
 
         while (bombCells.length > 0) {
             const nextBombCells = [];
@@ -366,34 +371,14 @@ export function checkAndClearLines() {
                                 if (cellColor === 'ice') {
                                     // Melt/break ice block
                                     state.grid[nr][nc] = 0;
-                                    spawnParticles(nr, nc, 'cyan');
                                     updateMissionProgress('ice', 1); // Track ice broken by bomb
                                     iceBrokenThisMove++;
-
-                                    const cellEl = getCellElement(nr, nc);
-                                    if (cellEl) {
-                                        cellEl.classList.add('blasting');
-                                        setTimeout(() => {
-                                            cellEl.style.transition = 'none';
-                                            cellEl.className = 'grid-cell';
-                                            requestAnimationFrame(() => requestAnimationFrame(() => cellEl.style.transition = ''));
-                                        }, 400);
-                                    }
+                                    brokenObstacles.push({ r: nr, c: nc, particleColor: 'cyan' });
                                 } else if (cellColor === 'stone') {
                                     // Break stone block with bomb
                                     state.grid[nr][nc] = 0;
-                                    spawnParticles(nr, nc, 'gray');
                                     updateMissionProgress('stone', 1);
-
-                                    const cellEl = getCellElement(nr, nc);
-                                    if (cellEl) {
-                                        cellEl.classList.add('blasting');
-                                        setTimeout(() => {
-                                            cellEl.style.transition = 'none';
-                                            cellEl.className = 'grid-cell';
-                                            requestAnimationFrame(() => requestAnimationFrame(() => cellEl.style.transition = ''));
-                                        }, 400);
-                                    }
+                                    brokenObstacles.push({ r: nr, c: nc, particleColor: 'gray' });
                                 } else {
                                     // Regular block or another bomb
                                     const cellObj = { r: nr, c: nc, color: cellColor };
@@ -411,6 +396,21 @@ export function checkAndClearLines() {
             bombCells = nextBombCells;
         }
 
+        // Batch all reads (particle position lookups) before any writes (class-list changes)
+        // to avoid forcing a synchronous layout recalculation on every obstacle cell.
+        brokenObstacles.forEach(o => spawnParticles(o.r, o.c, o.particleColor));
+        brokenObstacles.forEach(o => {
+            const cellEl = getCellElement(o.r, o.c);
+            if (cellEl) {
+                cellEl.classList.add('blasting');
+                setTimeout(() => {
+                    cellEl.style.transition = 'none';
+                    cellEl.className = 'grid-cell';
+                    requestAnimationFrame(() => requestAnimationFrame(() => cellEl.style.transition = ''));
+                }, 400);
+            }
+        });
+
         if (hasBombExploded) {
             AudioFX.playBomb();
             triggerScreenShake('heavy'); // Ensure heavy screen shake on bomb explosion
@@ -418,6 +418,7 @@ export function checkAndClearLines() {
         }
 
         // 2. Melt ice blocks adjacent to cleared rows/cols
+        const meltedIceCells = [];
         for (let r = 0; r < 8; r++) {
             for (let c = 0; c < 8; c++) {
                 if (state.grid[r][c] === 'ice') {
@@ -426,26 +427,31 @@ export function checkAndClearLines() {
 
                     if (isAdjacentRow || isAdjacentCol) {
                         state.grid[r][c] = 0;
-                        spawnParticles(r, c, 'cyan');
                         updateMissionProgress('ice', 1); // Track ice broken by adjacent clear
                         iceBrokenThisMove++;
-                        const cellEl = getCellElement(r, c);
-                        if (cellEl) {
-                            cellEl.classList.add('blasting');
-                            setTimeout(() => {
-                                cellEl.style.transition = 'none';
-                                if (state.grid[r][c] === 0) {
-                                    cellEl.className = 'grid-cell';
-                                } else {
-                                    cellEl.classList.remove('blasting', 'filled-ice');
-                                }
-                                requestAnimationFrame(() => requestAnimationFrame(() => cellEl.style.transition = ''));
-                            }, 400);
-                        }
+                        meltedIceCells.push({ r, c });
                     }
                 }
             }
         }
+
+        // Batch reads (particle position lookups) before writes (class-list changes) — see note above.
+        meltedIceCells.forEach(cell => spawnParticles(cell.r, cell.c, 'cyan'));
+        meltedIceCells.forEach(cell => {
+            const cellEl = getCellElement(cell.r, cell.c);
+            if (cellEl) {
+                cellEl.classList.add('blasting');
+                setTimeout(() => {
+                    cellEl.style.transition = 'none';
+                    if (state.grid[cell.r][cell.c] === 0) {
+                        cellEl.className = 'grid-cell';
+                    } else {
+                        cellEl.classList.remove('blasting', 'filled-ice');
+                    }
+                    requestAnimationFrame(() => requestAnimationFrame(() => cellEl.style.transition = ''));
+                }, 400);
+            }
+        });
 
         // Trigger particle blast for each cell
         const particleMultiplier = state.isFeverActive ? 2.5 : (1 + state.comboCount * 0.2);

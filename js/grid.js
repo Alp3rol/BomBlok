@@ -185,11 +185,19 @@ export function renderBlockInSlot(shape, slot, index) {
     slot.appendChild(blockEl);
 }
 
+// Cells currently carrying a highlight class, tracked so clearGridHighlights() doesn't have to
+// scan all 64 grid cells every animation frame during a drag (a real stutter source on low-end phones).
+let highlightedCells = [];
+
+export function trackHighlight(cellEl) {
+    if (cellEl) highlightedCells.push(cellEl);
+}
+
 export function clearGridHighlights() {
-    const cells = gridBoard.querySelectorAll('.grid-cell');
-    cells.forEach(cell => {
+    highlightedCells.forEach(cell => {
         cell.classList.remove('highlight-valid', 'highlight-invalid');
     });
+    highlightedCells = [];
 }
 
 export function redrawDock() {
