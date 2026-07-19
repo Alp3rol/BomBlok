@@ -121,24 +121,29 @@ export function checkPlacementValidity() {
     state.activeDrag.targetCells = [];
     state.activeDrag.validPlacement = false;
 
+    // Read the top-left grid cell's position ONCE to establish the board origin, then map
+    // screen coordinates to grid row/col with pure arithmetic. The previous approach toggled
+    // blockEl.pointerEvents and called document.elementFromPoint() for every solid cell on
+    // every frame, forcing a synchronous layout recalculation each time (layout thrashing) —
+    // the primary source of drag stutter on low-end phones. Same result, no forced reflow.
+    const originCell = getCellElement(0, 0);
+    if (!originCell) return;
+    const originRect = originCell.getBoundingClientRect();
+    const stride = gridCellSize + gap;
+
     // 1. Locate the grid cell under the first solid cell of the shape to establish the grid offset
     for (let r = 0; r < rows; r++) {
         for (let c = 0; c < cols; c++) {
             if (shape.matrix[r][c] === 1) {
-                // Approximate screen position of this cell's center
-                // Remember that translatey(-40px) is applied via CSS, so we read the actual visual rect
-                const cellCenterX = blockRect.left + (c + 0.5) * (gridCellSize + gap);
-                const cellCenterY = blockRect.top + (r + 0.5) * (gridCellSize + gap);
+                // Screen-space center of this solid cell (block is rendered at its visual rect)
+                const cellCenterX = blockRect.left + (c + 0.5) * stride;
+                const cellCenterY = blockRect.top + (r + 0.5) * stride;
 
-                // Temporarily hide dragged block to find grid cell underneath
-                blockEl.style.pointerEvents = 'none';
-                const el = document.elementFromPoint(cellCenterX, cellCenterY);
-                blockEl.style.pointerEvents = '';
+                const gridC = Math.floor((cellCenterX - originRect.left) / stride);
+                const gridR = Math.floor((cellCenterY - originRect.top) / stride);
 
-                if (el && el.classList.contains('grid-cell')) {
-                    const gridR = parseInt(el.dataset.row, 10);
-                    const gridC = parseInt(el.dataset.col, 10);
-
+                // Only accept cells that fall on the 8x8 board
+                if (gridR >= 0 && gridR < 8 && gridC >= 0 && gridC < 8) {
                     offsetR = gridR - r;
                     offsetC = gridC - c;
                     break;

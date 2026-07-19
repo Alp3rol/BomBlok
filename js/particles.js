@@ -9,6 +9,12 @@ const ctx = canvas.getContext('2d');
 let particles = [];
 let isLoopRunning = false;
 
+// Upper bound on live particles. A fever-mode cross-clear (multiplier 2.5, ~15 particles/cell
+// over a dozen-plus cleared cells) can otherwise push 500+ shadow-blurred particles in a single
+// frame, and canvas shadowBlur is ~5x the cost of a plain fill — a real stutter source on
+// low-end phones. Capping bounds the worst case without changing how any single particle looks.
+const MAX_PARTICLES = 280;
+
 class Particle {
     constructor(x, y, colorName) {
         this.x = x;
@@ -231,7 +237,7 @@ export function spawnParticles(gridR, gridC, colorName, multiplier = 1) {
     const startY = cellRect.top - canvasRect.top + cellRect.height / 2;
 
     const count = Math.floor(15 * multiplier);
-    for (let i = 0; i < count; i++) {
+    for (let i = 0; i < count && particles.length < MAX_PARTICLES; i++) {
         particles.push(new Particle(startX, startY, colorName));
     }
 
@@ -249,7 +255,7 @@ export function spawnParticlesAtScreen(clientX, clientY, colorName) {
     const y = clientY - canvasRect.top;
     if (x < 0 || y < 0 || x > canvasRect.width || y > canvasRect.height) return;
 
-    for (let i = 0; i < 25; i++) {
+    for (let i = 0; i < 25 && particles.length < MAX_PARTICLES; i++) {
         particles.push(new Particle(x, y, colorName));
     }
     if (!isLoopRunning) {
