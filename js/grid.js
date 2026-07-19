@@ -64,43 +64,62 @@ export function initGrid() {
                 }
             }
 
-            // Pointer event listeners for click-to-place
-            cell.addEventListener('pointerenter', () => {
-                if (state.selectedBlockIndex !== null) {
-                    _showPreview && _showPreview(r, c);
-                }
-            });
-
-            cell.addEventListener('pointerleave', () => {
-                if (state.selectedBlockIndex !== null) {
-                    clearGridHighlights();
-                }
-            });
-
-            cell.addEventListener('click', () => {
-                if (state.selectedBlockIndex !== null) {
-                    _tryPlace && _tryPlace(r, c);
-                }
-            });
-
             gridBoard.appendChild(cell);
         }
     }
+    bindGridEvents();
     updateScoreUI();
+}
+
+// Event delegation: three listeners on gridBoard instead of three per cell (192 total),
+// bound once and reused across every initGrid() rebuild. Cell coordinates come from the
+// cached cellElements grid, so we never touch dataset in the hot pointer path.
+let gridEventsBound = false;
+
+function cellCoordsFromEvent(e) {
+    const cell = e.target.closest ? e.target.closest('.grid-cell') : null;
+    if (!cell || !gridBoard.contains(cell)) return null;
+    const r = +cell.dataset.row;
+    const c = +cell.dataset.col;
+    return Number.isInteger(r) && Number.isInteger(c) ? { r, c } : null;
+}
+
+function bindGridEvents() {
+    if (gridEventsBound) return;
+    gridEventsBound = true;
+
+    // pointerover bubbles (unlike pointerenter); showPreview self-clears prior highlights.
+    gridBoard.addEventListener('pointerover', (e) => {
+        if (state.selectedBlockIndex === null) return;
+        const coords = cellCoordsFromEvent(e);
+        if (coords) _showPreview && _showPreview(coords.r, coords.c);
+    });
+
+    // Clear only when the pointer actually leaves the board, not on cell-to-cell moves.
+    gridBoard.addEventListener('pointerout', (e) => {
+        if (state.selectedBlockIndex === null) return;
+        if (!gridBoard.contains(e.relatedTarget)) clearGridHighlights();
+    });
+
+    gridBoard.addEventListener('click', (e) => {
+        if (state.selectedBlockIndex === null) return;
+        const coords = cellCoordsFromEvent(e);
+        if (coords) _tryPlace && _tryPlace(coords.r, coords.c);
+    });
 }
 
 // Pick a random shape, reducing 1x1 singles and rolling a chance to attach a bomb cell
 export function generateRandomShape() {
     // Pick a random shape from SHAPES
     let randomShapeIndex = Math.floor(Math.random() * SHAPES.length);
-    let shape = JSON.parse(JSON.stringify(SHAPES[randomShapeIndex]));
+    let shape = structuredClone(SHAPES[randomShapeIndex]);
 
     // Reduce 1x1 single block frequency by redrawing 95% of the time
     if (shape.matrix.length === 1 && shape.matrix[0].length === 1) {
         if (Math.random() < 0.95) {
             const nonSingleShapes = SHAPES.filter(s => !(s.matrix.length === 1 && s.matrix[0].length === 1));
             const newRandomIndex = Math.floor(Math.random() * nonSingleShapes.length);
-            shape = JSON.parse(JSON.stringify(nonSingleShapes[newRandomIndex]));
+            shape = structuredClone(nonSingleShapes[newRandomIndex]);
         }
     }
 

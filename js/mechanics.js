@@ -766,14 +766,14 @@ export function addXp(amount) {
 
 export function saveStateSnapshot() {
     state.previousState = {
-        grid: JSON.parse(JSON.stringify(state.grid)),
-        dockedBlocks: JSON.parse(JSON.stringify(state.dockedBlocks)),
+        grid: structuredClone(state.grid),
+        dockedBlocks: structuredClone(state.dockedBlocks),
         score: state.score,
         comboCount: state.comboCount,
         rotationRights: state.rotationRights,
         isFeverActive: state.isFeverActive,
         feverTimeLeft: state.feverTimeLeft,
-        currentMission: state.currentMission ? JSON.parse(JSON.stringify(state.currentMission)) : null
+        currentMission: state.currentMission ? structuredClone(state.currentMission) : null
     };
 }
 
