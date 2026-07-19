@@ -102,12 +102,17 @@ body.theme-neon::before {
     background-size: 50px 50px;
     transform: perspective(500px) rotateX(70deg);
     z-index: -1;
+    will-change: transform;
     animation: neon-grid-move 2s linear infinite;
 }
 
+/* Scroll the grid via `transform` (GPU-composited) instead of `background-position`.
+   Animating background-position forced a full repaint of this oversized, 3D-tilted layer
+   every frame — continuous stutter on the neon theme. translateY(50px) moves one tile
+   along the tilted plane, giving the same seamless scroll for free on the compositor. */
 @keyframes neon-grid-move {
-    0% { background-position: 0 0; }
-    100% { background-position: 0 50px; }
+    0% { transform: perspective(500px) rotateX(70deg) translateY(0); }
+    100% { transform: perspective(500px) rotateX(70deg) translateY(50px); }
 }
 
 /* Add custom glow to neon blocks using a trick: */
@@ -303,4 +308,25 @@ body.theme-seasons::before {
 @keyframes seasons-particles {
     0% { transform: translateY(0) translateX(0); }
     100% { transform: translateY(200px) translateX(30px); }
+}
+
+/* The Seasons background animates `background-position` on an 800%-sized gradient covering
+   the whole <body> — a full-page repaint every frame. On phones that is a constant stutter
+   source, so keep the colorful gradient but drop the per-frame motion. (Neon's grid is now
+   transform-based above, so it stays GPU-cheap and needs no mobile override.) */
+@media (max-width: 768px) {
+    body.theme-seasons {
+        animation: none !important;
+    }
+}
+
+/* Respect users who ask for less motion: stop all decorative, always-on background loops.
+   Gameplay feedback (line-clear/fever) is unaffected — this only quiets ambient backgrounds. */
+@media (prefers-reduced-motion: reduce) {
+    body.theme-neon::before,
+    body.theme-cosmos::before,
+    body.theme-seasons,
+    body.theme-seasons::before {
+        animation: none !important;
+    }
 }

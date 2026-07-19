@@ -1421,8 +1421,15 @@ body.theme-retro .modal-close-btn:hover {
     transition: box-shadow 0.3s ease;
 }
 
-body.fever-active:not(.theme-retro) {
+/* Aurora hue-rotate is scoped to the board grid itself — NOT <body>.
+   An animated `filter` on an ancestor forces every descendant `backdrop-filter` panel
+   (score cards, mission panel, dock, header…) to re-composite each frame, and makes the
+   browser re-rasterize the whole page every frame of the 8s loop. That filter↔backdrop-filter
+   combo is the core Fever-mode stutter. On the board grid it's a small, isolated GPU layer
+   with no blurred descendants, so the combo disappears and only the play area is filtered. */
+body.fever-active:not(.theme-retro) .grid-board {
     animation: fever-bg-aurora 8s infinite linear;
+    will-change: filter;
 }
 
 @keyframes fever-bg-aurora {
@@ -1953,6 +1960,15 @@ body.theme-retro .joker-button:disabled {
     }
     .game-board, .info-panel, .controls-panel, .mission-panel, .popup-content {
         box-shadow: none !important;
+    }
+
+    /* Fever mode: animating large box-shadows (up to 80px blur) repaints the whole shadow
+       every frame and cannot be GPU-composited — a real paint cost on phones. Keep the
+       static fever glow (from the base rules) but stop the per-frame box-shadow animation.
+       The board's hue-rotate (an isolated layer, cheap) is intentionally left running. */
+    body.fever-active .grid-board-container,
+    body.fever-active .game-container::after {
+        animation: none !important;
     }
 }
 
