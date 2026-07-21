@@ -233,10 +233,8 @@ body {
 
 .score-card {
     flex: 1;
-    background: var(--panel-bg);
+    background: rgba(26, 18, 52, 0.85);
     border: 1px solid var(--panel-border);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
     border-radius: 12px;
     padding: 8px 12px;
     text-align: center;
@@ -272,10 +270,8 @@ body {
 
 .control-card {
     flex: 1;
-    background: var(--panel-bg);
+    background: rgba(26, 18, 52, 0.85);
     border: 1px solid var(--panel-border);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
     border-radius: 12px;
     padding: 8px 10px;
     text-align: center;

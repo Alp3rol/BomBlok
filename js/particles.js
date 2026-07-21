@@ -140,57 +140,42 @@ class Particle {
         c.fillStyle = this.color;
 
         if (this.type === 'wood-splinter') {
-            c.shadowBlur = 3;
-            c.shadowColor = 'rgba(0,0,0,0.5)';
             c.fillRect(-this.radius, -this.radius * 0.25, this.radius * 2, this.radius * 0.5);
         } else if (this.type === 'confetti') {
-            c.shadowBlur = 5;
-            c.shadowColor = this.color;
-            c.fillRect(-this.radius, -this.radius*0.5, this.radius*2, this.radius);
+            c.fillRect(-this.radius, -this.radius * 0.5, this.radius * 2, this.radius);
         } else if (this.type === 'jellybean') {
-            c.shadowBlur = 8;
-            c.shadowColor = this.color;
             c.beginPath();
             c.ellipse(0, 0, this.radius * 1.5, this.radius * 0.8, 0, 0, Math.PI * 2);
             c.fill();
             // Highlight
-            c.fillStyle = 'rgba(255,255,255,0.6)';
+            c.fillStyle = 'rgba(255,255,255,0.7)';
             c.beginPath();
             c.ellipse(-this.radius * 0.5, -this.radius * 0.2, this.radius * 0.4, this.radius * 0.2, 0, 0, Math.PI * 2);
             c.fill();
         } else if (this.type === 'pixel') {
             c.rotate(-this.rotation); 
-            c.fillRect(-this.radius, -this.radius, this.radius*2, this.radius*2);
+            c.fillRect(-this.radius, -this.radius, this.radius * 2, this.radius * 2);
         } else if (this.type === 'glitch' || this.type === 'spark') {
-            c.shadowBlur = 15;
-            c.shadowColor = this.color;
-            c.globalCompositeOperation = 'screen';
+            c.globalCompositeOperation = 'lighter';
             if (this.type === 'spark') {
-                c.fillRect(-this.radius*1.5, -this.radius*1.5, this.radius*3, this.radius*3);
+                c.fillRect(-this.radius * 1.5, -this.radius * 1.5, this.radius * 3, this.radius * 3);
             } else {
-                c.fillRect(-this.radius*3, -this.radius*0.2, this.radius*6, this.radius*0.4);
+                c.fillRect(-this.radius * 3, -this.radius * 0.2, this.radius * 6, this.radius * 0.4);
             }
         } else if (this.type === 'leaf') {
-            c.shadowBlur = 5;
-            c.shadowColor = 'rgba(0,0,0,0.3)';
             c.beginPath();
             c.ellipse(0, 0, this.radius * 1.2, this.radius * 0.6, 0, 0, Math.PI * 2);
             c.fill();
         } else if (this.type === 'snow') {
-            c.shadowBlur = 8;
-            c.shadowColor = '#ffffff';
             c.beginPath();
             c.arc(0, 0, this.radius, 0, Math.PI * 2);
             c.fill();
         } else if (this.type === 'stardust') {
-            c.shadowBlur = 15;
-            c.shadowColor = this.color;
+            c.globalCompositeOperation = 'lighter';
             c.beginPath();
             c.arc(0, 0, this.radius, 0, Math.PI * 2);
             c.fill();
         } else {
-            c.shadowBlur = 10;
-            c.shadowColor = this.color;
             if (this.type === 'sparkle') {
                 c.beginPath();
                 for (let i = 0; i < 4; i++) {

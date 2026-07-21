@@ -37,6 +37,13 @@ export const AudioFX = {
         }
     },
 
+    autoDisconnect(osc, ...nodes) {
+        osc.onended = () => {
+            try { osc.disconnect(); } catch (e) {}
+            nodes.forEach(n => { try { n.disconnect(); } catch (e) {} });
+        };
+    },
+
     play(setupFn) {
         if (this.muted) return;
         this.init();
@@ -495,3 +502,17 @@ if (soundBtn) {
     });
     AudioFX.updateButtonUI(); // Sync button on load
 }
+
+document.addEventListener('visibilitychange', () => {
+    if (AudioFX.ctx) {
+        if (document.hidden) {
+            if (AudioFX.ctx.state === 'running') {
+                AudioFX.ctx.suspend().catch(() => {});
+            }
+        } else {
+            if (AudioFX.ctx.state === 'suspended' && !AudioFX.muted) {
+                AudioFX.ctx.resume().catch(() => {});
+            }
+        }
+    }
+});

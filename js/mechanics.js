@@ -767,15 +767,15 @@ export function addXp(amount) {
 
 export function saveStateSnapshot() {
     state.previousState = {
-        grid: structuredClone(state.grid),
-        dockedBlocks: structuredClone(state.dockedBlocks),
-        timeBombs: structuredClone(state.timeBombs),
+        grid: state.grid.map(row => row.slice()),
+        dockedBlocks: state.dockedBlocks.map(b => b ? { ...b, matrix: b.matrix.map(r => r.slice()) } : null),
+        timeBombs: state.timeBombs.map(b => ({ ...b })),
         score: state.score,
         comboCount: state.comboCount,
         rotationRights: state.rotationRights,
         isFeverActive: state.isFeverActive,
         feverTimeLeft: state.feverTimeLeft,
-        currentMission: state.currentMission ? structuredClone(state.currentMission) : null
+        currentMission: state.currentMission ? { ...state.currentMission } : null
     };
 }
 
