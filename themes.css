@@ -23,23 +23,25 @@ body.theme-wood {
     --ice-border: 2px solid rgba(255, 255, 255, 0.3);
     --ice-radius: 4px;
 
-    /* Muted painted wood colors */
-    --color-orange: #d35400;
-    --color-blue: #2980b9;
-    --color-green: #27ae60;
-    --color-yellow: #f39c12;
-    --color-purple: #8e44ad;
-    --color-pink: #c0392b;
-    --color-cyan: #16a085;
+    /* Rich carved wood gradients */
+    --color-orange: linear-gradient(135deg, #d35400 0%, #873600 100%);
+    --color-blue: linear-gradient(135deg, #2980b9 0%, #1a5276 100%);
+    --color-green: linear-gradient(135deg, #27ae60 0%, #1e8449 100%);
+    --color-yellow: linear-gradient(135deg, #f39c12 0%, #b9770e 100%);
+    --color-purple: linear-gradient(135deg, #8e44ad 0%, #5b2c6f 100%);
+    --color-pink: linear-gradient(135deg, #c0392b 0%, #7b241c 100%);
+    --color-cyan: linear-gradient(135deg, #16a085 0%, #117864 100%);
 }
 
 /* Realistic Wood Grain Overlay for Blocks */
-body.theme-wood .block-cell {
+body.theme-wood .block-cell,
+body.theme-wood .grid-cell.filled {
     position: relative;
     overflow: hidden;
 }
 
-body.theme-wood .block-cell::before {
+body.theme-wood .block-cell::before,
+body.theme-wood .grid-cell.filled::before {
     content: "";
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
@@ -50,7 +52,8 @@ body.theme-wood .block-cell::before {
     z-index: 1;
 }
 
-body.theme-wood .block-cell.bomb::before {
+body.theme-wood .block-cell.bomb::before,
+body.theme-wood .grid-cell.bomb::before {
     display: none; /* Do not apply wood grain to the bomb */
 }
 
@@ -115,14 +118,14 @@ body.theme-neon::before {
     100% { transform: perspective(500px) rotateX(70deg) translateY(50px); }
 }
 
-/* Add custom glow to neon blocks using a trick: */
-body.theme-neon .block-shape.orange .block-cell { border-color: #ff6d00; box-shadow: 0 0 15px #ff6d00, inset 0 0 10px #ff6d00; }
-body.theme-neon .block-shape.blue .block-cell { border-color: #00b0ff; box-shadow: 0 0 15px #00b0ff, inset 0 0 10px #00b0ff; }
-body.theme-neon .block-shape.green .block-cell { border-color: #00e676; box-shadow: 0 0 15px #00e676, inset 0 0 10px #00e676; }
-body.theme-neon .block-shape.yellow .block-cell { border-color: #ffea00; box-shadow: 0 0 15px #ffea00, inset 0 0 10px #ffea00; }
-body.theme-neon .block-shape.purple .block-cell { border-color: #d500f9; box-shadow: 0 0 15px #d500f9, inset 0 0 10px #d500f9; }
-body.theme-neon .block-shape.pink .block-cell { border-color: #f50057; box-shadow: 0 0 15px #f50057, inset 0 0 10px #f50057; }
-body.theme-neon .block-shape.cyan .block-cell { border-color: #18ffff; box-shadow: 0 0 15px #18ffff, inset 0 0 10px #18ffff; }
+/* Add custom glow to neon blocks for both dock blocks & placed grid cells */
+body.theme-neon .block-shape.orange .block-cell, body.theme-neon .grid-cell.filled-orange { border: 1.5px solid #ff6d00 !important; box-shadow: 0 0 12px #ff6d00, inset 0 0 8px #ff6d00 !important; }
+body.theme-neon .block-shape.blue .block-cell, body.theme-neon .grid-cell.filled-blue { border: 1.5px solid #00b0ff !important; box-shadow: 0 0 12px #00b0ff, inset 0 0 8px #00b0ff !important; }
+body.theme-neon .block-shape.green .block-cell, body.theme-neon .grid-cell.filled-green { border: 1.5px solid #00e676 !important; box-shadow: 0 0 12px #00e676, inset 0 0 8px #00e676 !important; }
+body.theme-neon .block-shape.yellow .block-cell, body.theme-neon .grid-cell.filled-yellow { border: 1.5px solid #ffea00 !important; box-shadow: 0 0 12px #ffea00, inset 0 0 8px #ffea00 !important; }
+body.theme-neon .block-shape.purple .block-cell, body.theme-neon .grid-cell.filled-purple { border: 1.5px solid #d500f9 !important; box-shadow: 0 0 12px #d500f9, inset 0 0 8px #d500f9 !important; }
+body.theme-neon .block-shape.pink .block-cell, body.theme-neon .grid-cell.filled-pink { border: 1.5px solid #f50057 !important; box-shadow: 0 0 12px #f50057, inset 0 0 8px #f50057 !important; }
+body.theme-neon .block-shape.cyan .block-cell, body.theme-neon .grid-cell.filled-cyan { border: 1.5px solid #18ffff !important; box-shadow: 0 0 12px #18ffff, inset 0 0 8px #18ffff !important; }
 
 
 /* 3. CANDY / PASTEL (Şeker Dükkanı) */

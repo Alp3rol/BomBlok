@@ -7,6 +7,8 @@ import { initGrid, clearGridHighlights, spawnIceBlocks, renderBlockInSlot, gener
 import { initMission, updateMissionProgress, updateMissionUI } from './missions.js';
 import { Leaderboard } from './leaderboard.js';
 import { updateScoreUI, addXp, syncProgressionUI, deactivateFeverMode, checkAndClearLines, saveStateSnapshot, performUndo, rerollDockBlocks, updateJokerButtonsUI, getRotatedMatrix, animateAndRotateBlock, activateFeverMode, checkGameOver, resetLevelProgression } from './mechanics.js';
+import { Haptics } from './haptics.js';
+import { Achievements } from './achievements.js';
 
 let dragRAF = null;
 let currentDragX = 0;
@@ -265,6 +267,7 @@ export function onPointerUp(e) {
     } else {
         if (validPlacement && targetCells.length > 0) {
             AudioFX.playDrop();
+            Haptics.vibrateDrop();
             saveStateSnapshot();
             
             targetCells.forEach(cell => {
@@ -478,7 +481,8 @@ export function tryPlaceSelectedBlock(gridR, gridC) {
         state.dockedBlocks[state.selectedBlockIndex] = null;
 
         AudioFX.playDrop();
-        deselectBlock();
+        Haptics.vibrateDrop();
+        saveStateSnapshot();
         checkAndClearLines();
 
         const isDockEmpty = state.dockedBlocks.every(block => block === null);
@@ -638,6 +642,55 @@ if (rotationRightsBtn) {
             rotationRightsBtn.classList.add('shake');
             setTimeout(() => rotationRightsBtn.classList.remove('shake'), 400);
         }
+    });
+}
+
+// Share score button listener
+const shareBtn = document.getElementById('share-score-btn');
+if (shareBtn) {
+    shareBtn.addEventListener('click', async () => {
+        const shareText = `💣 BomBlok | Skor: ${state.score.toLocaleString()}\n🏆 Seviye: ${state.playerLevel}\n🟪🟪🟨🟨💣🧊🟩🟩\n🎮 Sen de oyna: ${window.location.href}`;
+        if (navigator.share) {
+            try {
+                await navigator.share({ title: 'BomBlok Skorum', text: shareText, url: window.location.href });
+            } catch (err) {}
+        } else {
+            try {
+                await navigator.clipboard.writeText(shareText);
+                Achievements.showToast('🚀 Skor Kartı Panoya Kopyalandı!');
+            } catch (err) {}
+        }
+    });
+}
+
+// PWA Install prompt listener
+let deferredPrompt = null;
+const pwaBanner = document.getElementById('pwa-install-banner');
+const pwaInstallBtn = document.getElementById('pwa-install-btn');
+const pwaCloseBtn = document.getElementById('pwa-close-btn');
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    if (pwaBanner && !localStorage.getItem('bomblok_pwa_dismissed')) {
+        pwaBanner.classList.remove('hidden');
+    }
+});
+
+if (pwaInstallBtn) {
+    pwaInstallBtn.addEventListener('click', async () => {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            deferredPrompt = null;
+            if (pwaBanner) pwaBanner.classList.add('hidden');
+        }
+    });
+}
+if (pwaCloseBtn) {
+    pwaCloseBtn.addEventListener('click', () => {
+        if (pwaBanner) pwaBanner.classList.add('hidden');
+        localStorage.setItem('bomblok_pwa_dismissed', 'true');
     });
 }
 

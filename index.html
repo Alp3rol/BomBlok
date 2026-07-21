@@ -7,12 +7,20 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="icon" href="icon.png" type="image/png">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="themes.css">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#2d2d2d">
 </head>
 <body>
+    <!-- PWA Install Banner -->
+    <div id="pwa-install-banner" class="pwa-install-banner hidden">
+        <span class="pwa-text">📱 BomBlok'u Ana Ekrana Ekle!</span>
+        <button id="pwa-install-btn" class="pwa-install-btn" type="button">Yükle</button>
+        <button id="pwa-close-btn" class="pwa-close-btn" type="button">&times;</button>
+    </div>
+
     <div class="game-container">
         <!-- Header: Top Row (Title & Controls) -->
         <header class="game-header">
@@ -135,6 +143,7 @@
                 <button id="game-over-save-btn" class="modal-start-btn game-over-save-btn" type="button">Skoru Kaydet</button>
                 <div id="game-over-nickname-hint" class="nickname-hint">Skor göndermek için rumuz gerekli.</div>
             </div>
+            <button id="share-score-btn" class="modal-start-btn share-btn" type="button">🚀 Skoru Paylaş</button>
             <button id="restart-btn" class="restart-button">Yeniden Başla</button>
         </div>
     </div>
@@ -222,9 +231,11 @@
                 <div class="leaderboard-tabs">
                     <button id="lb-tab-weekly" class="lb-tab active">Haftalık</button>
                     <button id="lb-tab-global" class="lb-tab">Global</button>
+                    <button id="lb-tab-achievements" class="lb-tab">Rozetler</button>
                 </div>
                 <div id="leaderboard-status" class="leaderboard-status">Yükleniyor...</div>
                 <div id="leaderboard-list" class="leaderboard-list"></div>
+                <div id="achievements-list" class="achievements-list hidden"></div>
                 <div id="nickname-panel" class="nickname-panel">
                     <div class="nickname-label">Rumuz</div>
                     <div class="nickname-row">

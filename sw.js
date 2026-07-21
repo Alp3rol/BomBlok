@@ -10,7 +10,7 @@
 // everyone (it drops all previous caches on activate); day-to-day edits reach users on
 // their own via the strategies above, with no version bump and no ?v= query needed.
 
-const VERSION = 'v5';
+const VERSION = 'v10';
 const CACHE_NAME = `bomblok-${VERSION}`;
 
 const CORE_ASSETS = [
@@ -30,7 +30,9 @@ const CORE_ASSETS = [
   './js/config.js',
   './js/missions.js',
   './js/leaderboard.js',
-  './js/rules.js'
+  './js/rules.js',
+  './js/haptics.js',
+  './js/achievements.js'
 ];
 
 // Pre-cache the app shell. `cache: 'reload'` bypasses the browser HTTP cache so we never

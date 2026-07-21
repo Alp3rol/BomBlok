@@ -114,11 +114,14 @@ export function updateMissionUI() {
     }
 }
 
+import { Achievements } from './achievements.js';
+
 export function completeMission() {
     state.currentMission.completed = true;
     state.jokers++;
     updateJokerButtonsUI();
     localStorage.setItem('bomblok_jokers', state.jokers);
+    Achievements.recordStat('missions', 1);
 
     // Play victory chime
     AudioFX.playMissionComplete();

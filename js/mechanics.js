@@ -7,6 +7,8 @@ import { getRotatedMatrix, checkColorMatch, detectFullLines } from './rules.js';
 import { initMission, updateMissionProgress, updateMissionUI, checkMissionConstraints } from './missions.js';
 import { Leaderboard } from './leaderboard.js';
 import { selectBlock, deselectBlock } from './main.js';
+import { Haptics } from './haptics.js';
+import { Achievements } from './achievements.js';
 
 let shakeTimeoutId = null;
 let activePopups = 0;
@@ -14,6 +16,7 @@ let activePopups = 0;
 export function activateFeverMode() {
     if (!state.isFeverActive) {
         updateMissionProgress('fever', 1);
+        Achievements.recordStat('feverCount', 1);
     }
     state.isFeverActive = true;
     state.feverTimeLeft = 10.0; // 10 seconds
@@ -314,11 +317,13 @@ export function checkAndClearLines() {
             activateFeverMode();
         }
 
-        // Play clear sound (special powerup sound for cross-clear, regular chime for others)
+        // Play clear sound & haptic feedback
         if (isCrossClear) {
             AudioFX.playCrossClear();
+            Haptics.vibrateClear(state.comboCount + 1);
         } else {
             AudioFX.playClear(state.comboCount);
+            Haptics.vibrateClear(state.comboCount);
         }
 
         // Show floating combo text popups with multiplier and cross-clear state
@@ -415,6 +420,7 @@ export function checkAndClearLines() {
 
         if (hasBombExploded) {
             AudioFX.playBomb();
+            Haptics.vibrateBomb();
             triggerScreenShake('heavy'); // Ensure heavy screen shake on bomb explosion
             activateFeverMode(); // Bomb explosion triggers/extends Fever Mode!
         }
@@ -539,6 +545,7 @@ export function checkAndClearLines() {
             pointsAwarded *= multiplier;
             showFloatingText(`🌈 COLOR MATCH x${multiplier}!`, '#00e5ff');
             updateMissionProgress('colormatch', colorMatchCount);
+            Achievements.recordStat('colorMatch', colorMatchCount);
             try { AudioFX.playCrossClear(); } catch(e) {}
         }
 
@@ -559,9 +566,11 @@ export function checkAndClearLines() {
             updateScoreUI();
         }
 
-        // --- NEW MISSIONS TRACKING (Clear happened) ---
-        state.movesSinceClear = 0;
-        state.consecutiveClears++;
+        // Record achievements stats
+        Achievements.recordStat('bombs', bombsExplodedThisMove);
+        Achievements.recordStat('ice', iceBrokenThisMove);
+        Achievements.recordStat('maxCombo', state.comboCount);
+        Achievements.recordStat('maxScore', state.score);
 
         if (state.currentMission) {
             const mType = state.currentMission.type;
@@ -688,8 +697,9 @@ export function checkGameOver() {
         deactivateFeverMode();
         resetLevelProgression();
 
-        // Play game over tune
+        // Play game over tune & haptics
         AudioFX.playGameOver();
+        Haptics.vibrateGameOver();
 
         // Show Game Over UI after a small delay
         setTimeout(() => {

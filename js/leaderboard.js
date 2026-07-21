@@ -1,4 +1,5 @@
 import { state, leaderboardBtn, leaderboardModal, leaderboardCloseBtn, leaderboardStatusEl, leaderboardListEl, lbTabWeekly, lbTabGlobal, submitScoreBtn, nicknamePanelEl, nicknameInputEl, nicknameSaveBtnEl, nicknameHintEl, gameOverSaveStatusEl, gameOverNicknameInputEl, gameOverSaveBtnEl, gameOverNicknameHintEl } from './state.js';
+import { Achievements } from './achievements.js';
 
 export function getISOWeekKey(date = new Date()) {
     const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
@@ -54,8 +55,10 @@ export const Leaderboard = {
             });
         }
 
+        const lbTabAch = document.getElementById('lb-tab-achievements');
         if (lbTabWeekly) lbTabWeekly.addEventListener('click', () => this.setView('weekly'));
         if (lbTabGlobal) lbTabGlobal.addEventListener('click', () => this.setView('global'));
+        if (lbTabAch) lbTabAch.addEventListener('click', () => this.setView('achievements'));
 
         if (submitScoreBtn) {
             submitScoreBtn.addEventListener('click', async () => {
@@ -107,7 +110,7 @@ export const Leaderboard = {
         if (!leaderboardModal) return;
         leaderboardModal.classList.remove('hidden');
         this.updateNicknameUI();
-        this.refresh();
+        this.setView(this.view || 'weekly');
     },
 
     close() {
@@ -117,9 +120,32 @@ export const Leaderboard = {
 
     setView(view) {
         this.view = view;
+        const lbTabAch = document.getElementById('lb-tab-achievements');
+        const achListEl = document.getElementById('achievements-list');
+        const noteEl = document.querySelector('.lb-note');
+
         if (lbTabWeekly) lbTabWeekly.classList.toggle('active', view === 'weekly');
         if (lbTabGlobal) lbTabGlobal.classList.toggle('active', view === 'global');
-        this.refresh();
+        if (lbTabAch) lbTabAch.classList.toggle('active', view === 'achievements');
+
+        if (view === 'achievements') {
+            if (leaderboardListEl) leaderboardListEl.classList.add('hidden');
+            if (nicknamePanelEl) nicknamePanelEl.classList.add('hidden');
+            if (submitScoreBtn) submitScoreBtn.classList.add('hidden');
+            if (noteEl) noteEl.classList.add('hidden');
+            if (achListEl) {
+                achListEl.classList.remove('hidden');
+                Achievements.renderUI(achListEl);
+            }
+            this.setStatus('Kazanılan Rozetler ve Başarımlar');
+        } else {
+            if (achListEl) achListEl.classList.add('hidden');
+            if (leaderboardListEl) leaderboardListEl.classList.remove('hidden');
+            if (nicknamePanelEl) nicknamePanelEl.classList.remove('hidden');
+            if (submitScoreBtn) submitScoreBtn.classList.remove('hidden');
+            if (noteEl) noteEl.classList.remove('hidden');
+            this.refresh();
+        }
     },
 
     setStatus(text, target = 'modal') {

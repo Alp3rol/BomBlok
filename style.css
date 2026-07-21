@@ -1,5 +1,9 @@
 /* --- BLOCK BLAST PREMIUM STYLESHEET --- */
 
+.hidden {
+    display: none !important;
+}
+
 :root {
     --bg-gradient: linear-gradient(135deg, #0c081d 0%, #160f2e 100%);
     --panel-bg: rgba(26, 18, 52, 0.65);
@@ -376,13 +380,13 @@ button.control-card:disabled {
     transition: transform 0.1s ease, opacity 0.1s ease;
 }
 
-.grid-cell.preview-orange { background: var(--color-orange); }
-.grid-cell.preview-blue { background: var(--color-blue); }
-.grid-cell.preview-green { background: var(--color-green); }
-.grid-cell.preview-yellow { background: var(--color-yellow); }
-.grid-cell.preview-purple { background: var(--color-purple); }
-.grid-cell.preview-pink { background: var(--color-pink); }
-.grid-cell.preview-cyan { background: var(--color-cyan); }
+.grid-cell.preview-orange { background: var(--color-orange) !important; }
+.grid-cell.preview-blue { background: var(--color-blue) !important; }
+.grid-cell.preview-green { background: var(--color-green) !important; }
+.grid-cell.preview-yellow { background: var(--color-yellow) !important; }
+.grid-cell.preview-purple { background: var(--color-purple) !important; }
+.grid-cell.preview-pink { background: var(--color-pink) !important; }
+.grid-cell.preview-cyan { background: var(--color-cyan) !important; }
 
 .grid-cell.preview-bomb {
     background: var(--bomb-bg) !important;
@@ -403,10 +407,14 @@ button.control-card:disabled {
     transform: scale(0.96);
 }
 
-/* Filled Cells */
-.grid-cell.filled {
-    border: none;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3), inset 0 2px 4px rgba(255, 255, 255, 0.2);
+/* Filled Cells & Dock Block Cells (Unified Base) */
+.grid-cell.filled,
+.block-cell {
+    position: relative;
+    overflow: hidden;
+    border: var(--block-border, none);
+    border-radius: var(--block-radius, 6px);
+    box-shadow: var(--block-shadow, 0 4px 8px rgba(0, 0, 0, 0.3), inset 0 2px 4px rgba(255, 255, 255, 0.2));
 }
 
 .grid-cell.filled-orange { background: var(--color-orange); }
@@ -515,7 +523,9 @@ button.control-card:disabled {
 }
 
 .block-cell {
-    border-radius: var(--block-radius);
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--block-radius, 6px);
     box-shadow: var(--block-shadow);
     border: var(--block-border);
 }
@@ -2189,4 +2199,152 @@ body.theme-retro .joker-button:disabled {
     font-size: 11px;
     color: var(--text-secondary);
     line-height: 1.4;
+}
+
+/* --- PWA INSTALL BANNER STYLES --- */
+.pwa-install-banner {
+    position: fixed;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 32px);
+    max-width: 440px;
+    background: linear-gradient(135deg, #7c3aed 0%, #ff007f 100%);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    border-radius: 14px;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    z-index: 9999;
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 700;
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
+}
+
+.pwa-install-banner.hidden {
+    transform: translate(-50%, -100px);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.pwa-install-btn {
+    background: #ffffff;
+    color: #7c3aed;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-weight: 800;
+    font-size: 12px;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.pwa-close-btn {
+    background: transparent;
+    border: none;
+    color: #ffffff;
+    font-size: 20px;
+    cursor: pointer;
+    opacity: 0.8;
+    line-height: 1;
+}
+
+/* --- SHARE SCORE BUTTON --- */
+.share-btn {
+    background: linear-gradient(135deg, #00d2d3 0%, #0abde3 100%) !important;
+    margin-top: 8px;
+}
+
+/* --- ACHIEVEMENTS MODAL TAB & CARDS --- */
+.achievements-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 240px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.achievement-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    transition: background 0.3s ease, border-color 0.3s ease;
+}
+
+.achievement-card.unlocked {
+    background: rgba(29, 209, 161, 0.15);
+    border-color: rgba(29, 209, 161, 0.4);
+}
+
+.ach-icon {
+    font-size: 24px;
+    flex-shrink: 0;
+}
+
+.ach-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.ach-title {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--text-primary);
+}
+
+.ach-desc {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+}
+
+.ach-progress-bg {
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.ach-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #1dd1a1, #00d2d3);
+    border-radius: 2px;
+    transition: width 0.3s ease;
+}
+
+/* --- ACHIEVEMENT TOAST NOTIFICATION --- */
+.achievement-toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translate(-50%, 80px);
+    background: linear-gradient(135deg, #160f2e 0%, #2d1b4e 100%);
+    border: 1.5px solid #ffd700;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(255, 215, 0, 0.4);
+    border-radius: 14px;
+    padding: 12px 20px;
+    color: #ffffff;
+    font-weight: 800;
+    font-size: 14px;
+    text-align: center;
+    white-space: pre-line;
+    z-index: 10000;
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
+}
+
+.achievement-toast.show {
+    transform: translate(-50%, 0);
+    opacity: 1;
 }
