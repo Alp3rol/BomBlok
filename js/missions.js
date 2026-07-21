@@ -69,7 +69,7 @@ export function initMission() {
     }
 
     if (state.currentMission.type === 'saatlibombapanigi') {
-        for(let i=0; i<3; i++) spawnTimeBomb();
+        for(let i=0; i<3; i++) spawnTimeBomb(true);
     }
 
     updateMissionUI();

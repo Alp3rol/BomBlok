@@ -169,11 +169,12 @@ export function showFloatingText(text, color = '#00e5ff') {
     }, 2500); // Matches float-up-fade CSS animation duration
 }
 
-export function spawnTimeBomb() {
+export function spawnTimeBomb(force = false) {
     const diff = getDifficultyParams(state.level);
-    if (state.score < diff.timeBombScoreThreshold) return;
-    
-    if (Math.random() > diff.timeBombChance) return;
+    if (!force) {
+        if (state.score < diff.timeBombScoreThreshold) return;
+        if (Math.random() > diff.timeBombChance) return;
+    }
     
     let emptyCells = [];
     for (let r = 0; r < 8; r++) {
@@ -768,6 +769,7 @@ export function saveStateSnapshot() {
     state.previousState = {
         grid: structuredClone(state.grid),
         dockedBlocks: structuredClone(state.dockedBlocks),
+        timeBombs: structuredClone(state.timeBombs),
         score: state.score,
         comboCount: state.comboCount,
         rotationRights: state.rotationRights,
@@ -819,6 +821,7 @@ export function performUndo() {
     const prev = state.previousState;
     state.grid = prev.grid;
     state.dockedBlocks = prev.dockedBlocks;
+    state.timeBombs = prev.timeBombs ? structuredClone(prev.timeBombs) : [];
     state.score = prev.score;
     state.comboCount = prev.comboCount;
     state.rotationRights = prev.rotationRights;
