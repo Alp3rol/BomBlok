@@ -1109,9 +1109,12 @@ body.theme-wood {
 body.theme-wood .theme-select option {
     background: #3e2723;
 }
-body.theme-wood .grid-cell {
+body.theme-wood .grid-cell:not(.filled) {
     border-radius: 4px;
     box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+body.theme-wood .grid-cell.filled {
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.3) !important;
 }
 body.theme-wood .block-cell {
     border-radius: 4px;

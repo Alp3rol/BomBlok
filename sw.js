@@ -10,7 +10,7 @@
 // everyone (it drops all previous caches on activate); day-to-day edits reach users on
 // their own via the strategies above, with no version bump and no ?v= query needed.
 
-const VERSION = 'v10';
+const VERSION = 'v11';
 const CACHE_NAME = `bomblok-${VERSION}`;
 
 const CORE_ASSETS = [
