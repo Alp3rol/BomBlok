@@ -214,7 +214,11 @@ export function trackHighlight(cellEl) {
 
 export function clearGridHighlights() {
     highlightedCells.forEach(cell => {
-        cell.classList.remove('highlight-valid', 'highlight-invalid');
+        Array.from(cell.classList).forEach(cls => {
+            if (cls.startsWith('preview-') || cls.startsWith('highlight-')) {
+                cell.classList.remove(cls);
+            }
+        });
     });
     highlightedCells = [];
 }

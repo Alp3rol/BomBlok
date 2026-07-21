@@ -72,17 +72,18 @@ export function triggerScreenShake(intensity) {
     }
 
     container.classList.remove('shake-mild', 'shake-heavy');
-    void container.offsetWidth; // Trigger reflow to restart CSS animation
 
-    const shakeClass = intensity === 'heavy' ? 'shake-heavy' : 'shake-mild';
-    const duration = intensity === 'heavy' ? 350 : 200;
+    requestAnimationFrame(() => {
+        const shakeClass = intensity === 'heavy' ? 'shake-heavy' : 'shake-mild';
+        const duration = intensity === 'heavy' ? 350 : 200;
 
-    container.classList.add(shakeClass);
+        container.classList.add(shakeClass);
 
-    shakeTimeoutId = setTimeout(() => {
-        container.classList.remove('shake-mild', 'shake-heavy');
-        shakeTimeoutId = null;
-    }, duration);
+        shakeTimeoutId = setTimeout(() => {
+            container.classList.remove('shake-mild', 'shake-heavy');
+            shakeTimeoutId = null;
+        }, duration);
+    });
 }
 
 export function showComboPopup(linesCleared, comboCount, isCrossClear = false) {
@@ -454,8 +455,11 @@ export function checkAndClearLines() {
             }
         });
 
-        // Trigger particle blast for each cell
-        const particleMultiplier = state.isFeverActive ? 2.5 : (1 + state.comboCount * 0.2);
+        // Trigger particle blast for each cell with a balanced particle budget
+        const totalCells = cellsToClear.length;
+        const baseMultiplier = state.isFeverActive ? 1.5 : (1 + state.comboCount * 0.1);
+        const particleMultiplier = totalCells > 8 ? (baseMultiplier * 0.5) : baseMultiplier;
+
         cellsToClear.forEach(cell => {
             const colorName = typeof cell.color === 'string' ? cell.color.split('-')[0] : 'orange';
             spawnParticles(cell.r, cell.c, colorName, particleMultiplier);

@@ -173,33 +173,38 @@ export function checkPlacementValidity() {
 
                     const cellEl = getCellElement(targetR, targetC);
                     const isOccupied = state.grid[targetR][targetC] !== 0;
+                    const isBomb = shape.bombCell && shape.bombCell.r === r && shape.bombCell.c === c;
+
                     if (isOccupied) {
                         fits = false;
-                        invalidCells.push({ r: targetR, c: targetC, el: cellEl });
+                        invalidCells.push({ r: targetR, c: targetC, el: cellEl, isBomb });
                     } else {
-                        proposedCells.push({ r: targetR, c: targetC, el: cellEl });
+                        proposedCells.push({ r: targetR, c: targetC, el: cellEl, isBomb });
                     }
                 }
             }
             if (!fits && invalidCells.length === 0) break;
         }
 
+        const colorClass = `preview-${shape.color}`;
         if (fits) {
             state.activeDrag.validPlacement = true;
             state.activeDrag.targetCells = proposedCells;
             state.activeDrag.offsetR = offsetR;
             state.activeDrag.offsetC = offsetC;
 
-            // Apply highlight class to candidate grid cells
-            proposedCells.forEach(cell => {
-                cell.el.classList.add('highlight-valid');
-                trackHighlight(cell.el);
-            });
-        } else {
-            // Daha iyi preview: kısmen geçerli hücreleri yeşil, dolu olanları kırmızı göster
             proposedCells.forEach(cell => {
                 if (cell.el) {
-                    cell.el.classList.add('highlight-valid');
+                    cell.el.classList.add('preview-valid', colorClass);
+                    if (cell.isBomb) cell.el.classList.add('preview-bomb');
+                    trackHighlight(cell.el);
+                }
+            });
+        } else {
+            proposedCells.forEach(cell => {
+                if (cell.el) {
+                    cell.el.classList.add('preview-valid', colorClass);
+                    if (cell.isBomb) cell.el.classList.add('preview-bomb');
                     trackHighlight(cell.el);
                 }
             });
@@ -372,38 +377,41 @@ export function showPreviewForSelectedBlock(gridR, gridC) {
                 const targetC = offsetC + c;
                 if (targetR < 0 || targetR >= 8 || targetC < 0 || targetC >= 8) {
                     fits = false;
-                    break;
+                    continue;
                 }
                 const cellEl = getCellElement(targetR, targetC);
+                const isBomb = shape.bombCell && shape.bombCell.r === r && shape.bombCell.c === c;
                 if (state.grid[targetR][targetC] !== 0) {
                     fits = false;
-                    invalidCells.push(cellEl);
+                    invalidCells.push({ el: cellEl, isBomb });
                 } else {
-                    proposedCells.push(cellEl);
+                    proposedCells.push({ el: cellEl, isBomb });
                 }
             }
         }
-        if (!fits) break;
     }
 
+    const colorClass = `preview-${shape.color}`;
     if (fits) {
-        proposedCells.forEach(el => {
-            if (el) {
-                el.classList.add('highlight-valid');
-                trackHighlight(el);
+        proposedCells.forEach(item => {
+            if (item.el) {
+                item.el.classList.add('preview-valid', colorClass);
+                if (item.isBomb) item.el.classList.add('preview-bomb');
+                trackHighlight(item.el);
             }
         });
     } else {
-        proposedCells.forEach(el => {
-            if (el) {
-                el.classList.add('highlight-valid');
-                trackHighlight(el);
+        proposedCells.forEach(item => {
+            if (item.el) {
+                item.el.classList.add('preview-valid', colorClass);
+                if (item.isBomb) item.el.classList.add('preview-bomb');
+                trackHighlight(item.el);
             }
         });
-        invalidCells.forEach(el => {
-            if (el) {
-                el.classList.add('highlight-invalid');
-                trackHighlight(el);
+        invalidCells.forEach(item => {
+            if (item.el) {
+                item.el.classList.add('highlight-invalid');
+                trackHighlight(item.el);
             }
         });
     }

@@ -212,16 +212,15 @@ export function resizeCanvas() {
 }
 
 export function spawnParticles(gridR, gridC, colorName, multiplier = 1) {
-    const cellEl = getCellElement(gridR, gridC);
-    if (!cellEl) return;
+    if (!canvas || canvas.width === 0) return;
 
-    const cellRect = cellEl.getBoundingClientRect();
-    const canvasRect = canvas.getBoundingClientRect();
+    const cellW = canvas.width / 8;
+    const cellH = canvas.height / 8;
 
-    const startX = cellRect.left - canvasRect.left + cellRect.width / 2;
-    const startY = cellRect.top - canvasRect.top + cellRect.height / 2;
+    const startX = (gridC + 0.5) * cellW;
+    const startY = (gridR + 0.5) * cellH;
 
-    const count = Math.floor(15 * multiplier);
+    const count = Math.floor(10 * multiplier);
     for (let i = 0; i < count && particles.length < MAX_PARTICLES; i++) {
         particles.push(new Particle(startX, startY, colorName));
     }
