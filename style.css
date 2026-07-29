@@ -2217,3 +2217,158 @@ input:focus-visible,
         scroll-behavior: auto !important;
     }
 }
+
+/* --- AYARLAR MODALI --- */
+
+.setting-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 10px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--panel-border);
+    cursor: pointer;
+    position: relative;
+    transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.setting-row:hover {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: rgba(255, 255, 255, 0.16);
+}
+
+.setting-icon {
+    font-size: 22px;
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+.setting-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.setting-text strong {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.setting-text small {
+    font-size: 11.5px;
+    color: var(--text-secondary);
+    line-height: 1.35;
+}
+
+/* Gerçek onay kutusu görünmez ama odaklanabilir kalır: klavye ve ekran okuyucu
+   yerel checkbox semantiğini kullanmaya devam eder, görsel anahtar yalnızca kabuktur. */
+.setting-toggle {
+    position: absolute;
+    opacity: 0;
+    width: 46px;
+    height: 26px;
+    right: 10px;
+    margin: 0;
+    cursor: pointer;
+}
+
+.setting-switch {
+    flex-shrink: 0;
+    width: 46px;
+    height: 26px;
+    border-radius: 13px;
+    background: rgba(0, 0, 0, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    position: relative;
+    transition: background 0.25s ease, border-color 0.25s ease;
+}
+
+.setting-switch::after {
+    content: "";
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #ffffff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.setting-toggle:checked ~ .setting-switch {
+    background: var(--accent);
+    border-color: var(--accent);
+}
+
+.setting-toggle:checked ~ .setting-switch::after {
+    transform: translateX(20px);
+}
+
+.setting-toggle:focus-visible ~ .setting-switch {
+    outline: 3px solid #ffffff;
+    outline-offset: 2px;
+}
+
+/* Cihaz titreşimi desteklemiyorsa satır soluk ve etkisiz görünür. */
+.setting-row.setting-unavailable {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.setting-row.setting-unavailable .setting-toggle {
+    cursor: not-allowed;
+}
+
+/* Oyun içi "Hareketi Azalt" tercihi. prefers-reduced-motion medya sorgusuyla aynı etkiyi
+   verir ama işletim sistemi ayarından bağımsız olarak oyun içinden açılabilir. */
+body.reduce-motion *,
+body.reduce-motion *::before,
+body.reduce-motion *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+}
+
+/* Tema butonu: ikon + ad. Dar ekranlarda ad gizlenir, buton emoji boyutuna iner —
+   header 5 kontrole çıktığında 320px cihazlarda oyun başlığı tamamen kırpılıyordu. */
+.theme-btn-icon {
+    line-height: 1;
+}
+
+.theme-btn-name {
+    margin-left: 6px;
+}
+
+@media (max-width: 480px) {
+    .theme-btn-name {
+        display: none;
+    }
+    .theme-btn {
+        padding: 8px 10px;
+    }
+    .theme-dropdown,
+    .theme-btn {
+        max-width: none;
+    }
+}
+
+/* 320px sınıfı cihazlar: başlığı biraz daha daralt. Buton boyutlarını küçültmek yerine
+   fontu düşürüyoruz — dokunma hedefleri zaten 38px ile sınırda. */
+@media (max-width: 360px) {
+    .game-title {
+        font-size: clamp(13px, 4.6vw, 20px);
+        letter-spacing: 0;
+    }
+    .title-bomb {
+        width: clamp(11px, 3.4vw, 16px);
+        height: clamp(11px, 3.4vw, 16px);
+    }
+    .header-controls {
+        gap: 5px;
+    }
+}

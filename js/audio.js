@@ -6,6 +6,9 @@ import { soundBtn } from './state.js';
 export const AudioFX = {
     ctx: null,
     muted: Storage.get(KEYS.muted) === 'true',
+    // Arka plan müziği ses efektlerinden ayrı kapatılabiliyor. Varsayılan açık — mevcut
+    // davranışı korumak için; ayarlardan kapatılabilir.
+    musicEnabled: Storage.get(KEYS.music, 'true') !== 'false',
 
     init() {
         if (this.ctx) return;
@@ -397,8 +400,18 @@ export const AudioFX = {
     bgMusicStep: 0,
     bgMusicTempo: 500, // ms per beat
 
+    setMusicEnabled(enabled) {
+        this.musicEnabled = !!enabled;
+        Storage.set(KEYS.music, this.musicEnabled);
+        if (this.musicEnabled) {
+            this.startBgMusic();
+        } else {
+            this.stopBgMusic();
+        }
+    },
+
     startBgMusic() {
-        if (this.muted) return;
+        if (this.muted || !this.musicEnabled) return;
         if (this.bgMusicInterval) return;
         this.init();
         if (!this.ctx) return;

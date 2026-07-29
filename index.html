@@ -62,7 +62,8 @@
                         <button class="theme-item" type="button" data-theme="seasons">&#127810; Mevsimler</button>
                     </div>
                 </div>
-                <button id="sound-btn" class="sound-button" title="Sesi Kapat/Aç">🔊</button>
+                <button id="settings-btn" class="help-button" type="button" title="Ayarlar" aria-label="Ayarlar">⚙️</button>
+                <button id="sound-btn" class="sound-button" title="Sesi Kapat/Aç" aria-label="Sesi Kapat/Aç">🔊</button>
             </div>
         </header>
 
@@ -167,6 +168,56 @@
             </div>
             <button id="share-score-btn" class="modal-start-btn share-btn" type="button">🚀 Skoru Paylaş</button>
             <button id="restart-btn" class="restart-button">Yeniden Başla</button>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+        <div class="modal-card">
+            <button class="modal-close-btn" id="settings-close-btn" type="button" aria-label="Kapat">&times;</button>
+            <h2 class="modal-title" id="settings-title">Ayarlar</h2>
+            <div class="modal-content">
+                <label class="setting-row" for="setting-sfx">
+                    <span class="setting-icon">🔊</span>
+                    <span class="setting-text">
+                        <strong>Ses Efektleri</strong>
+                        <small>Yerleştirme, patlama ve kırım sesleri</small>
+                    </span>
+                    <input type="checkbox" id="setting-sfx" class="setting-toggle">
+                    <span class="setting-switch" aria-hidden="true"></span>
+                </label>
+
+                <label class="setting-row" for="setting-music">
+                    <span class="setting-icon">🎵</span>
+                    <span class="setting-text">
+                        <strong>Arka Plan Müziği</strong>
+                        <small>Ses efektlerinden bağımsız kapatılabilir</small>
+                    </span>
+                    <input type="checkbox" id="setting-music" class="setting-toggle">
+                    <span class="setting-switch" aria-hidden="true"></span>
+                </label>
+
+                <label class="setting-row" for="setting-haptics" id="setting-haptics-row">
+                    <span class="setting-icon">📳</span>
+                    <span class="setting-text">
+                        <strong>Titreşim</strong>
+                        <small>Dokunmatik cihazlarda haptik geri bildirim</small>
+                    </span>
+                    <input type="checkbox" id="setting-haptics" class="setting-toggle">
+                    <span class="setting-switch" aria-hidden="true"></span>
+                </label>
+
+                <label class="setting-row" for="setting-reduce-motion">
+                    <span class="setting-icon">🎬</span>
+                    <span class="setting-text">
+                        <strong>Hareketi Azalt</strong>
+                        <small>Dekoratif animasyonları ve ekran sarsıntısını durdurur</small>
+                    </span>
+                    <input type="checkbox" id="setting-reduce-motion" class="setting-toggle">
+                    <span class="setting-switch" aria-hidden="true"></span>
+                </label>
+            </div>
+            <button id="settings-done-btn" class="modal-start-btn" type="button">Tamam</button>
         </div>
     </div>
 

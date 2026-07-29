@@ -9,6 +9,7 @@ import { initMission, updateMissionProgress, updateMissionUI } from './missions.
 import { Leaderboard } from './leaderboard.js';
 import { updateScoreUI, addXp, syncProgressionUI, deactivateFeverMode, checkAndClearLines, saveStateSnapshot, performUndo, rerollDockBlocks, updateJokerButtonsUI, getRotatedMatrix, saveJokers } from './mechanics.js';
 import { Storage, KEYS } from './storage.js';
+import { Settings } from './settings.js';
 import { Haptics } from './haptics.js';
 import { Achievements } from './achievements.js';
 
@@ -571,6 +572,7 @@ document.querySelectorAll('.dock-slot').forEach((slot, index) => {
 // Boot the game
 applyProgressResetIfNeeded();
 ThemeManager.init(); // Initialize Theme Manager
+Settings.init();
 Leaderboard.init();
 syncProgressionUI();
 

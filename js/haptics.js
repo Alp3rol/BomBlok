@@ -1,6 +1,15 @@
+import { Storage, KEYS } from './storage.js';
+
 // --- HAPTIC FEEDBACK (VIBRATION API) MODULE ---
 export const Haptics = {
-    enabled: true,
+    // Eskiden kodda sabit `true` idi; kullanıcının kapatma yolu yoktu. Artık ayarlardan
+    // kontrol ediliyor ve tercih kalıcı.
+    enabled: Storage.get(KEYS.haptics, 'true') !== 'false',
+
+    setEnabled(value) {
+        this.enabled = !!value;
+        Storage.set(KEYS.haptics, this.enabled);
+    },
 
     isSupported() {
         return typeof window !== 'undefined' && 'vibrate' in navigator;

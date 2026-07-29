@@ -4,18 +4,35 @@ import { Storage, KEYS } from './storage.js';
 
 // --- THEME MANAGER ---
 export const THEME_LABELS = {
-    dark: '🌙 Karanlık',
-    neon: '⚡ Neon',
-    wood: '🪵 Ahşap',
-    candy: '🍭 Şeker',
-    cosmos: '🌌 Uzay',
-    retro: '👾 Retro',
-    seasons: '🍂 Mevsimler'
+    dark: { icon: '🌙', name: 'Karanlık' },
+    neon: { icon: '⚡', name: 'Neon' },
+    wood: { icon: '🪵', name: 'Ahşap' },
+    candy: { icon: '🍭', name: 'Şeker' },
+    cosmos: { icon: '🌌', name: 'Uzay' },
+    retro: { icon: '👾', name: 'Retro' },
+    seasons: { icon: '🍂', name: 'Mevsimler' }
 };
 
+// İkon ve ad ayrı span'lara yazılıyor: dar ekranlarda CSS yalnızca adı gizleyip butonu
+// ikon boyutuna indirebiliyor. Tek metin düğümüyle bu mümkün değildi ve başlık,
+// kontroller yüzünden 320px'te tamamen kırpılıyordu.
 function setThemeButtonLabel(themeName) {
     if (!themeBtnEl) return;
-    themeBtnEl.textContent = THEME_LABELS[themeName] || themeName;
+    const label = THEME_LABELS[themeName] || { icon: '', name: themeName };
+
+    themeBtnEl.textContent = '';
+
+    const icon = document.createElement('span');
+    icon.className = 'theme-btn-icon';
+    icon.textContent = label.icon;
+
+    const name = document.createElement('span');
+    name.className = 'theme-btn-name';
+    name.textContent = label.name;
+
+    themeBtnEl.append(icon, name);
+    // Ad gizlendiğinde buton yalnızca emoji gösterdiği için erişilebilir ad şart.
+    themeBtnEl.setAttribute('aria-label', `Tema: ${label.name}`);
 }
 
 function closeThemeMenu() {
