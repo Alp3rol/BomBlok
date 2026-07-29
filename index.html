@@ -2,12 +2,34 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>BomBlok - Premium Web Oyunu</title>
+    <!-- maximum-scale / user-scalable=no BİLEREK kaldırıldı: yakınlaştırmayı engellemek
+         WCAG 1.4.4 ihlali. Tarayıcı jestleri zaten oyun alanında touch-action ile kapalı. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>BomBlok — Bombalı Blok Bulmaca Oyunu</title>
+    <meta name="description" content="BomBlok: bomba blokları, buz engelleri, görevler ve haftalık liderlik tablosu olan ücretsiz 8x8 blok bulmaca oyunu. Kurulum yok, doğrudan tarayıcıda oyna.">
+    <link rel="canonical" href="https://alp3rol.github.io/BomBlok/">
+
+    <!-- Sosyal medya önizleme kartı -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="BomBlok">
+    <meta property="og:title" content="BomBlok — Bombalı Blok Bulmaca Oyunu">
+    <meta property="og:description" content="Satırları patlat, kombo zinciri kur, liderlik tablosuna gir. Ücretsiz, kurulumsuz, tarayıcıda.">
+    <meta property="og:url" content="https://alp3rol.github.io/BomBlok/">
+    <meta property="og:image" content="https://alp3rol.github.io/BomBlok/assets/og-cover.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="BomBlok logosu: patlayan renkli bloklar ve bir bomba">
+    <meta property="og:locale" content="tr_TR">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="BomBlok — Bombalı Blok Bulmaca Oyunu">
+    <meta name="twitter:description" content="Satırları patlat, kombo zinciri kur, liderlik tablosuna gir.">
+    <meta name="twitter:image" content="https://alp3rol.github.io/BomBlok/assets/og-cover.jpg">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
-    <link rel="icon" href="icon.png" type="image/png">
+    <link rel="icon" href="assets/favicon-32.png" sizes="32x32" type="image/png">
+    <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="themes.css">
     <link rel="manifest" href="manifest.json">
@@ -145,15 +167,6 @@
             </div>
             <button id="share-score-btn" class="modal-start-btn share-btn" type="button">🚀 Skoru Paylaş</button>
             <button id="restart-btn" class="restart-button">Yeniden Başla</button>
-        </div>
-    </div>
-
-    <!-- Mission Complete Screen -->
-    <div id="mission-complete-overlay" class="mission-complete-overlay hidden">
-        <div class="mission-complete-card">
-            <div class="complete-icon">🏆</div>
-            <h2 class="complete-title">GÖREV TAMAMLANDI!</h2>
-            <p class="complete-reward">+1 JOKER KAZANDIN</p>
         </div>
     </div>
 

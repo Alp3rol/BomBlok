@@ -1,17 +1,33 @@
 {
-  "name": "BomBlok",
+  "name": "BomBlok — Bombalı Blok Bulmaca",
   "short_name": "BomBlok",
-  "description": "Block Blast with bombs and themes",
+  "description": "Bomba blokları, buz engelleri, görevler ve haftalık liderlik tablosu olan 8x8 blok bulmaca oyunu.",
+  "lang": "tr",
   "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#2d2d2d",
   "theme_color": "#2d2d2d",
+  "categories": ["games", "entertainment"],
   "icons": [
     {
-      "src": "icon.png",
+      "src": "assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }

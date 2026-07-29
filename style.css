@@ -250,12 +250,6 @@ body {
         font-size: 15px;
         margin-right: 0;
     }
-    .theme-select {
-        font-size: 12px;
-        padding: 6px 8px;
-        margin-right: 0;
-        max-width: 120px;
-    }
 }
 
 .scoreboard-row {
@@ -322,7 +316,6 @@ body {
 /* Interactive card buttons */
 button.control-card {
     cursor: pointer;
-    outline: none;
     color: var(--text-primary);
     font-family: var(--font-main);
     transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -936,36 +929,6 @@ button.control-card:disabled {
     100% { transform: translate(-50%, -50%) scale(1.2) rotate(5deg); }
 }
 
-/* Theme Selector Styling */
-.theme-select {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--panel-border);
-    border-radius: 12px;
-    color: var(--text-primary);
-    padding: 8px 12px;
-    font-size: 14px;
-    cursor: pointer;
-    box-shadow: var(--panel-glow);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
-    outline: none;
-    font-family: var(--font-main);
-    margin-right: 8px;
-}
-
-.theme-select:hover {
-    background: rgba(255, 255, 255, 0.12);
-    transform: scale(1.06);
-    box-shadow: var(--panel-glow), 0 0 15px var(--accent-glow);
-    border-color: rgba(255, 255, 255, 0.2);
-}
-
-.theme-select option {
-    background: #17102b;
-    color: #ffffff;
-}
-
 /* Custom Theme Dropdown (native select yerine) */
 .theme-dropdown {
     position: relative;
@@ -985,7 +948,6 @@ button.control-card:disabled {
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
-    outline: none;
     font-family: var(--font-main);
     white-space: nowrap;
     max-width: 160px;
@@ -1111,9 +1073,6 @@ body.theme-neon {
     --color-pink: linear-gradient(135deg, #ff00aa 0%, #ff00ff 100%);
     --color-cyan: linear-gradient(135deg, #00ffff 0%, #00ffaa 100%);
 }
-body.theme-neon .theme-select option {
-    background: #050510;
-}
 body.theme-neon .grid-cell.filled {
     box-shadow: 0 0 12px var(--accent);
 }
@@ -1136,9 +1095,6 @@ body.theme-wood {
     --color-purple: linear-gradient(135deg, #4e342e 0%, #8d6e63 100%);
     --color-pink: linear-gradient(135deg, #880e4f 0%, #d81b60 100%);
     --color-cyan: linear-gradient(135deg, #bf360c 0%, #ff8a65 100%);
-}
-body.theme-wood .theme-select option {
-    background: #3e2723;
 }
 body.theme-wood .grid-cell:not(.filled) {
     border-radius: 4px;
@@ -1194,23 +1150,11 @@ body.theme-retro {
     
     --font-main: 'Courier New', Courier, monospace;
 }
-body.theme-retro .theme-select option {
-    background: #000000;
-    color: #00ff00;
-}
 body.theme-retro .grid-board-container,
 body.theme-retro .dock-container,
 body.theme-retro .score-card,
 body.theme-retro .control-card,
 body.theme-retro .sound-button,
-body.theme-retro .theme-select {
-    border: 2px solid #00ff00;
-    border-radius: 0;
-    box-shadow: none;
-    background: #000;
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-}
 body.theme-retro .grid-cell {
     border: 1px solid rgba(0, 255, 0, 0.25);
     border-radius: 0;
@@ -1873,149 +1817,11 @@ body.theme-wood .fever-bar-fill {
     background: linear-gradient(90deg, #ff5722, #ffcc80);
 }
 
-/* Mission Complete Overlay */
-.mission-complete-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1100;
-    transition: opacity 0.3s ease;
-}
-
-.mission-complete-overlay.hidden {
-    display: none;
-    opacity: 0;
-}
-
-.mission-complete-card {
-    background: var(--panel-bg);
-    border: 2px solid #ff007f;
-    box-shadow: 0 0 30px rgba(255, 0, 127, 0.5), var(--panel-glow);
-    border-radius: 20px;
-    padding: 35px;
-    text-align: center;
-    max-width: 320px;
-    width: 85%;
-    box-sizing: border-box;
-    animation: mission-complete-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-}
-
-@keyframes mission-complete-pop {
-    0% { transform: scale(0.7); opacity: 0; }
-    100% { transform: scale(1); opacity: 1; }
-}
-
-.complete-icon {
-    font-size: 50px;
-    margin-bottom: 15px;
-    animation: bounce-reward 1s infinite alternate;
-}
-
 @keyframes bounce-reward {
     from { transform: translateY(0); }
     to { transform: translateY(-10px); }
 }
 
-.complete-title {
-    font-size: 20px;
-    font-weight: 800;
-    color: #ffffff;
-    margin-bottom: 8px;
-    letter-spacing: 1.5px;
-}
-
-.complete-reward {
-    font-size: 15px;
-    font-weight: 700;
-    color: #00ffcc;
-    text-shadow: 0 0 10px rgba(0, 255, 204, 0.4);
-    letter-spacing: 1px;
-}
-
-/* Retro theme overrides for Mission Complete */
-body.theme-retro .mission-complete-card {
-    border: 3px solid #00ff00;
-    background: #000;
-    border-radius: 0;
-    box-shadow: none;
-}
-body.theme-retro .complete-title {
-    color: #00ff00;
-    font-family: Courier New, monospace;
-}
-body.theme-retro .complete-reward {
-    color: #ffffff;
-    text-shadow: none;
-    font-family: Courier New, monospace;
-}
-
-/* Joker Buttons Styling */
-.joker-controls {
-    display: flex;
-    justify-content: center;
-    gap: 20px;
-    width: 100%;
-}
-
-.joker-button {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--panel-border);
-    border-radius: 12px;
-    color: var(--text-primary);
-    padding: 10px 18px;
-    font-size: 13.5px;
-    font-weight: 700;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    box-shadow: var(--panel-glow);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, opacity 0.3s ease;
-}
-
-.joker-button:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.12);
-    transform: scale(1.08);
-    box-shadow: var(--panel-glow), 0 0 15px var(--accent-glow);
-    border-color: rgba(255, 255, 255, 0.2);
-}
-
-.joker-button:active:not(:disabled) {
-    transform: scale(0.92);
-}
-
-.joker-button:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-}
-
-.joker-btn-icon {
-    font-size: 16px;
-}
-
-/* Retro theme overrides for Joker controls */
-body.theme-retro .joker-button {
-    border: 2px solid #00ff00;
-    border-radius: 0;
-    background: #000;
-    box-shadow: none;
-    color: #00ff00;
-    font-family: Courier New, monospace;
-}
-body.theme-retro .joker-button:disabled {
-    border-color: #004400;
-    color: #004400;
-}
 
 /* MOBILE PERFORMANCE OPTIMIZATIONS */
 @media (max-width: 768px) {
@@ -2155,7 +1961,6 @@ body.theme-retro .joker-button:disabled {
     border: 1px solid rgba(255, 255, 255, 0.14);
     background: rgba(0, 0, 0, 0.22);
     color: var(--text-primary);
-    outline: none;
     font-family: var(--font-main);
     font-weight: 700;
 }
@@ -2381,4 +2186,34 @@ body.theme-retro .joker-button:disabled {
 .achievement-toast.show {
     transform: translate(-50%, 0);
     opacity: 1;
+}
+
+/* --- ERİŞİLEBİLİRLİK --- */
+
+/* Görünür odak halkası (WCAG 2.4.7). :focus-visible kullanıldığı için fare tıklamasında
+   görünmez, yalnızca klavye/AT ile gezinirken çıkar — daha önce elementlerin üzerindeki
+   outline: none tarayıcı varsayılanını da yok ediyordu. */
+:focus-visible {
+    outline: 3px solid #ffffff;
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+/* Koyu zeminlerde beyaz halka her temada okunur kalsın diye ek kontrast gölgesi. */
+button:focus-visible,
+input:focus-visible,
+[role="listbox"] button:focus-visible {
+    box-shadow: 0 0 0 6px rgba(0, 0, 0, 0.55);
+}
+
+/* Hareketi azalt tercihi: dekoratif animasyonların tamamı durur, oyun akışı etkilenmez. */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
 }
