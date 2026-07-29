@@ -1,3 +1,5 @@
+import { Storage, KEYS } from './storage.js';
+
 export const SHAPES = [
     // 1x1 Single
     { matrix: [[1]], color: 'orange' },
@@ -34,18 +36,12 @@ export const SHAPES = [
 export const PROGRESSION_RESET_VERSION = '2026-06-30-reset-1';
 
 export function applyProgressResetIfNeeded() {
-    const appliedVersion = localStorage.getItem('bomblok_progress_reset_version');
-    if (appliedVersion === PROGRESSION_RESET_VERSION) return;
+    if (Storage.get(KEYS.resetVersion) === PROGRESSION_RESET_VERSION) return;
 
-    [
-        'bomblok_best',
-        'block_blast_best',
-        'bomblok_level',
-        'bomblok_xp',
-        'bomblok_jokers'
-    ].forEach((key) => localStorage.removeItem(key));
+    [KEYS.best, KEYS.bestLegacy, KEYS.level, KEYS.xp, KEYS.jokers]
+        .forEach((key) => Storage.remove(key));
 
-    localStorage.setItem('bomblok_progress_reset_version', PROGRESSION_RESET_VERSION);
+    Storage.set(KEYS.resetVersion, PROGRESSION_RESET_VERSION);
 }
 
 export function getDifficultyParams(level = 1) {

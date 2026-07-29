@@ -1,5 +1,6 @@
 import { state, gridBoard, currentScoreEl, bestScoreEl, blockDock, gameOverScreen, finalScoreEl, feverBanner, feverBarFill, playerLevelEl, xpBarFillEl, xpTextEl } from './state.js';
 import { getDifficultyParams } from './config.js';
+import { Storage, KEYS } from './storage.js';
 import { AudioFX } from './audio.js';
 import { spawnParticles } from './particles.js';
 import { initGrid, redrawDock, generateRandomShape, getCellElement } from './grid.js';
@@ -583,7 +584,7 @@ export function checkAndClearLines() {
 
         if (state.score > state.bestScore) {
             state.bestScore = state.score;
-            localStorage.setItem('bomblok_best', state.bestScore);
+            Storage.set(KEYS.best, state.bestScore);
             updateScoreUI();
         }
 
@@ -762,9 +763,14 @@ export function syncProgressionUI() {
     if (xpTextEl) xpTextEl.textContent = `${xp}/${xpNeeded} XP`;
 }
 
+// Joker sayisi 6 ayri noktada elle localStorage'a yaziliyordu; tek kapiya indirildi.
+export function saveJokers() {
+    Storage.set(KEYS.jokers, state.jokers);
+}
+
 export function saveProgression() {
-    localStorage.setItem('bomblok_level', String(state.level));
-    localStorage.setItem('bomblok_xp', String(state.xp));
+    Storage.set(KEYS.level, state.level);
+    Storage.set(KEYS.xp, state.xp);
 }
 
 export function resetLevelProgression() {
@@ -772,7 +778,7 @@ export function resetLevelProgression() {
     state.xp = 0;
     state.jokers = 0;
     saveProgression();
-    localStorage.setItem('bomblok_jokers', '0');
+    saveJokers();
     syncProgressionUI();
     updateJokerButtonsUI();
 }
@@ -788,7 +794,7 @@ export function addXp(amount) {
         leveledUp = true;
         // küçük ödül: level atlayınca 1 joker
         state.jokers += 1;
-        localStorage.setItem('bomblok_jokers', state.jokers);
+        saveJokers();
         showFloatingText(`SEVİYE ATLADIN! (${state.level}) +1 JOKER`, '#00ffcc');
     }
 
@@ -850,7 +856,7 @@ export function performUndo() {
 
     // Deduct joker
     state.jokers--;
-    localStorage.setItem('bomblok_jokers', state.jokers);
+    saveJokers();
     state.undoUsedThisGame = true;
 
     // Restore state
@@ -894,7 +900,7 @@ export function rerollDockBlocks() {
 
     // Deduct joker
     state.jokers--;
-    localStorage.setItem('bomblok_jokers', state.jokers);
+    saveJokers();
     state.rerollUsedThisGame = true;
 
     // Generate new blocks for remaining slots

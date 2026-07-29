@@ -1,12 +1,14 @@
+import { Storage, KEYS } from './storage.js';
+
 // Game State
 export const state = {
     grid: Array(8).fill(null).map(() => Array(8).fill(0)), // 0 = empty, string (e.g., 'blue') = color of filled block
     timeBombs: [],
     score: 0,
-    bestScore: parseInt(localStorage.getItem('bomblok_best') || localStorage.getItem('block_blast_best') || '0', 10),
-    level: parseInt(localStorage.getItem('bomblok_level') || '1', 10),
-    xp: parseInt(localStorage.getItem('bomblok_xp') || '0', 10),
-    nickname: localStorage.getItem('bomblok_nickname') || '',
+    bestScore: Storage.getInt(KEYS.best, 0) || Storage.getInt(KEYS.bestLegacy, 0),
+    level: Storage.getInt(KEYS.level, 1) || 1,
+    xp: Storage.getInt(KEYS.xp, 0),
+    nickname: Storage.get(KEYS.nickname, ''),
     dockedBlocks: [null, null, null], // Holds current shapes on dock
     isGameOver: false,
     comboCount: 0, // Track consecutive clears!
@@ -15,7 +17,7 @@ export const state = {
     isFeverActive: false,
     feverTimeLeft: 0,
     feverIntervalId: null,
-    jokers: parseInt(localStorage.getItem('bomblok_jokers'), 10) || 0,
+    jokers: Storage.getInt(KEYS.jokers, 0),
     previousState: null,
     undoUsedThisGame: false,
     rerollUsedThisGame: false,

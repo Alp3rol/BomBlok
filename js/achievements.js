@@ -1,4 +1,5 @@
 import { AudioFX } from './audio.js';
+import { Storage, KEYS } from './storage.js';
 import { Haptics } from './haptics.js';
 
 export const ACHIEVEMENTS = [
@@ -13,12 +14,12 @@ export const ACHIEVEMENTS = [
 ];
 
 export const Achievements = {
-    unlockedIds: new Set(JSON.parse(localStorage.getItem('bomblok_unlocked_achievements') || '[]')),
-    stats: JSON.parse(localStorage.getItem('bomblok_lifetime_stats') || '{"bombs":0,"maxCombo":0,"ice":0,"maxScore":0,"missions":0,"stone":0,"feverCount":0,"colorMatch":0}'),
+    unlockedIds: new Set(Storage.getJSON(KEYS.achievements, [])),
+    stats: Storage.getJSON(KEYS.lifetimeStats, { bombs: 0, maxCombo: 0, ice: 0, maxScore: 0, missions: 0, stone: 0, feverCount: 0, colorMatch: 0 }),
 
     save() {
-        localStorage.setItem('bomblok_unlocked_achievements', JSON.stringify(Array.from(this.unlockedIds)));
-        localStorage.setItem('bomblok_lifetime_stats', JSON.stringify(this.stats));
+        Storage.setJSON(KEYS.achievements, Array.from(this.unlockedIds));
+        Storage.setJSON(KEYS.lifetimeStats, this.stats);
     },
 
     recordStat(key, amount = 1) {

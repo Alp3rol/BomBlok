@@ -1,5 +1,6 @@
 import { state, leaderboardBtn, leaderboardModal, leaderboardCloseBtn, leaderboardStatusEl, leaderboardListEl, lbTabWeekly, lbTabGlobal, submitScoreBtn, nicknamePanelEl, nicknameInputEl, nicknameSaveBtnEl, nicknameHintEl, gameOverSaveStatusEl, gameOverNicknameInputEl, gameOverSaveBtnEl, gameOverNicknameHintEl } from './state.js';
 import { Achievements } from './achievements.js';
+import { Storage, KEYS } from './storage.js';
 
 export function getISOWeekKey(date = new Date()) {
     const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
@@ -262,7 +263,7 @@ export const Leaderboard = {
 
     persistNickname(nick) {
         state.nickname = nick;
-        localStorage.setItem('bomblok_nickname', nick);
+        Storage.set(KEYS.nickname, nick);
     },
 
     updateNicknameUI() {

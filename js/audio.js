@@ -1,10 +1,11 @@
 import { state } from './state.js';
+import { Storage, KEYS } from './storage.js';
 import { soundBtn } from './state.js';
 
 // --- WEB AUDIO API: SYNTHESIZED SOUND EFFECTS ---
 export const AudioFX = {
     ctx: null,
-    muted: localStorage.getItem('block_blast_muted') === 'true',
+    muted: Storage.get(KEYS.muted) === 'true',
 
     init() {
         if (this.ctx) return;
@@ -16,7 +17,7 @@ export const AudioFX = {
 
     toggleMute() {
         this.muted = !this.muted;
-        localStorage.setItem('block_blast_muted', this.muted);
+        Storage.set(KEYS.muted, this.muted);
         this.updateButtonUI();
         if (this.muted) {
             this.stopBgMusic();

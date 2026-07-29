@@ -1,5 +1,6 @@
 import { themeBtnEl, themeMenuEl } from './state.js';
 import { resizeCanvas } from './particles.js';
+import { Storage, KEYS } from './storage.js';
 
 // --- THEME MANAGER ---
 export const THEME_LABELS = {
@@ -36,7 +37,7 @@ function toggleThemeMenu() {
 }
 
 export const ThemeManager = {
-    current: localStorage.getItem('block_blast_theme') || 'dark',
+    current: Storage.get(KEYS.theme, 'dark'),
 
     init() {
         this.setTheme(this.current);
@@ -68,7 +69,7 @@ export const ThemeManager = {
 
     setTheme(themeName) {
         this.current = themeName;
-        localStorage.setItem('block_blast_theme', themeName);
+        Storage.set(KEYS.theme, themeName);
 
         // Remove existing theme classes
         document.body.classList.remove('theme-dark', 'theme-neon', 'theme-wood', 'theme-candy', 'theme-cosmos', 'theme-retro', 'theme-seasons');

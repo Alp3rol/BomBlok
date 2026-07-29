@@ -1,6 +1,6 @@
 import { state } from './state.js';
 import { AudioFX } from './audio.js';
-import { updateJokerButtonsUI, showFloatingText, spawnTimeBomb } from './mechanics.js';
+import { updateJokerButtonsUI, showFloatingText, spawnTimeBomb, saveJokers } from './mechanics.js';
 
 export const MISSION_POOL = [
     { type: 'lines', text: 'Satır/Sütun Temizle', target: () => Math.floor(Math.random() * 8) + 5, icon: '📏' }, // 5-12
@@ -120,7 +120,7 @@ export function completeMission() {
     state.currentMission.completed = true;
     state.jokers++;
     updateJokerButtonsUI();
-    localStorage.setItem('bomblok_jokers', state.jokers);
+    saveJokers();
     Achievements.recordStat('missions', 1);
 
     // Play victory chime

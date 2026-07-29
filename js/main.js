@@ -6,7 +6,8 @@ import { resizeCanvas, spawnParticlesAtScreen } from './particles.js';
 import { initGrid, clearGridHighlights, spawnIceBlocks, renderBlockInSlot, generateDockBlocks, registerGridCallbacks, getCellElement, trackHighlight } from './grid.js';
 import { initMission, updateMissionProgress, updateMissionUI } from './missions.js';
 import { Leaderboard } from './leaderboard.js';
-import { updateScoreUI, addXp, syncProgressionUI, deactivateFeverMode, checkAndClearLines, saveStateSnapshot, performUndo, rerollDockBlocks, updateJokerButtonsUI, getRotatedMatrix } from './mechanics.js';
+import { updateScoreUI, addXp, syncProgressionUI, deactivateFeverMode, checkAndClearLines, saveStateSnapshot, performUndo, rerollDockBlocks, updateJokerButtonsUI, getRotatedMatrix, saveJokers } from './mechanics.js';
+import { Storage, KEYS } from './storage.js';
 import { Haptics } from './haptics.js';
 import { Achievements } from './achievements.js';
 
@@ -266,42 +267,8 @@ export function onPointerUp(e) {
         }
     } else {
         if (validPlacement && targetCells.length > 0) {
-            AudioFX.playDrop();
-            Haptics.vibrateDrop();
-            saveStateSnapshot();
-            
-            targetCells.forEach(cell => {
-                const relativeR = cell.r - state.activeDrag.offsetR;
-                const relativeC = cell.c - state.activeDrag.offsetC;
-                const isBomb = shape.bombCell && shape.bombCell.r === relativeR && shape.bombCell.c === relativeC;
-                const cellColor = isBomb ? `${shape.color}-bomb` : shape.color;
-
-                state.grid[cell.r][cell.c] = cellColor;
-
-                cell.el.classList.add('filled', `filled-${shape.color}`);
-                if (isBomb) {
-                    cell.el.classList.add('bomb');
-                }
-            });
-
-            // Add score (1 point per filled cell)
-            let shapeScore = targetCells.length;
-            if (state.isFeverActive) {
-                shapeScore *= 2;
-            }
-            state.score += shapeScore;
-            updateMissionProgress('points', shapeScore);
-            updateMissionProgress('blocks', 1);
-            updateScoreUI();
-            addXp(shapeScore);
-
             blockEl.remove();
-            state.dockedBlocks[slotIndex] = null;
-            checkAndClearLines();
-            
-            const isDockEmpty = state.dockedBlocks.every(b => b === null);
-            if (isDockEmpty) generateDockBlocks();
-            updateJokerButtonsUI();
+            commitPlacement(shape, targetCells, state.activeDrag.offsetR, state.activeDrag.offsetC, slotIndex);
         } else {
             AudioFX.playBuzzer();
             blockEl.style.transition = 'transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
@@ -451,50 +418,60 @@ export function tryPlaceSelectedBlock(gridR, gridC) {
     }
 
     if (fits) {
-        // Save state snapshot before placement for Undo
-        saveStateSnapshot();
-        proposedCells.forEach(cell => {
-            const relativeR = cell.r - offsetR;
-            const relativeC = cell.c - offsetC;
-            const isBomb = shape.bombCell && shape.bombCell.r === relativeR && shape.bombCell.c === relativeC;
-            const cellColor = isBomb ? `${shape.color}-bomb` : shape.color;
-            state.grid[cell.r][cell.c] = cellColor;
-
-            cell.el.classList.add('filled', `filled-${shape.color}`);
-            if (isBomb) {
-                cell.el.classList.add('bomb');
-            }
-        });
-
-        let shapeScore = proposedCells.length;
-        if (state.isFeverActive) {
-            shapeScore *= 2;
-        }
-        state.score += shapeScore;
-        updateMissionProgress('points', shapeScore);
-        updateMissionProgress('blocks', 1);
-        updateScoreUI();
-        addXp(shapeScore);
-
-        const blockEl = blockDock.querySelector(`.block-shape[data-slot-index="${state.selectedBlockIndex}"]`);
+        const slotIndex = state.selectedBlockIndex;
+        const blockEl = blockDock.querySelector(`.block-shape[data-slot-index="${slotIndex}"]`);
         if (blockEl) blockEl.remove();
-        state.dockedBlocks[state.selectedBlockIndex] = null;
-
-        AudioFX.playDrop();
-        Haptics.vibrateDrop();
-        // Snapshot yukarıda, tahta değiştirilmeden önce alınıyor. Burada ikinci kez almak
-        // yerleştirme SONRASI durumu kaydediyordu; Geri Al bir joker harcayıp hiçbir şeyi
-        // değiştirmiyordu (sürükle-bırak yolunda tek çağrı olduğu için fark edilmemişti).
-        checkAndClearLines();
-
-        const isDockEmpty = state.dockedBlocks.every(block => block === null);
-        if (isDockEmpty) {
-            generateDockBlocks();
-        }
-        updateJokerButtonsUI();
+        commitPlacement(shape, proposedCells, offsetR, offsetC, slotIndex);
     } else {
         AudioFX.playBuzzer();
     }
+}
+
+/**
+ * Bir şekli tahtaya yazar, puanlar ve turu ilerletir.
+ *
+ * Sürükle-bırak ve tıkla-yerleştir akışları bu bloğun neredeyse birebir aynısını ayrı ayrı
+ * taşıyordu. İki kopya zamanla ayrıştı: tıklama yolu snapshot'ı mutasyondan sonra ikinci kez
+ * alıp Geri Al'ı işlevsiz bırakmıştı. Tek yol bırakarak o sınıf hatayı yapısal olarak kapatıyoruz.
+ *
+ * Snapshot BURADA ve yalnızca bir kez, tahtaya dokunmadan önce alınır.
+ *
+ * @param {{matrix:(0|1)[][], color:string, bombCell?:{r:number,c:number}}} shape
+ * @param {{r:number, c:number, el:HTMLElement}[]} cells Yerleştirilecek hücreler
+ * @param {number} offsetR Şekil matrisinin tahtadaki satır kaydırması
+ * @param {number} offsetC Şekil matrisinin tahtadaki sütun kaydırması
+ * @param {number} slotIndex Boşaltılacak dock yuvası
+ */
+function commitPlacement(shape, cells, offsetR, offsetC, slotIndex) {
+    saveStateSnapshot();
+
+    for (const cell of cells) {
+        const isBomb = !!shape.bombCell
+            && shape.bombCell.r === cell.r - offsetR
+            && shape.bombCell.c === cell.c - offsetC;
+
+        state.grid[cell.r][cell.c] = isBomb ? `${shape.color}-bomb` : shape.color;
+
+        cell.el.classList.add('filled', `filled-${shape.color}`);
+        if (isBomb) cell.el.classList.add('bomb');
+    }
+
+    // Yerleştirme puanı: dolan hücre başına 1, Fever Mode'da iki katı.
+    const gained = state.isFeverActive ? cells.length * 2 : cells.length;
+    state.score += gained;
+    updateMissionProgress('points', gained);
+    updateMissionProgress('blocks', 1);
+    updateScoreUI();
+    addXp(gained);
+
+    state.dockedBlocks[slotIndex] = null;
+
+    AudioFX.playDrop();
+    Haptics.vibrateDrop();
+    checkAndClearLines();
+
+    if (state.dockedBlocks.every(b => b === null)) generateDockBlocks();
+    updateJokerButtonsUI();
 }
 
 export function resetGame() {
@@ -626,7 +603,7 @@ if (rotationRightsBtn) {
         // Sadece joker harcayarak döndürme hakkı alma işlemi
         if (state.jokers > 0) {
             state.jokers--;
-            localStorage.setItem('bomblok_jokers', state.jokers);
+            saveJokers();
             state.rotationRights += 1;
             
             updateMissionProgress('rotate', 1);
@@ -674,7 +651,7 @@ const pwaCloseBtn = document.getElementById('pwa-close-btn');
 window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
-    if (pwaBanner && !localStorage.getItem('bomblok_pwa_dismissed')) {
+    if (pwaBanner && !Storage.get(KEYS.pwaDismissed)) {
         pwaBanner.classList.remove('hidden');
     }
 });
@@ -694,6 +671,6 @@ if (pwaInstallBtn) {
 if (pwaCloseBtn) {
     pwaCloseBtn.addEventListener('click', () => {
         if (pwaBanner) pwaBanner.classList.add('hidden');
-        localStorage.setItem('bomblok_pwa_dismissed', 'true');
+        Storage.set(KEYS.pwaDismissed, 'true');
     });
 }
