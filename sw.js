@@ -1,16 +1,22 @@
 // BomBlok Service Worker
 // Caching strategy (no build step, so no content-hashed filenames):
-//   - Navigations / HTML  -> network-first: always the latest index.html when online,
-//                            cached copy as an offline fallback.
-//   - Same-origin assets  -> stale-while-revalidate: serve instantly from cache, then
-//                            refresh the cache in the background so the NEXT load is current.
+//   - Every same-origin GET -> network-first: the newest copy when online, the cached copy
+//     as an offline fallback.
 //   - Cross-origin (CDN, fonts, Supabase) -> not intercepted; the browser handles them.
-// This removes the old "cache-first + manual CACHE_NAME bump" trap where updates never
-// reached users. Bump VERSION only when you want to force an immediate full refresh for
-// everyone (it drops all previous caches on activate); day-to-day edits reach users on
-// their own via the strategies above, with no version bump and no ?v= query needed.
+//
+// Assets used to be stale-while-revalidate, which served them instantly from cache and
+// refreshed in the background. That produced VERSION SKEW: navigations are network-first,
+// so after a deploy a reload fetched the NEW index.html while the module scripts still came
+// from the OLD cache. The service worker only registers on window 'load' — after those
+// modules have already been requested — so bumping VERSION cannot prevent it either; it
+// only cleans up the load after. Any change that alters the HTML/JS contract (a new element
+// id, a new saved-data shape) would break for exactly one load per user.
+//
+// Network-first costs a round trip per asset when online, which on a CDN with HTTP/2 is
+// negligible for a project this size, and nothing when offline. Consistency wins.
+// Bump VERSION to force every client to drop its old cache on activate.
 
-const VERSION = 'v14';
+const VERSION = 'v16';
 const CACHE_NAME = `bomblok-${VERSION}`;
 
 const CORE_ASSETS = [
@@ -43,16 +49,24 @@ const CORE_ASSETS = [
 
 // Pre-cache the app shell. `cache: 'reload'` bypasses the browser HTTP cache so we never
 // bake a stale copy into the SW cache (the exact failure mode that hid earlier updates).
+//
+// skipWaiting() MUST come after the precache resolves, not before it. Calling it up front
+// activates the worker while cache.add() calls are still in flight, and the browser is then
+// free to terminate the old worker mid-write — the precache was silently completing zero
+// entries. The cache only ever held what the running page happened to request, so
+// manifest.json and the icons were never stored, and a first visit followed by going
+// offline had no app shell to fall back on.
 self.addEventListener('install', (event) => {
-  self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) =>
-      Promise.all(
+    (async () => {
+      const cache = await caches.open(CACHE_NAME);
+      await Promise.all(
         CORE_ASSETS.map((url) =>
           cache.add(new Request(url, { cache: 'reload' })).catch(() => {})
         )
-      )
-    )
+      );
+      await self.skipWaiting();
+    })()
   );
 });
 
@@ -81,35 +95,25 @@ self.addEventListener('fetch', (event) => {
     req.mode === 'navigate' ||
     (req.headers.get('accept') || '').includes('text/html');
 
-  event.respondWith(isHTML ? networkFirst(req) : staleWhileRevalidate(req));
+  event.respondWith(networkFirst(req, isHTML));
 });
 
-// HTML: fresh when online, cached fallback when offline.
-async function networkFirst(req) {
+// Fresh when online, cached copy when offline.
+// `isHTML` only controls the offline fallback: a navigation may fall back to the cached
+// app shell, but an asset must not — answering a .js request with index.html would hand
+// the module loader a page of HTML and fail confusingly.
+async function networkFirst(req, isHTML) {
   const cache = await caches.open(CACHE_NAME);
   try {
     const fresh = await fetch(req, { cache: 'no-store' });
     if (fresh && fresh.status === 200) cache.put(req, fresh.clone());
     return fresh;
   } catch {
-    // Çevrimdışı: önbellekteki kopyaya düş.
     const cached =
       (await cache.match(req)) ||
-      (await cache.match('./index.html')) ||
-      (await cache.match('./'));
+      (isHTML
+        ? (await cache.match('./index.html')) || (await cache.match('./'))
+        : undefined);
     return cached || Response.error();
   }
-}
-
-// Assets: instant from cache, revalidate in the background for the next load.
-async function staleWhileRevalidate(req) {
-  const cache = await caches.open(CACHE_NAME);
-  const cached = await cache.match(req);
-  const network = fetch(req, { cache: 'no-store' })
-    .then((res) => {
-      if (res && res.status === 200) cache.put(req, res.clone());
-      return res;
-    })
-    .catch(() => null);
-  return cached || (await network) || Response.error();
 }
