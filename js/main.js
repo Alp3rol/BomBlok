@@ -3,7 +3,8 @@ import { applyProgressResetIfNeeded } from './config.js';
 import { AudioFX } from './audio.js';
 import { ThemeManager } from './theme.js';
 import { resizeCanvas, spawnParticlesAtScreen } from './particles.js';
-import { initGrid, clearGridHighlights, spawnIceBlocks, renderBlockInSlot, generateDockBlocks, registerGridCallbacks, getCellElement, trackHighlight } from './grid.js';
+import { initGrid, clearGridHighlights, spawnIceBlocks, renderBlockInSlot, generateDockBlocks, redrawDock, registerGridCallbacks, getCellElement, trackHighlight } from './grid.js';
+import { saveRun, clearRun, restoreRun } from './run-save.js';
 import { initMission, updateMissionProgress, updateMissionUI } from './missions.js';
 import { Leaderboard } from './leaderboard.js';
 import { updateScoreUI, addXp, syncProgressionUI, deactivateFeverMode, checkAndClearLines, saveStateSnapshot, performUndo, rerollDockBlocks, updateJokerButtonsUI, getRotatedMatrix, saveJokers } from './mechanics.js';
@@ -475,6 +476,7 @@ function commitPlacement(shape, cells, offsetR, offsetC, slotIndex) {
 }
 
 export function resetGame() {
+    clearRun();
     state.grid = Array(8).fill(null).map(() => Array(8).fill(0));
     state.timeBombs = [];
     state.score = 0;
@@ -484,6 +486,9 @@ export function resetGame() {
     state.previousState = null;
     state.undoUsedThisGame = false;
     state.rerollUsedThisGame = false;
+    // Bunlar sıfırlanmadığı için önceki turun sayaçları yeni tura sızıyordu.
+    state.movesSinceClear = 0;
+    state.consecutiveClears = 0;
     deactivateFeverMode();
     initMission();
     deselectBlock();
@@ -568,12 +573,32 @@ applyProgressResetIfNeeded();
 ThemeManager.init(); // Initialize Theme Manager
 Leaderboard.init();
 syncProgressionUI();
-state.grid = Array(8).fill(null).map(() => Array(8).fill(0));
-spawnIceBlocks(); // Spawn initial ice blocks
+
+// Yarım kalan tur varsa kaldığı yerden devam et. Kayıt bozuk/eski şemalıysa restoreRun
+// false döner ve normal yeni oyun akışına düşeriz.
+const resumed = restoreRun();
+
+if (!resumed) {
+    state.grid = Array(8).fill(null).map(() => Array(8).fill(0));
+    spawnIceBlocks(); // Spawn initial ice blocks
+}
+
 initGrid();
 resizeCanvas(); // Align canvas size to grid
-generateDockBlocks();
-initMission(); // Initialize first mission!
+
+if (resumed) {
+    redrawDock(); // Kaydedilmiş şekilleri yerine koy
+} else {
+    generateDockBlocks();
+}
+
+if (state.currentMission) {
+    updateMissionUI(); // Geri yüklenen görev ilerlemesini göster
+} else {
+    initMission(); // Initialize first mission!
+}
+
+updateScoreUI();
 updateJokerButtonsUI(); // Set initial button states
 
 const undoBtn = document.getElementById('undo-btn');
@@ -611,6 +636,7 @@ if (rotationRightsBtn) {
             updateScoreUI();
             updateJokerButtonsUI();
             updateMissionUI();
+            saveRun();
             AudioFX.playReroll(); // Satın alma sesi
             
             const btnRect = rotationRightsBtn.getBoundingClientRect();

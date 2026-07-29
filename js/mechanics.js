@@ -1,6 +1,7 @@
 import { state, gridBoard, currentScoreEl, bestScoreEl, blockDock, gameOverScreen, finalScoreEl, feverBanner, feverBarFill, playerLevelEl, xpBarFillEl, xpTextEl } from './state.js';
 import { getDifficultyParams } from './config.js';
 import { Storage, KEYS } from './storage.js';
+import { saveRun, clearRun } from './run-save.js';
 import { AudioFX } from './audio.js';
 import { spawnParticles } from './particles.js';
 import { initGrid, redrawDock, generateRandomShape, getCellElement } from './grid.js';
@@ -642,6 +643,9 @@ export function endTurn() {
     tickTimeBombs();
     spawnTimeBomb();
     checkGameOver();
+    // Tur burada oturmuş durumda (bombalar tikledi, game-over kontrolü yapıldı).
+    // Oyun bittiyse saveRun kendisi çıkar, kayıt checkGameOver'da zaten silinmiştir.
+    saveRun();
 }
 
 export { getRotatedMatrix };
@@ -719,6 +723,8 @@ export function checkGameOver() {
     if (!anyBlockFits) {
         state.isGameOver = true;
         deactivateFeverMode();
+        // Biten tur geri yüklenmemeli; yenile tuşuna basınca game-over ekranına dönülmesin.
+        clearRun();
         resetLevelProgression();
 
         // Play game over tune & haptics
@@ -893,6 +899,7 @@ export function performUndo() {
     updateJokerButtonsUI();
 
     AudioFX.playUndo();
+    saveRun();
 }
 
 export function rerollDockBlocks() {
@@ -926,6 +933,7 @@ export function rerollDockBlocks() {
 
     updateJokerButtonsUI();
     AudioFX.playReroll();
+    saveRun();
 }
 
 export function animateAndRotateBlock(slotIndex, shape) {
