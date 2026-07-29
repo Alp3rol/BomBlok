@@ -482,7 +482,9 @@ export function tryPlaceSelectedBlock(gridR, gridC) {
 
         AudioFX.playDrop();
         Haptics.vibrateDrop();
-        saveStateSnapshot();
+        // Snapshot yukarıda, tahta değiştirilmeden önce alınıyor. Burada ikinci kez almak
+        // yerleştirme SONRASI durumu kaydediyordu; Geri Al bir joker harcayıp hiçbir şeyi
+        // değiştirmiyordu (sürükle-bırak yolunda tek çağrı olduğu için fark edilmemişti).
         checkAndClearLines();
 
         const isDockEmpty = state.dockedBlocks.every(block => block === null);

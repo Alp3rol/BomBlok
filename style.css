@@ -58,8 +58,39 @@
     padding: 0;
     user-select: none;
     -webkit-user-select: none;
-    touch-action: none;
+}
+
+/* touch-action: none ESKİDEN `*` üzerindeydi; modal içeriğinin (Nasıl Oynanır, Leaderboard,
+   Rozetler) dokunmatik ekranda kaydırılmasını da engelliyordu. Artık sadece tarayıcı
+   jestlerinin gerçekten sorun çıkardığı yerde — oyun alanı ve sürüklenen bloklarda — kapalı. */
+html, body {
     overscroll-behavior: none;
+    touch-action: pan-y;
+}
+
+.grid-board,
+.grid-cell,
+.block-dock,
+.dock-slot,
+.block-shape,
+.block-cell {
+    touch-action: none;
+}
+
+/* Kaydırılabilir paneller: dikey kaydırma serbest, taşma sayfaya sıçramasın. */
+.modal-content,
+.leaderboard-list,
+.achievements-list {
+    touch-action: pan-y;
+    overscroll-behavior: contain;
+}
+
+/* Metin girişlerinde seçim/kopyalama çalışmalı. */
+input,
+textarea {
+    user-select: text;
+    -webkit-user-select: text;
+    touch-action: auto;
 }
 
 html {

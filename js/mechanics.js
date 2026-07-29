@@ -206,37 +206,54 @@ export function spawnTimeBomb(force = false) {
 }
 
 export function tickTimeBombs() {
-    for (let i = state.timeBombs.length - 1; i >= 0; i--) {
-        const bomb = state.timeBombs[i];
-        
-        // Bomba temizlendiyse listeden çıkar
-        if (state.grid[bomb.r][bomb.c] !== 'timebomb') {
-            state.timeBombs.splice(i, 1);
-            updateMissionProgress('defuse', 1);
-            if (state.currentMission && state.currentMission.type === 'saatlibombapanigi') {
-                updateMissionProgress('saatlibombapanigi', 1);
+    // Anlık kopya üzerinde dönüyoruz: explodeTimeBomb() zincirleme olarak state.timeBombs'u
+    // yeniden atayabiliyor, canlı dizide indeks bazlı gezinmek yanlış elemanı silmeye yol açar.
+    const bombs = state.timeBombs.slice();
+
+    for (const bomb of bombs) {
+        // Bomba artık tahtada değilse listeden çıkar
+        const cellNow = state.grid[bomb.r][bomb.c];
+        if (cellNow !== 'timebomb') {
+            removeTimeBomb(bomb);
+            // İmha ödülü SADECE hücre gerçekten temizlendiyse verilir. Hücre 'stone' ise bomba
+            // oyuncu tarafından imha edilmedi, başka bir bombanın patlaması onu ezdi — bu bir
+            // başarısızlık, ödül değil.
+            if (cellNow === 0) {
+                updateMissionProgress('defuse', 1);
+                if (state.currentMission && state.currentMission.type === 'saatlibombapanigi') {
+                    updateMissionProgress('saatlibombapanigi', 1);
+                }
             }
             continue;
         }
-        
+
         bomb.timer--;
-        
+
         const cellEl = getCellElement(bomb.r, bomb.c);
         if (cellEl) {
             cellEl.dataset.timer = bomb.timer;
         }
-        
+
         if (bomb.timer <= 0) {
+            // explodeTimeBomb bu bombayı da (satırındaki diğerleriyle birlikte) listeden düşürür.
             explodeTimeBomb(bomb.r, bomb.c);
-            state.timeBombs.splice(i, 1);
         }
     }
+}
+
+function removeTimeBomb(bomb) {
+    const idx = state.timeBombs.indexOf(bomb);
+    if (idx !== -1) state.timeBombs.splice(idx, 1);
 }
 
 export function explodeTimeBomb(bombR, bombC) {
     try { AudioFX.playBomb(); } catch(e) {}
     triggerScreenShake('heavy');
-    
+
+    // Satır taşa dönmeden önce bu satırdaki TÜM saatli bombaları kayıttan düş. Aksi halde
+    // ezilen bombalar listede kalıyor ve tickTimeBombs onları "imha edildi" sayıyordu.
+    state.timeBombs = state.timeBombs.filter(b => b.r !== bombR);
+
     // O satırı komple taşa çevir
     for (let c = 0; c < 8; c++) {
         state.grid[bombR][c] = 'stone';
@@ -274,6 +291,10 @@ export function checkAndClearLines() {
 
         // Increment consecutive combo multiplier
         state.comboCount++;
+        // Ardışık kırım sayacı. Yalnızca kırımsız hamlede sıfırlanıyordu ama hiçbir yerde
+        // artırılmadığı için hep 0 kalıyor, 'serikatil' görevi tamamlanamıyordu.
+        state.consecutiveClears++;
+        state.movesSinceClear = 0;
         if (state.comboCount >= 3) {
             updateMissionProgress('combo', 1);
         }
@@ -666,8 +687,10 @@ export function canShapeFitWithRotation(shape) {
     // 1. Check current orientation
     if (canShapeFit(shape)) return true;
 
-    // 2. If no rotation rights left, we cannot rotate.
-    if (state.rotationRights <= 0) return false;
+    // 2. Döndürme hakkı yoksa döndüremeyiz — ama oyuncu 1 joker karşılığında +1 hak satın
+    //    alabiliyor (main.js'teki rotation-rights-btn). Sadece mevcut hakka bakmak, elinde
+    //    joker olan oyuncuyu haksız yere game-over'a düşürüyordu.
+    if (state.rotationRights + state.jokers <= 0) return false;
 
     // 3. Check 90, 180, 270 degree rotated states
     let tempMatrix = shape.matrix;
