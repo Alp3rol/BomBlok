@@ -24,6 +24,7 @@ const CORE_ASSETS = [
   './manifest.json',
   './js/main.js',
   './js/state.js',
+  './js/storage.js',
   './js/grid.js',
   './js/mechanics.js',
   './js/particles.js',
