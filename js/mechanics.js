@@ -1,10 +1,10 @@
 import { state, gridBoard, currentScoreEl, bestScoreEl, blockDock, gameOverScreen, finalScoreEl, feverBanner, feverBarFill, playerLevelEl, xpBarFillEl, xpTextEl } from './state.js';
-import { getDifficultyParams, COLOR_MAP } from './config.js';
+import { getDifficultyParams } from './config.js';
 import { AudioFX } from './audio.js';
-import { spawnParticles, spawnParticlesAtScreen } from './particles.js';
-import { initGrid, clearGridHighlights, renderBlockInSlot, generateDockBlocks, redrawDock, generateRandomShape, getCellElement } from './grid.js';
+import { spawnParticles } from './particles.js';
+import { initGrid, redrawDock, generateRandomShape, getCellElement } from './grid.js';
 import { getRotatedMatrix, checkColorMatch, detectFullLines } from './rules.js';
-import { initMission, updateMissionProgress, updateMissionUI, checkMissionConstraints } from './missions.js';
+import { updateMissionProgress, updateMissionUI, checkMissionConstraints } from './missions.js';
 import { Leaderboard } from './leaderboard.js';
 import { selectBlock, deselectBlock } from './main.js';
 import { Haptics } from './haptics.js';
@@ -98,7 +98,7 @@ export function showComboPopup(linesCleared, comboCount, isCrossClear = false) {
     activePopups++;
 
     let isGold = false;
-    let lines = [];
+    const lines = [];
 
     if (isCrossClear) {
         lines.push('MÜKEMMEL!');
@@ -180,7 +180,7 @@ export function spawnTimeBomb(force = false) {
         if (Math.random() > diff.timeBombChance) return;
     }
     
-    let emptyCells = [];
+    const emptyCells = [];
     for (let r = 0; r < 8; r++) {
         for (let c = 0; c < 8; c++) {
             if (state.grid[r][c] === 0) {
@@ -359,7 +359,7 @@ export function checkAndClearLines() {
 
         // 1. Process Bomb Explosions (Chain-reaction)
         let bombCells = cellsToClear.filter(cell => typeof cell.color === 'string' && cell.color.endsWith('-bomb'));
-        let explodedCells = new Set();
+        const explodedCells = new Set();
         // Add initial cleared cells to exploded list so they are not duplicate-processed
         cellsToClear.forEach(cell => explodedCells.add(`${cell.r},${cell.c}`));
 
@@ -733,7 +733,6 @@ export function checkGameOver() {
             }
         }, 600);
 
-        console.log('Game Over! No shapes can fit.');
         updateJokerButtonsUI();
     }
 }

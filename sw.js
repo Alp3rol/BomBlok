@@ -85,7 +85,8 @@ async function networkFirst(req) {
     const fresh = await fetch(req, { cache: 'no-store' });
     if (fresh && fresh.status === 200) cache.put(req, fresh.clone());
     return fresh;
-  } catch (err) {
+  } catch {
+    // Çevrimdışı: önbellekteki kopyaya düş.
     const cached =
       (await cache.match(req)) ||
       (await cache.match('./index.html')) ||

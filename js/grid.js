@@ -2,8 +2,8 @@ import { state, gridBoard } from './state.js';
 import { SHAPES, getDifficultyParams } from './config.js';
 import { updateScoreUI } from './mechanics.js';
 
-var _showPreview = null;
-var _tryPlace = null;
+let _showPreview = null;
+let _tryPlace = null;
 
 export function registerGridCallbacks(showPreview, tryPlace) {
     _showPreview = showPreview;
@@ -111,7 +111,7 @@ function bindGridEvents() {
 // Pick a random shape, reducing 1x1 singles and rolling a chance to attach a bomb cell
 export function generateRandomShape() {
     // Pick a random shape from SHAPES
-    let randomShapeIndex = Math.floor(Math.random() * SHAPES.length);
+    const randomShapeIndex = Math.floor(Math.random() * SHAPES.length);
     let shape = structuredClone(SHAPES[randomShapeIndex]);
 
     // Reduce 1x1 single block frequency by redrawing 95% of the time

@@ -2,8 +2,9 @@
 supabase-config.js
 
 # Node dependencies
+# package-lock.json BİLEREK takip ediliyor: CI'daki `npm ci` tekrarlanabilir bir
+# devDependency kurulumu için lock dosyasına ihtiyaç duyuyor.
 node_modules/
-package-lock.json
 
 # IDE / Editor files
 .vscode/

@@ -1,12 +1,11 @@
 import { COLOR_MAP } from './config.js';
 import { gridBoard } from './state.js';
-import { getCellElement } from './grid.js';
 
 // --- CANVAS-BASED NEON PARTICLE SYSTEM ---
 const canvas = document.getElementById('effects-canvas');
 const ctx = canvas.getContext('2d');
 
-let particles = [];
+const particles = [];
 let isLoopRunning = false;
 
 // Upper bound on live particles. A fever-mode cross-clear (multiplier 2.5, ~15 particles/cell
@@ -28,7 +27,7 @@ class Particle {
         const isCosmos = document.body.classList.contains('theme-cosmos');
         const isSeasons = document.body.classList.contains('theme-seasons');
         
-        let baseColor = COLOR_MAP[colorName] || '#ff007f';
+        const baseColor = COLOR_MAP[colorName] || '#ff007f';
 
         this.alpha = 1.0;
         this.rotation = Math.random() * Math.PI * 2;

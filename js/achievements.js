@@ -1,4 +1,3 @@
-import { state } from './state.js';
 import { AudioFX } from './audio.js';
 import { Haptics } from './haptics.js';
 

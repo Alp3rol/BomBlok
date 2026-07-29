@@ -5,6 +5,12 @@
   "type": "module",
   "description": "BomBlok - block puzzle oyunu",
   "scripts": {
-    "test": "node --test tests/*.test.js"
+    "test": "node --test tests/*.test.js",
+    "lint": "eslint . --max-warnings 0",
+    "lint:fix": "eslint . --fix",
+    "check": "npm run lint && npm test"
+  },
+  "devDependencies": {
+    "eslint": "^10.8.0"
   }
 }

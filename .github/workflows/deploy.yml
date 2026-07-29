@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+  pull_request:
   workflow_dispatch:
 
 permissions:
@@ -16,42 +17,63 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Kalite kapısı. Deploy buna bağlı olduğu için lint veya test kırıldığında
+  # değişiklik canlıya çıkamaz.
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test
+
   deploy:
+    # Kalite kapısı geçmeden deploy yok.
+    needs: quality
+    # PR'larda sadece kontrol çalışsın; yayına yalnızca main'e push çıkar.
+    if: github.event_name != 'pull_request'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
-      # Leaderboard config dosyası repo'ya konmaz; deploy sırasında GitHub Actions secret'larından üretilir.
+      # Leaderboard config dosyası repo'ya konmaz; deploy sırasında GitHub Actions
+      # secret'larından üretilir.
       # Repo Secrets (Settings -> Secrets and variables -> Actions):
       # - SUPABASE_URL
       # - SUPABASE_ANON_KEY   (anon public key)
+      #
+      # Secret'lar shell'e `env:` üzerinden geçiriliyor ve dosyaya JSON.stringify ile
+      # yazılıyor. Doğrudan `${{ secrets.X }}` interpolasyonu, secret içinde tırnak veya
+      # satır sonu olduğunda üretilen JS'i bozabiliyordu.
       - name: Create supabase-config.js (from secrets)
-        shell: bash
-        run: |
-          if [ -n "${{ secrets.SUPABASE_URL }}" ] && [ -n "${{ secrets.SUPABASE_ANON_KEY }}" ]; then
-            cat > supabase-config.js << 'EOF'
-          // Bu dosya GitHub Actions sırasında üretilir. Repo'ya eklenmez.
-          window.SUPABASE_URL = "${{ secrets.SUPABASE_URL }}";
-          window.SUPABASE_ANON_KEY = "${{ secrets.SUPABASE_ANON_KEY }}";
-          EOF
-          else
-            cat > supabase-config.js << 'EOF'
-          // Supabase secret'ları ayarlı değil. Leaderboard devre dışı.
-          window.SUPABASE_URL = "";
-          window.SUPABASE_ANON_KEY = "";
-          EOF
-          fi
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: node scripts/write-supabase-config.js
 
       - name: Setup Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: '.'
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5

@@ -3,10 +3,10 @@ import { applyProgressResetIfNeeded } from './config.js';
 import { AudioFX } from './audio.js';
 import { ThemeManager } from './theme.js';
 import { resizeCanvas, spawnParticlesAtScreen } from './particles.js';
-import { initGrid, clearGridHighlights, spawnIceBlocks, renderBlockInSlot, generateDockBlocks, redrawDock, registerGridCallbacks, getCellElement, trackHighlight } from './grid.js';
+import { initGrid, clearGridHighlights, spawnIceBlocks, renderBlockInSlot, generateDockBlocks, registerGridCallbacks, getCellElement, trackHighlight } from './grid.js';
 import { initMission, updateMissionProgress, updateMissionUI } from './missions.js';
 import { Leaderboard } from './leaderboard.js';
-import { updateScoreUI, addXp, syncProgressionUI, deactivateFeverMode, checkAndClearLines, saveStateSnapshot, performUndo, rerollDockBlocks, updateJokerButtonsUI, getRotatedMatrix, animateAndRotateBlock, activateFeverMode, checkGameOver, resetLevelProgression } from './mechanics.js';
+import { updateScoreUI, addXp, syncProgressionUI, deactivateFeverMode, checkAndClearLines, saveStateSnapshot, performUndo, rerollDockBlocks, updateJokerButtonsUI, getRotatedMatrix } from './mechanics.js';
 import { Haptics } from './haptics.js';
 import { Achievements } from './achievements.js';
 
@@ -683,7 +683,9 @@ if (pwaInstallBtn) {
     pwaInstallBtn.addEventListener('click', async () => {
         if (deferredPrompt) {
             deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
+            await deferredPrompt.userChoice;
+            // Prompt tek kullanımlık: kullanıcı kabul de etse reddetse de aynı event
+            // nesnesi bir daha kullanılamaz, o yüzden sonucuna bakmadan düşürüyoruz.
             deferredPrompt = null;
             if (pwaBanner) pwaBanner.classList.add('hidden');
         }
@@ -695,5 +697,3 @@ if (pwaCloseBtn) {
         localStorage.setItem('bomblok_pwa_dismissed', 'true');
     });
 }
-
-console.log('BomBlok Initialized: Game Fully Functional!');
