@@ -1,5 +1,6 @@
 import { state, leaderboardBtn, leaderboardModal, leaderboardCloseBtn, leaderboardStatusEl, leaderboardListEl, lbTabWeekly, lbTabGlobal, submitScoreBtn, nicknamePanelEl, nicknameInputEl, nicknameSaveBtnEl, nicknameHintEl, gameOverSaveStatusEl, gameOverNicknameInputEl, gameOverSaveBtnEl, gameOverNicknameHintEl } from './state.js';
 import { Achievements } from './achievements.js';
+import { createModal } from './modal.js';
 import { Storage, KEYS } from './storage.js';
 
 export function getISOWeekKey(date = new Date()) {
@@ -41,19 +42,23 @@ export const Leaderboard = {
             }
         }
 
-        if (leaderboardBtn && leaderboardModal) {
+        // Diyalog semantiği/Escape/odak tuzağı ortak yardımcıdan.
+        this.dialog = createModal(leaderboardModal, {
+            labelledBy: 'leaderboard-title',
+            onOpen: () => {
+                this.updateNicknameUI();
+                this.setView(this.view || 'weekly');
+            }
+        });
+
+        if (leaderboardBtn && this.dialog) {
             leaderboardBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                this.open();
+                this.dialog.open(leaderboardBtn);
             });
         }
-        if (leaderboardCloseBtn && leaderboardModal) {
+        if (leaderboardCloseBtn && this.dialog) {
             leaderboardCloseBtn.addEventListener('click', () => this.close());
-        }
-        if (leaderboardModal) {
-            leaderboardModal.addEventListener('click', (e) => {
-                if (e.target === leaderboardModal) this.close();
-            });
         }
 
         const lbTabAch = document.getElementById('lb-tab-achievements');
@@ -108,15 +113,11 @@ export const Leaderboard = {
     },
 
     open() {
-        if (!leaderboardModal) return;
-        leaderboardModal.classList.remove('hidden');
-        this.updateNicknameUI();
-        this.setView(this.view || 'weekly');
+        if (this.dialog) this.dialog.open(leaderboardBtn);
     },
 
     close() {
-        if (!leaderboardModal) return;
-        leaderboardModal.classList.add('hidden');
+        if (this.dialog) this.dialog.close();
     },
 
     setView(view) {

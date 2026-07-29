@@ -11,6 +11,7 @@ import { updateScoreUI, addXp, syncProgressionUI, deactivateFeverMode, checkAndC
 import { Storage, KEYS } from './storage.js';
 import { Settings } from './settings.js';
 import { Keyboard } from './keyboard.js';
+import { createModal } from './modal.js';
 import { Haptics } from './haptics.js';
 import { Achievements } from './achievements.js';
 
@@ -528,7 +529,7 @@ export function resetGame() {
     deactivateFeverMode();
     initMission();
     deselectBlock();
-    gameOverScreen.classList.add('hidden');
+    closeGameOverDialog();
     spawnIceBlocks();
     initGrid();
     generateDockBlocks();
@@ -545,42 +546,49 @@ if (restartBtn) {
     });
 }
 
-// Help Modal Event Listeners
-if (helpBtn && helpModal) {
+// Oyun bitti ekranı: BİLEREK kapatılamaz (dismissible: false). Escape veya arka plana
+// tıklayarak kapatılabilseydi oyuncu, hiçbir hamlenin mümkün olmadığı ölü bir tahtada,
+// yeniden başlama yolu görünmeden mahsur kalırdı.
+// Odak metin kutusuna değil butona veriliyor: mobilde otomatik açılan klavye ekranın
+// yarısını kapatırdı.
+const gameOverDialog = createModal(gameOverScreen, {
+    labelledBy: 'game-over-title',
+    dismissible: false,
+    initialFocus: () => {
+        const save = document.getElementById('game-over-save-btn');
+        return save && !save.disabled ? save : restartBtn;
+    }
+});
+
+export function openGameOverDialog() {
+    if (gameOverDialog) gameOverDialog.open(null);
+}
+
+export function closeGameOverDialog() {
+    if (gameOverDialog) gameOverDialog.close();
+}
+
+// Help Modal — diyalog semantiği, Escape, arka plan tıklaması, odak tuzağı ve odak
+// geri dönüşü ortak yardımcıdan geliyor.
+const helpDialog = createModal(helpModal, { labelledBy: 'help-title' });
+
+if (helpBtn && helpDialog) {
     helpBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         AudioFX.init();
         AudioFX.playGrab();
-        helpModal.classList.remove('hidden');
+        helpDialog.open(helpBtn);
     });
 }
 
-if (helpModal) {
-    helpModal.addEventListener('click', (e) => {
-        // Close if clicking the overlay itself (outside the modal-card)
-        if (e.target === helpModal) {
-            AudioFX.init();
-            AudioFX.playGrab();
-            helpModal.classList.add('hidden');
-        }
-    });
-}
-
-if (helpCloseBtn) {
-    helpCloseBtn.addEventListener('click', () => {
+[helpCloseBtn, modalStartBtn].forEach((btn) => {
+    if (!btn || !helpDialog) return;
+    btn.addEventListener('click', () => {
         AudioFX.init();
         AudioFX.playGrab();
-        helpModal.classList.add('hidden');
+        helpDialog.close();
     });
-}
-
-if (modalStartBtn) {
-    modalStartBtn.addEventListener('click', () => {
-        AudioFX.init();
-        AudioFX.playGrab();
-        helpModal.classList.add('hidden');
-    });
-}
+});
 
 // Deselect selected block if clicked outside of any dock slot or grid cell
 window.addEventListener('click', (e) => {

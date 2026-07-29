@@ -8,6 +8,7 @@
 //   - Hareketi azalt: yalnızca işletim sistemi tercihine bağlıydı; artık oyun içinden de açılabilir.
 
 import { Storage, KEYS } from './storage.js';
+import { createModal } from './modal.js';
 import { AudioFX } from './audio.js';
 import { Haptics } from './haptics.js';
 
@@ -31,26 +32,20 @@ export const Settings = {
         // Kayıtlı hareket tercihini açılışta uygula (ses/titreşim kendi modüllerinde okunuyor).
         applyReduceMotion(Storage.get(KEYS.reduceMotion) === 'true');
 
-        // Tetikleyen butonu doğrudan tutuyoruz: kapanışta odağı geri verirken
-        // document.activeElement'e güvenmek kırılgan (programatik açılışta body olabiliyor).
+        // Diyalog semantiği, Escape, arka plan tıklaması, odak tuzağı ve odak geri dönüşü
+        // ortak yardımcıdan geliyor; burada yalnızca içerik senkronizasyonu kalıyor.
+        this.dialog = createModal(this.modal, {
+            labelledBy: 'settings-title',
+            onOpen: () => this.syncUI()
+        });
+
         this.trigger = openBtn;
         openBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            this.open();
+            this.dialog.open(openBtn);
         });
-        if (closeBtn) closeBtn.addEventListener('click', () => this.close());
-        if (doneBtn) doneBtn.addEventListener('click', () => this.close());
-
-        this.modal.addEventListener('click', (e) => {
-            if (e.target === this.modal) this.close();
-        });
-
-        // Escape ile kapat — diğer modallarda olmayan bir davranış, burada standarda uyuyoruz.
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && !this.modal.classList.contains('hidden')) {
-                this.close();
-            }
-        });
+        if (closeBtn) closeBtn.addEventListener('click', () => this.dialog.close());
+        if (doneBtn) doneBtn.addEventListener('click', () => this.dialog.close());
 
         this.bindToggle('setting-sfx',
             () => !AudioFX.muted,
@@ -113,17 +108,10 @@ export const Settings = {
     },
 
     open() {
-        if (!this.modal) return;
-        this.syncUI();
-        this.modal.classList.remove('hidden');
-        const first = this.modal.querySelector('input, button');
-        if (first) first.focus();
+        if (this.dialog) this.dialog.open(this.trigger);
     },
 
     close() {
-        if (!this.modal) return;
-        this.modal.classList.add('hidden');
-        // Odağı açan butona geri ver — klavye kullanıcısı sayfanın başına savrulmasın.
-        if (this.trigger) this.trigger.focus();
+        if (this.dialog) this.dialog.close();
     }
 };

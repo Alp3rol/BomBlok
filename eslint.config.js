@@ -28,6 +28,7 @@ const browserGlobals = {
     MouseEvent: 'readonly',
     getComputedStyle: 'readonly',
     MutationObserver: 'readonly',
+    HTMLElement: 'readonly',
     KeyboardEvent: 'readonly'
 };
 

@@ -1,4 +1,4 @@
-import { state, gridBoard, currentScoreEl, bestScoreEl, blockDock, gameOverScreen, finalScoreEl, feverBanner, feverBarFill, playerLevelEl, xpBarFillEl, xpTextEl } from './state.js';
+import { state, gridBoard, currentScoreEl, bestScoreEl, blockDock, finalScoreEl, feverBanner, feverBarFill, playerLevelEl, xpBarFillEl, xpTextEl } from './state.js';
 import { getDifficultyParams } from './config.js';
 import { Storage, KEYS } from './storage.js';
 import { saveRun, clearRun } from './run-save.js';
@@ -8,7 +8,7 @@ import { initGrid, redrawDock, generateRandomShape, getCellElement } from './gri
 import { getRotatedMatrix, checkColorMatch, detectFullLines } from './rules.js';
 import { updateMissionProgress, updateMissionUI, checkMissionConstraints } from './missions.js';
 import { Leaderboard } from './leaderboard.js';
-import { selectBlock, deselectBlock } from './main.js';
+import { selectBlock, deselectBlock, openGameOverDialog, closeGameOverDialog } from './main.js';
 import { Haptics } from './haptics.js';
 import { Achievements } from './achievements.js';
 
@@ -734,7 +734,7 @@ export function checkGameOver() {
         // Show Game Over UI after a small delay
         setTimeout(() => {
             finalScoreEl.textContent = state.score;
-            gameOverScreen.classList.remove('hidden');
+            openGameOverDialog();
             if (typeof Leaderboard !== 'undefined' && Leaderboard.prepareGameOverUI) {
                 Leaderboard.prepareGameOverUI();
             }
@@ -885,7 +885,7 @@ export function performUndo() {
     // If was game over, cancel it
     if (state.isGameOver) {
         state.isGameOver = false;
-        gameOverScreen.classList.add('hidden');
+        closeGameOverDialog();
     }
 
     state.previousState = null;
@@ -927,7 +927,7 @@ export function rerollDockBlocks() {
         const anyFits = activeBlocks.some(s => canShapeFitWithRotation(s));
         if (anyFits) {
             state.isGameOver = false;
-            gameOverScreen.classList.add('hidden');
+            closeGameOverDialog();
         }
     }
 
