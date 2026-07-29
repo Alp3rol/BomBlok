@@ -2372,3 +2372,41 @@ body.reduce-motion *::after {
         gap: 5px;
     }
 }
+
+/* --- KLAVYE ILE OYNAMA --- */
+
+/* Ekranda görünmez ama ekran okuyucuya açık. display:none veya visibility:hidden
+   kullanılamaz — ikisi de içeriği erişilebilirlik ağacından tamamen çıkarır. */
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Klavye imleci. Yerleştirme önizlemesinden ayrı bir sınıf: önizleme her harekette
+   temizleniyor, imleç ise nerede olduğunu sürekli göstermeli. */
+.grid-cell.kb-cursor {
+    outline: 3px solid #ffffff;
+    outline-offset: -1px;
+    box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.55), 0 0 12px rgba(255, 255, 255, 0.6);
+    z-index: 2;
+}
+
+/* Tahta odaklandığında kenarını belirt — imleç tek başına yeterince bağlam vermiyor. */
+.grid-board:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 6px;
+    border-radius: 8px;
+}
+
+.dock-slot:focus-visible {
+    outline: 3px solid #ffffff;
+    outline-offset: 2px;
+}

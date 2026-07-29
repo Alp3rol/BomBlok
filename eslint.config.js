@@ -26,7 +26,9 @@ const browserGlobals = {
     webkitAudioContext: 'readonly',
     PointerEvent: 'readonly',
     MouseEvent: 'readonly',
-    getComputedStyle: 'readonly'
+    getComputedStyle: 'readonly',
+    MutationObserver: 'readonly',
+    KeyboardEvent: 'readonly'
 };
 
 export default [

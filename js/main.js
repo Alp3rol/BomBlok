@@ -10,6 +10,7 @@ import { Leaderboard } from './leaderboard.js';
 import { updateScoreUI, addXp, syncProgressionUI, deactivateFeverMode, checkAndClearLines, saveStateSnapshot, performUndo, rerollDockBlocks, updateJokerButtonsUI, getRotatedMatrix, saveJokers } from './mechanics.js';
 import { Storage, KEYS } from './storage.js';
 import { Settings } from './settings.js';
+import { Keyboard } from './keyboard.js';
 import { Haptics } from './haptics.js';
 import { Achievements } from './achievements.js';
 
@@ -293,6 +294,40 @@ export function onPointerUp(e) {
         validPlacement: false, targetCells: [], originalSlot: null,
         startX: 0, startY: 0, startTime: 0, offsetR: null, offsetC: null, isDragging: false
     };
+}
+
+/**
+ * Bir dock bloğunu 90° döndürür ve döndürme hakkından bir tane düşer.
+ * Sürükleme yolundaki satır içi kopyadan çıkarıldı ki klavye de aynı kuralı kullansın.
+ * @returns {boolean} döndürme gerçekleştiyse true (hak yoksa false)
+ */
+export function rotateDockBlock(slotIndex) {
+    const shape = state.dockedBlocks[slotIndex];
+    if (!shape || state.rotationRights <= 0) return false;
+
+    state.rotationRights--;
+    state.usedRotationsInMission++;
+    updateScoreUI();
+    AudioFX.playRotate();
+
+    const rCount = shape.matrix.length;
+    shape.matrix = getRotatedMatrix(shape.matrix);
+
+    if (shape.bombCell) {
+        const oldR = shape.bombCell.r;
+        const oldC = shape.bombCell.c;
+        shape.bombCell.r = oldC;
+        shape.bombCell.c = rCount - 1 - oldR;
+    }
+
+    state.dockedBlocks[slotIndex] = shape;
+
+    const slot = document.querySelectorAll('.dock-slot')[slotIndex];
+    if (slot) {
+        slot.innerHTML = '';
+        renderBlockInSlot(shape, slot, slotIndex);
+    }
+    return true;
 }
 
 export function selectBlock(slotIndex) {
@@ -602,6 +637,14 @@ if (state.currentMission) {
 
 updateScoreUI();
 updateJokerButtonsUI(); // Set initial button states
+
+Keyboard.init({
+    selectBlock,
+    deselectBlock,
+    showPreview: showPreviewForSelectedBlock,
+    tryPlace: tryPlaceSelectedBlock,
+    rotateDockBlock
+});
 
 const undoBtn = document.getElementById('undo-btn');
 const rerollBtn = document.getElementById('reroll-btn');
