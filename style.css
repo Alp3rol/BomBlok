@@ -7,6 +7,11 @@
 :root {
     --bg-gradient: linear-gradient(135deg, #0c081d 0%, #160f2e 100%);
     --panel-bg: rgba(26, 18, 52, 0.65);
+    /* Skor/kontrol kartları ve görev paneli diğer panellerden daha opak olsun diye ayrı
+       değişken. Eskiden bu üç yerde koyu renk SABİT yazılıydı, dolayısıyla açık temalar
+       (Şeker, Mevsimler) paneli açığa çevirmediği için koyu tema metinleri koyu zeminde
+       kalıyordu — Mevsimler'de skor değeri 1.08:1 ile okunamaz durumdaydı. */
+    --card-bg: rgba(26, 18, 52, 0.85);
     --panel-border: rgba(255, 255, 255, 0.08);
     --panel-glow: 0 12px 40px 0 rgba(0, 0, 0, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
     
@@ -262,7 +267,7 @@ body {
 
 .score-card {
     flex: 1;
-    background: rgba(26, 18, 52, 0.85);
+    background: var(--card-bg);
     border: 1px solid var(--panel-border);
     border-radius: 12px;
     padding: 8px 12px;
@@ -299,7 +304,7 @@ body {
 
 .control-card {
     flex: 1;
-    background: rgba(26, 18, 52, 0.85);
+    background: var(--card-bg);
     border: 1px solid var(--panel-border);
     border-radius: 12px;
     padding: 8px 10px;
@@ -607,7 +612,7 @@ button.control-card:disabled {
 }
 
 .game-over-card {
-    background: var(--panel-bg);
+    background: var(--card-bg);
     border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: var(--panel-glow), 0 0 50px rgba(255, 0, 127, 0.2);
     border-radius: 24px;
@@ -676,7 +681,7 @@ button.control-card:disabled {
 }
 
 .restart-button {
-    background: linear-gradient(135deg, #ff007f 0%, #7f00ff 100%);
+    background: linear-gradient(135deg, #e00070 0%, #7f00ff 100%);
     border: none;
     color: #ffffff;
     padding: 14px 28px;
@@ -1270,7 +1275,7 @@ body.theme-retro::before {
 
 /* Modal Card */
 .modal-card {
-    background: var(--panel-bg);
+    background: var(--card-bg);
     border: 1px solid var(--panel-border);
     box-shadow: var(--panel-glow);
     border-radius: 20px;
@@ -1380,7 +1385,7 @@ body.theme-retro::before {
     padding: 14px;
     border-radius: 12px;
     border: none;
-    background: linear-gradient(135deg, #ff007f 0%, #7f00ff 100%);
+    background: linear-gradient(135deg, #e00070 0%, #7f00ff 100%);
     color: #ffffff;
     font-size: 15px;
     font-weight: 800;
@@ -1571,7 +1576,7 @@ body.theme-retro .fever-bar-fill {
 /* Mission Panel Styling */
 .mission-panel {
     width: 100%;
-    background: rgba(22, 17, 45, 0.45);
+    background: var(--card-bg);
     border: 1px solid rgba(0, 255, 204, 0.15);
     border-radius: 14px;
     padding: 10px 16px;
@@ -1610,7 +1615,9 @@ body.theme-retro .fever-bar-fill {
     font-size: 9px;
     font-weight: 800;
     color: #ffffff;
-    background: linear-gradient(135deg, #00d2d3, #7f00ff);
+    /* Camgöbeği ucu #00d2d3 iken beyaz metin 1.88:1 idi (9px, eşik 4.5). Gradyanın
+       parlaklık aralığı daraltıldı; beyaz metin en kötü durumda 4.94:1. */
+    background: linear-gradient(135deg, #0a7d7e, #7f00ff);
     box-shadow: 0 0 10px rgba(0, 210, 211, 0.4);
     padding: 3px 8px;
     border-radius: 20px;
@@ -1688,7 +1695,7 @@ body.theme-retro .fever-bar-fill {
 .banner-text {
     font-size: 12px;
     font-weight: 800;
-    color: #ff007f;
+    color: #ff3d96;
     text-shadow: 0 0 10px rgba(255, 0, 127, 0.35);
     letter-spacing: 0.5px;
 }
@@ -2048,7 +2055,7 @@ body.theme-wood .fever-bar-fill {
     transform: translateX(-50%);
     width: calc(100% - 32px);
     max-width: 440px;
-    background: linear-gradient(135deg, #7c3aed 0%, #ff007f 100%);
+    background: linear-gradient(135deg, #7c3aed 0%, #e00070 100%);
     border: 1px solid rgba(255, 255, 255, 0.2);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     border-radius: 14px;

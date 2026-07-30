@@ -4,6 +4,7 @@
 body.theme-wood {
     --bg-gradient: linear-gradient(135deg, #2b170c 0%, #3e2723 100%);
     --panel-bg: rgba(93, 64, 55, 0.45);
+    --card-bg: rgba(72, 48, 40, 0.85);
     --panel-border: rgba(141, 110, 99, 0.3);
     
     --cell-bg: rgba(62, 39, 35, 0.6);
@@ -61,6 +62,7 @@ body.theme-wood .grid-cell.bomb::before {
 body.theme-neon {
     --bg-gradient: linear-gradient(135deg, #090a0f 0%, #041424 100%);
     --panel-bg: rgba(0, 0, 0, 0.7);
+    --card-bg: rgba(0, 0, 0, 0.88);
     --panel-border: rgba(0, 255, 255, 0.3);
     --text-primary: #e0f2f1;
     --accent: #00ffff;
@@ -132,9 +134,10 @@ body.theme-neon .block-shape.cyan .block-cell, body.theme-neon .grid-cell.filled
 body.theme-candy {
     --bg-gradient: linear-gradient(135deg, #ffe0e9 0%, #b2ebf2 100%);
     --panel-bg: rgba(255, 255, 255, 0.6);
+    --card-bg: rgba(255, 255, 255, 0.9);
     --panel-border: rgba(255, 255, 255, 0.8);
     --text-primary: #5d4037;
-    --text-secondary: #8d6e63;
+    --text-secondary: #7a5c52;
     --accent: #ff4081;
 
     --cell-bg: rgba(255, 255, 255, 0.4);
@@ -160,6 +163,7 @@ body.theme-candy {
 body.theme-cosmos {
     --bg-gradient: radial-gradient(circle at 50% 50%, #1a0b2e 0%, #05010a 100%);
     --panel-bg: rgba(10, 5, 20, 0.8);
+    --card-bg: rgba(10, 5, 20, 0.92);
     --panel-border: rgba(138, 43, 226, 0.4);
     --text-primary: #e6e6fa;
     --accent: #8a2be2;
@@ -214,6 +218,7 @@ body.theme-cosmos::before {
 body.theme-retro {
     --bg-gradient: #000000;
     --panel-bg: #000000;
+    --card-bg: #000000;
     --panel-border: #ffffff;
     --text-primary: #ffffff;
     --accent: #00ff00;
@@ -253,6 +258,7 @@ body.theme-retro .grid-board-container {
 /* 6. MEVSIMLER (Seasons) */
 body.theme-seasons {
     --panel-bg: rgba(255, 255, 255, 0.4);
+    --card-bg: rgba(255, 255, 255, 0.88);
     --panel-border: rgba(255, 255, 255, 0.6);
     --text-primary: #1b4332;
     --text-secondary: #2d6a4f;
