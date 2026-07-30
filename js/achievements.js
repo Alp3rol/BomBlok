@@ -13,13 +13,39 @@ export const ACHIEVEMENTS = [
     { id: 'renk_ustasi', icon: '🌈', title: 'Renk Ustası', desc: '10 Renk Çarpanı yap', targetKey: 'colorMatch', targetValue: 10 }
 ];
 
+// Bir hamle checkAndClearLines() içinden recordStat'ı beş kez çağırıyor (bomba, buz,
+// maxCombo, maxScore, renk çarpanı) ve her çağrı iki JSON.stringify + iki senkron
+// localStorage yazması yapıyordu: hamle başına 10 yazma, hepsi ana iş parçacığında,
+// oyunun sıcak yolunda. Yazmalar artık tek bir boşta-kalma anına toplanıyor.
+let flushBekliyor = false;
+
 export const Achievements = {
     unlockedIds: new Set(Storage.getJSON(KEYS.achievements, [])),
     stats: Storage.getJSON(KEYS.lifetimeStats, { bombs: 0, maxCombo: 0, ice: 0, maxScore: 0, missions: 0, stone: 0, feverCount: 0, colorMatch: 0 }),
 
     save() {
+        flushBekliyor = false;
         Storage.setJSON(KEYS.achievements, Array.from(this.unlockedIds));
         Storage.setJSON(KEYS.lifetimeStats, this.stats);
+    },
+
+    /**
+     * Diske yazmayı erteler ve aynı hamledeki çağrıları tek yazmada birleştirir.
+     *
+     * requestAnimationFrame KULLANILMIYOR: sekme arka plandayken çalışmaz, dolayısıyla
+     * oyuncu hamleden hemen sonra sekmeyi arka plana alırsa istatistik kaybolurdu.
+     * setTimeout arka planda kısılır ama çalışır; ayrıca sayfa gizlenirken/kapanırken
+     * aşağıda ayrıca flush ediyoruz.
+     */
+    scheduleSave() {
+        if (flushBekliyor) return;
+        flushBekliyor = true;
+        const calistir = () => { if (flushBekliyor) this.save(); };
+        if (typeof requestIdleCallback === 'function') {
+            requestIdleCallback(calistir, { timeout: 500 });
+        } else {
+            setTimeout(calistir, 0);
+        }
     },
 
     recordStat(key, amount = 1) {
@@ -28,8 +54,10 @@ export const Achievements = {
         } else {
             this.stats[key] = (this.stats[key] || 0) + amount;
         }
-        this.save();
+        // Rozet kilidi anında açılmalı (ses/titreşim/toast oyuncuya hemen dönmeli),
+        // yalnızca diske yazma erteleniyor.
         this.checkAchievements();
+        this.scheduleSave();
     },
 
     checkAchievements() {
@@ -91,3 +119,11 @@ export const Achievements = {
         }).join('');
     }
 };
+
+// Ertelenen yazma, sayfa kapanmadan/gizlenmeden önce mutlaka diske inmeli. `visibilitychange`
+// mobilde sekme değiştirme ve uygulamadan çıkma için güvenilir tek sinyal; `pagehide` ise
+// iOS Safari'de `beforeunload` çalışmadığı durumları kapatıyor.
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) Achievements.save();
+});
+window.addEventListener('pagehide', () => Achievements.save());
