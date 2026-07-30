@@ -9,6 +9,7 @@ import { initMission, updateMissionProgress, updateMissionUI } from './missions.
 import { Leaderboard } from './leaderboard.js';
 import { updateScoreUI, addXp, syncProgressionUI, deactivateFeverMode, checkAndClearLines, saveStateSnapshot, performUndo, rerollDockBlocks, updateJokerButtonsUI, getRotatedMatrix, saveJokers } from './mechanics.js';
 import { Storage, KEYS } from './storage.js';
+import { GRID, inBounds } from './constants.js';
 import { Settings } from './settings.js';
 import { Keyboard } from './keyboard.js';
 import { createModal } from './modal.js';
@@ -150,7 +151,7 @@ export function checkPlacementValidity() {
                 const gridR = Math.floor((cellCenterY - originRect.top) / stride);
 
                 // Only accept cells that fall on the 8x8 board
-                if (gridR >= 0 && gridR < 8 && gridC >= 0 && gridC < 8) {
+                if (inBounds(gridR, gridC)) {
                     offsetR = gridR - r;
                     offsetC = gridC - c;
                     break;
@@ -173,7 +174,7 @@ export function checkPlacementValidity() {
                     const targetC = offsetC + c;
 
                     // Out of bounds
-                    if (targetR < 0 || targetR >= 8 || targetC < 0 || targetC >= 8) {
+                    if (!inBounds(targetR, targetC)) {
                         fits = false;
                         break;
                     }
@@ -383,7 +384,7 @@ export function showPreviewForSelectedBlock(gridR, gridC) {
             if (shape.matrix[r][c] === 1) {
                 const targetR = offsetR + r;
                 const targetC = offsetC + c;
-                if (targetR < 0 || targetR >= 8 || targetC < 0 || targetC >= 8) {
+                if (!inBounds(targetR, targetC)) {
                     fits = false;
                     continue;
                 }
@@ -444,7 +445,7 @@ export function tryPlaceSelectedBlock(gridR, gridC) {
             if (shape.matrix[r][c] === 1) {
                 const targetR = offsetR + r;
                 const targetC = offsetC + c;
-                if (targetR < 0 || targetR >= 8 || targetC < 0 || targetC >= 8 || state.grid[targetR][targetC] !== 0) {
+                if (!inBounds(targetR, targetC) || state.grid[targetR][targetC] !== 0) {
                     fits = false;
                     break;
                 }
@@ -514,7 +515,7 @@ function commitPlacement(shape, cells, offsetR, offsetC, slotIndex) {
 
 export function resetGame() {
     clearRun();
-    state.grid = Array(8).fill(null).map(() => Array(8).fill(0));
+    state.grid = Array(GRID).fill(null).map(() => Array(GRID).fill(0));
     state.timeBombs = [];
     state.score = 0;
     state.comboCount = 0;
@@ -624,7 +625,7 @@ syncProgressionUI();
 const resumed = restoreRun();
 
 if (!resumed) {
-    state.grid = Array(8).fill(null).map(() => Array(8).fill(0));
+    state.grid = Array(GRID).fill(null).map(() => Array(GRID).fill(0));
     spawnIceBlocks(); // Spawn initial ice blocks
 }
 

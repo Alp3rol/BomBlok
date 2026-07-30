@@ -1,8 +1,9 @@
 import { Storage, KEYS } from './storage.js';
+import { GRID } from './constants.js';
 
 // Game State
 export const state = {
-    grid: Array(8).fill(null).map(() => Array(8).fill(0)), // 0 = empty, string (e.g., 'blue') = color of filled block
+    grid: Array(GRID).fill(null).map(() => Array(GRID).fill(0)), // 0 = empty, string (e.g., 'blue') = color of filled block
     timeBombs: [],
     score: 0,
     bestScore: Storage.getInt(KEYS.best, 0) || Storage.getInt(KEYS.bestLegacy, 0),

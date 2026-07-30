@@ -1,4 +1,5 @@
 import { state } from './state.js';
+import { LAST } from './constants.js';
 import { AudioFX } from './audio.js';
 import { updateJokerButtonsUI, showFloatingText, spawnTimeBomb, saveJokers } from './mechanics.js';
 
@@ -164,7 +165,7 @@ export function checkMissionConstraints() {
     }
 
     if (mType === 'kosekapmaca') {
-        const corners = [state.grid[0][0], state.grid[0][7], state.grid[7][0], state.grid[7][7]];
+        const corners = [state.grid[0][0], state.grid[0][LAST], state.grid[LAST][0], state.grid[LAST][LAST]];
         if (corners.every(c => c !== 0)) {
             updateMissionProgress('kosekapmaca', 1);
         }
@@ -172,8 +173,8 @@ export function checkMissionConstraints() {
 
     if (mType === 'boslukbirakmasanati') {
         let found = false;
-        for (let r=1; r<7; r++) {
-            for (let c=1; c<7; c++) {
+        for (let r=1; r<LAST; r++) {
+            for (let c=1; c<LAST; c++) {
                 if (state.grid[r][c] === 0) {
                     let allFull = true;
                     for (let dr=-1; dr<=1; dr++) {

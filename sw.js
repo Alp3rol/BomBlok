@@ -16,7 +16,7 @@
 // negligible for a project this size, and nothing when offline. Consistency wins.
 // Bump VERSION to force every client to drop its old cache on activate.
 
-const VERSION = 'v19';
+const VERSION = 'v20';
 const CACHE_NAME = `bomblok-${VERSION}`;
 
 const CORE_ASSETS = [
@@ -30,6 +30,7 @@ const CORE_ASSETS = [
   './manifest.json',
   './js/main.js',
   './js/state.js',
+  './js/constants.js',
   './js/storage.js',
   './js/run-save.js',
   './js/run-save-schema.js',

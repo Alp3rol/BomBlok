@@ -1,5 +1,8 @@
 // Pure game-rule helpers: no DOM, no localStorage, no external state.
 // Kept dependency-free on purpose so they can be unit tested directly with `node --test`.
+// (constants.js is itself dependency-free, so importing it keeps that property.)
+
+import { GRID } from './constants.js';
 
 // Rotate a shape matrix 90 degrees clockwise
 export function getRotatedMatrix(matrix) {
@@ -30,7 +33,9 @@ export function checkColorMatch(lineCells) {
         }
     });
 
-    return maxCount >= 6; // 8 hücrenin en az 6'sı aynı renkse
+    // Satırın neredeyse tamamı aynı renk olmalı: 8 hücrede 6. Eşik GRID'e bağlı yazıldı,
+    // aksi halde tahta boyutu değişse kural sessizce anlamını yitirirdi.
+    return maxCount >= GRID - 2;
 }
 
 // Find fully-filled rows/columns eligible for clearing on an 8x8 grid.
@@ -39,7 +44,7 @@ export function detectFullLines(grid) {
     const rowsToClear = [];
     const colsToClear = [];
 
-    for (let r = 0; r < 8; r++) {
+    for (let r = 0; r < GRID; r++) {
         const isFull = grid[r].every(cell => cell !== 0);
         const isAllStone = grid[r].every(cell => cell === 'stone');
         if (isFull && !isAllStone) {
@@ -47,10 +52,10 @@ export function detectFullLines(grid) {
         }
     }
 
-    for (let c = 0; c < 8; c++) {
+    for (let c = 0; c < GRID; c++) {
         let colFull = true;
         let allStone = true;
-        for (let r = 0; r < 8; r++) {
+        for (let r = 0; r < GRID; r++) {
             if (grid[r][c] === 0) {
                 colFull = false;
                 break;

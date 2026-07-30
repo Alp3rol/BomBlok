@@ -13,10 +13,10 @@
 // aria-live bölgesiyle sesli olarak veriliyor.
 
 import { state } from './state.js';
+import { GRID } from './constants.js';
 import { getCellElement } from './grid.js';
 import { AudioFX } from './audio.js';
 
-const GRID = 8;
 const CURSOR_CLASS = 'kb-cursor';
 
 let cb = {};

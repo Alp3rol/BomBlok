@@ -1,9 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { getRotatedMatrix, checkColorMatch, detectFullLines } from '../js/rules.js';
+import { GRID } from '../js/constants.js';
 
 function emptyGrid() {
-    return Array.from({ length: 8 }, () => Array(8).fill(0));
+    return Array.from({ length: GRID }, () => Array(GRID).fill(0));
 }
 
 test('getRotatedMatrix rotates a rectangular shape 90deg clockwise', () => {
@@ -52,7 +53,7 @@ test('detectFullLines finds no lines on an empty grid', () => {
 
 test('detectFullLines finds a fully-filled row', () => {
     const grid = emptyGrid();
-    grid[3] = Array(8).fill('blue');
+    grid[3] = Array(GRID).fill('blue');
     const { rowsToClear, colsToClear } = detectFullLines(grid);
     assert.deepEqual(rowsToClear, [3]);
     assert.deepEqual(colsToClear, []);
@@ -60,7 +61,7 @@ test('detectFullLines finds a fully-filled row', () => {
 
 test('detectFullLines finds a fully-filled column', () => {
     const grid = emptyGrid();
-    for (let r = 0; r < 8; r++) grid[r][5] = 'orange';
+    for (let r = 0; r < GRID; r++) grid[r][5] = 'orange';
     const { rowsToClear, colsToClear } = detectFullLines(grid);
     assert.deepEqual(rowsToClear, []);
     assert.deepEqual(colsToClear, [5]);
@@ -68,8 +69,8 @@ test('detectFullLines finds a fully-filled column', () => {
 
 test('detectFullLines detects a cross-clear (row and column at once)', () => {
     const grid = emptyGrid();
-    grid[0] = Array(8).fill('green');
-    for (let r = 0; r < 8; r++) grid[r][0] = 'green';
+    grid[0] = Array(GRID).fill('green');
+    for (let r = 0; r < GRID; r++) grid[r][0] = 'green';
     const { rowsToClear, colsToClear } = detectFullLines(grid);
     assert.deepEqual(rowsToClear, [0]);
     assert.deepEqual(colsToClear, [0]);
@@ -77,7 +78,7 @@ test('detectFullLines detects a cross-clear (row and column at once)', () => {
 
 test('detectFullLines excludes an all-stone row (stone only breaks via bombs)', () => {
     const grid = emptyGrid();
-    grid[2] = Array(8).fill('stone');
+    grid[2] = Array(GRID).fill('stone');
     const { rowsToClear, colsToClear } = detectFullLines(grid);
     assert.deepEqual(rowsToClear, []);
     assert.deepEqual(colsToClear, []);
@@ -85,7 +86,7 @@ test('detectFullLines excludes an all-stone row (stone only breaks via bombs)', 
 
 test('detectFullLines still clears a row that is full but not entirely stone', () => {
     const grid = emptyGrid();
-    grid[4] = Array(8).fill('stone');
+    grid[4] = Array(GRID).fill('stone');
     grid[4][0] = 'blue'; // one non-stone cell keeps it eligible for clearing
     const { rowsToClear } = detectFullLines(grid);
     assert.deepEqual(rowsToClear, [4]);
@@ -93,7 +94,7 @@ test('detectFullLines still clears a row that is full but not entirely stone', (
 
 test('detectFullLines does not clear a row with any empty cell', () => {
     const grid = emptyGrid();
-    grid[6] = Array(8).fill('blue');
+    grid[6] = Array(GRID).fill('blue');
     grid[6][7] = 0;
     const { rowsToClear } = detectFullLines(grid);
     assert.deepEqual(rowsToClear, []);

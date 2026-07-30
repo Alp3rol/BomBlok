@@ -1,5 +1,6 @@
 import { COLOR_MAP } from './config.js';
 import { gridBoard } from './state.js';
+import { GRID } from './constants.js';
 
 // --- CANVAS-BASED NEON PARTICLE SYSTEM ---
 const canvas = document.getElementById('effects-canvas');
@@ -213,8 +214,8 @@ export function resizeCanvas() {
 export function spawnParticles(gridR, gridC, colorName, multiplier = 1) {
     if (!canvas || canvas.width === 0) return;
 
-    const cellW = canvas.width / 8;
-    const cellH = canvas.height / 8;
+    const cellW = canvas.width / GRID;
+    const cellH = canvas.height / GRID;
 
     const startX = (gridC + 0.5) * cellW;
     const startY = (gridR + 0.5) * cellH;

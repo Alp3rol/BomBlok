@@ -1,3 +1,5 @@
+import { GRID } from './constants.js';
+
 // Kaydedilmiş tur verisinin şema doğrulaması.
 //
 // state.js modül yüklenirken DOM'a dokunduğu için run-save.js Node'da import edilemiyor.
@@ -5,7 +7,6 @@
 // bu yüzden saf tutulup ayrı dosyaya alındı ve doğrudan unit test ediliyor.
 
 export const SCHEMA = 1;
-const GRID = 8;
 
 /** Tahta gerçekten 8x8 mi ve hücreler tanınan tiplerde mi? */
 export function isValidGrid(grid) {

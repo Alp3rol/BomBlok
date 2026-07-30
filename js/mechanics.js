@@ -1,6 +1,7 @@
 import { state, gridBoard, currentScoreEl, bestScoreEl, blockDock, finalScoreEl, feverBanner, feverBarFill, playerLevelEl, xpBarFillEl, xpTextEl } from './state.js';
 import { getDifficultyParams } from './config.js';
 import { Storage, KEYS } from './storage.js';
+import { GRID, inBounds } from './constants.js';
 import { saveRun, clearRun } from './run-save.js';
 import { AudioFX } from './audio.js';
 import { spawnParticles } from './particles.js';
@@ -183,8 +184,8 @@ export function spawnTimeBomb(force = false) {
     }
     
     const emptyCells = [];
-    for (let r = 0; r < 8; r++) {
-        for (let c = 0; c < 8; c++) {
+    for (let r = 0; r < GRID; r++) {
+        for (let c = 0; c < GRID; c++) {
             if (state.grid[r][c] === 0) {
                 emptyCells.push({ r, c });
             }
@@ -257,7 +258,7 @@ export function explodeTimeBomb(bombR, bombC) {
     state.timeBombs = state.timeBombs.filter(b => b.r !== bombR);
 
     // O satırı komple taşa çevir
-    for (let c = 0; c < 8; c++) {
+    for (let c = 0; c < GRID; c++) {
         state.grid[bombR][c] = 'stone';
         spawnParticles(bombR, c, 'gray');
         const cellEl = getCellElement(bombR, c);
@@ -311,8 +312,8 @@ export function checkAndClearLines() {
         const cellsToClear = [];
 
         // Collect coordinates and current colors of cells in full rows/columns
-        for (let r = 0; r < 8; r++) {
-            for (let c = 0; c < 8; c++) {
+        for (let r = 0; r < GRID; r++) {
+            for (let c = 0; c < GRID; c++) {
                 if (rowsToClear.includes(r) || colsToClear.includes(c)) {
                     const cellColor = state.grid[r][c];
                     
@@ -390,7 +391,7 @@ export function checkAndClearLines() {
                         const nr = bombR + dr;
                         const nc = bombC + dc;
 
-                        if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8) {
+                        if (inBounds(nr, nc)) {
                             const cellColor = state.grid[nr][nc];
                             const key = `${nr},${nc}`;
 
@@ -450,8 +451,8 @@ export function checkAndClearLines() {
 
         // 2. Melt ice blocks adjacent to cleared rows/cols
         const meltedIceCells = [];
-        for (let r = 0; r < 8; r++) {
-            for (let c = 0; c < 8; c++) {
+        for (let r = 0; r < GRID; r++) {
+            for (let c = 0; c < GRID; c++) {
                 if (state.grid[r][c] === 'ice') {
                     const isAdjacentRow = rowsToClear.some(rowIdx => Math.abs(r - rowIdx) <= 1);
                     const isAdjacentCol = colsToClear.some(colIdx => Math.abs(c - colIdx) <= 1);
@@ -528,8 +529,8 @@ export function checkAndClearLines() {
                 const spawnCount = colsToClear.length * diff.iceSpawnMultiplier;
                 for (let i = 0; i < spawnCount; i++) {
                     const emptyCells = [];
-                    for (let r = 0; r < 8; r++) {
-                        for (let c = 0; c < 8; c++) {
+                    for (let r = 0; r < GRID; r++) {
+                        for (let c = 0; c < GRID; c++) {
                             if (state.grid[r][c] === 0) {
                                 emptyCells.push({ r, c });
                             }
@@ -657,8 +658,8 @@ export function canShapeFit(shape) {
     const cols = matrix[0].length;
 
     // Scan all possible offsets on the 8x8 grid
-    for (let startR = 0; startR <= 8 - rows; startR++) {
-        for (let startC = 0; startC <= 8 - cols; startC++) {
+    for (let startR = 0; startR <= GRID - rows; startR++) {
+        for (let startC = 0; startC <= GRID - cols; startC++) {
             let canPlace = true;
 
             // Check if all cells of the shape can be placed at this offset

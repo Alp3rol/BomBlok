@@ -1,5 +1,6 @@
 import { state, gridBoard } from './state.js';
 import { SHAPES, getDifficultyParams } from './config.js';
+import { GRID } from './constants.js';
 import { updateScoreUI } from './mechanics.js';
 
 let _showPreview = null;
@@ -25,8 +26,8 @@ export function spawnIceBlocks() {
     const iceCount = diff.initialIceMin + Math.floor(Math.random() * (diff.initialIceMax - diff.initialIceMin + 1));
     let remaining = iceCount;
     while (remaining > 0) {
-        const r = Math.floor(Math.random() * 8);
-        const c = Math.floor(Math.random() * 8);
+        const r = Math.floor(Math.random() * GRID);
+        const c = Math.floor(Math.random() * GRID);
         if (state.grid[r][c] === 0) {
             state.grid[r][c] = 'ice';
             remaining--;
@@ -37,9 +38,9 @@ export function spawnIceBlocks() {
 // Initialize Grid Board HTML
 export function initGrid() {
     gridBoard.innerHTML = '';
-    cellElements = Array.from({ length: 8 }, () => Array(8).fill(null));
-    for (let r = 0; r < 8; r++) {
-        for (let c = 0; c < 8; c++) {
+    cellElements = Array.from({ length: GRID }, () => Array(GRID).fill(null));
+    for (let r = 0; r < GRID; r++) {
+        for (let c = 0; c < GRID; c++) {
             const cell = document.createElement('div');
             cell.classList.add('grid-cell');
             cell.dataset.row = r;
