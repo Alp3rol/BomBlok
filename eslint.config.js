@@ -35,7 +35,7 @@ const browserGlobals = {
 export default [
     {
         // Bağımlılıklar, asset'ler ve üretilen/yerel config dosyası denetlenmez.
-        ignores: ['node_modules/**', 'assets/**', 'supabase-config.js', 'supabase-config.example.js']
+        ignores: ['node_modules/**', 'dist/**', 'assets/**', 'supabase-config.js', 'supabase-config.example.js']
     },
     {
         // Build/CI yardımcı script'leri Node ortamında çalışıyor.

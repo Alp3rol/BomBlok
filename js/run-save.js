@@ -15,6 +15,7 @@
 import { Storage } from './storage.js';
 import { state } from './state.js';
 import { SCHEMA, isValidSave } from './run-save-schema.js';
+import { createSubmissionId } from './score-submission.js';
 
 const KEY = 'bomblok_run';
 
@@ -24,6 +25,7 @@ export function saveRun() {
 
     Storage.setJSON(KEY, {
         schema: SCHEMA,
+        scoreSubmissionId: state.scoreSubmissionId,
         grid: state.grid,
         dockedBlocks: state.dockedBlocks,
         timeBombs: state.timeBombs,
@@ -57,6 +59,8 @@ export function restoreRun() {
     }
 
     state.grid = save.grid;
+    // Şema 1 kayıtları bu alan eklenmeden önce oluşturulmuş olabilir.
+    state.scoreSubmissionId = save.scoreSubmissionId || createSubmissionId();
     state.dockedBlocks = save.dockedBlocks;
     state.timeBombs = save.timeBombs;
     state.score = save.score;

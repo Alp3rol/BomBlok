@@ -1,5 +1,6 @@
 import { Storage, KEYS } from './storage.js';
 import { GRID } from './constants.js';
+import { createSubmissionId } from './score-submission.js';
 
 // Game State
 export const state = {
@@ -13,6 +14,7 @@ export const state = {
     dockedBlocks: [null, null, null], // Holds current shapes on dock
     isGameOver: false,
     runId: 0, // Yeni oyun başlayınca eski turun gecikmiş animasyon callback'lerini geçersiz kılar.
+    scoreSubmissionId: createSubmissionId(), // Aynı turun skoru yenileme/çift tıklamayla tekrar yazılmasın.
     comboCount: 0, // Track consecutive clears!
     rotationRights: 0, // Rotation rights per game!
     selectedBlockIndex: null, // Track selected block for click-to-place
@@ -29,6 +31,7 @@ export const state = {
     consecutiveClears: 0,
     usedRotationsInMission: 0,
     missionTimerId: null,
+    missionCompletionTimeoutId: null,
     missionTimeLeft: 0,
     // --- Active Drag State ---
     activeDrag: {

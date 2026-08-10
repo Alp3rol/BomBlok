@@ -17,6 +17,24 @@ export function getRotatedMatrix(matrix) {
     return rotated;
 }
 
+/** Matrisi ve varsa bomba hücresini birlikte döndürür; girdi nesnesini değiştirmez. */
+export function getRotatedShape(shape) {
+    const rowCount = shape.matrix.length;
+    const rotated = {
+        ...shape,
+        matrix: getRotatedMatrix(shape.matrix)
+    };
+
+    if (shape.bombCell) {
+        rotated.bombCell = {
+            r: shape.bombCell.c,
+            c: rowCount - 1 - shape.bombCell.r
+        };
+    }
+
+    return rotated;
+}
+
 // Returns whether a shape matrix can be placed anywhere on the supplied grid.
 // Keeping this rule independent from UI state lets game-over checks use exactly
 // the same occupied-cell semantics as placement and makes edge cases testable.

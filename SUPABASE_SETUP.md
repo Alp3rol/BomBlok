@@ -1,9 +1,22 @@
-## Supabase Leaderboard Kurulumu
+## Supabase Leaderboard Kurulumu — 0 TL
 
-> ÖNEMLİ GÜVENLİK NOTU  
-> Leaderboard için **sadece `anon public key`** kullan. `service_role` / `secret` key’i asla client tarafına koyma.
+Bu kurulum Supabase ücretsiz planı ve GitHub Pages ile çalışır. Leaderboard için yalnızca `anon public key` kullan. `service_role` veya secret key'i asla tarayıcıya, repoya ya da GitHub Pages çıktısına koyma.
 
-### 1) Tablo (SQL Editor)
+### 1. Veritabanını hazırla
+
+Supabase Dashboard → SQL Editor bölümünde aşağıdaki dosyanın tamamını bir kez çalıştır:
+
+`supabase/migrations/202608100001_secure_scores.sql`
+
+Migration:
+
+- `scores` tablosuna `submission_id` ekler,
+- aynı turun iki kez yazılmasını unique indeksle engeller,
+- skor, rumuz ve hafta biçimi için veritabanı kontrolleri ekler,
+- anonim kullanıcıya yalnızca okuma ve kontrollü insert izni verir,
+- anonim update/delete izni oluşturmaz.
+
+Yeni kurulumda önce tabloyu oluştur:
 
 ```sql
 create table if not exists public.scores (
@@ -18,42 +31,24 @@ create index if not exists scores_score_idx on public.scores (score desc);
 create index if not exists scores_week_score_idx on public.scores (week_key, score desc);
 ```
 
-### 2) RLS (Basit, herkese insert/select)
+Ardından migration dosyasını çalıştır.
 
-Not: Bu kurulum “kolay başlangıç” içindir. Gerçek anti-cheat istenirse daha sıkı kurallar gerekir.
+### 2. Siteyi bağla
 
-```sql
-alter table public.scores enable row level security;
+#### GitHub Pages
 
-drop policy if exists "scores_read_all" on public.scores;
-create policy "scores_read_all"
-on public.scores
-for select
-to anon
-using (true);
+Repository → Settings → Secrets and variables → Actions bölümüne şunları ekle:
 
-drop policy if exists "scores_insert_all" on public.scores;
-create policy "scores_insert_all"
-on public.scores
-for insert
-to anon
-with check (true);
-```
+- `SUPABASE_URL`
+- `SUPABASE_ANON_KEY`
 
-### 3) Siteye bağlama
+Deploy iş akışı `supabase-config.js` dosyasını otomatik üretir. Bu değerler public client bağlantısı içindir; güvenlik RLS ve veritabanı constraint'leriyle sağlanır.
 
-#### Seçenek A (Önerilen): GitHub Pages deploy sırasında üret
+#### Yerel geliştirme
 
-1. GitHub repo ayarlarında `Settings -> Secrets and variables -> Actions` bölümüne şunları ekle:
-   - `SUPABASE_URL`
-   - `SUPABASE_ANON_KEY`  (anon public key)
-2. Deploy workflow bu değerlerle otomatik `supabase-config.js` dosyasını üretir ve Pages’a koyar.
+1. `supabase-config.example.js` dosyasını `supabase-config.js` adıyla kopyala.
+2. `window.SUPABASE_URL` ve `window.SUPABASE_ANON_KEY` değerlerini doldur.
 
-#### Seçenek B: Lokal geliştirme
+### Güvenlik sınırı
 
-1. `supabase-config.example.js` dosyasını kopyalayıp `supabase-config.js` yap.
-2. `supabase-config.js` içindeki:
-   - `window.SUPABASE_URL`
-   - `window.SUPABASE_ANON_KEY`
-
-alanlarını doldur.
+Bu ücretsiz iyileştirme yanlış biçimli girdileri, bariz skor aralıklarını ve aynı tur kimliğiyle tekrar gönderimi engeller. Oyun kodu kullanıcının tarayıcısında çalıştığı için kararlı bir saldırgan farklı tur kimlikleri üretip sahte skor deneyebilir. Tam anti-cheat için skorun güvenilir bir sunucuda hesaplanması gerekir; bu proje bütçesiz kaldığı sürece leaderboard “topluluk/dürüstlük temelli” kabul edilmelidir.

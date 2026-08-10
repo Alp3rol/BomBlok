@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { SCHEMA, isValidSave, isValidGrid, isValidShape } from '../js/run-save-schema.js';
+import { SCHEMA, isValidSave, isValidGrid, isValidShape, isValidTimeBomb } from '../js/run-save-schema.js';
 
 // Kabul edilen bozuk bir kayıt oyunu AÇILIŞTA kilitler — kullanıcının kurtulma yolu yok.
 // Bu yüzden doğrulama varsayılan olarak reddetmeli.
@@ -16,6 +16,7 @@ function gecerliKayit(ustuneYaz = {}) {
         dockedBlocks: [{ matrix: [[1, 1]], color: 'blue' }, null, null],
         timeBombs: [],
         score: 42,
+        scoreSubmissionId: '12345678-1234-1234-1234-123456789012',
         ...ustuneYaz
     };
 }
@@ -51,6 +52,10 @@ test('tanınmayan hücre tipi taşıyan tahta reddedilir', () => {
     const g2 = bosGrid();
     g2[0][0] = 7;
     assert.equal(isValidGrid(g2), false, 'sayı hücre olamaz (0 hariç)');
+
+    const g3 = bosGrid();
+    g3[0][0] = '<script>alert(1)</script>';
+    assert.equal(isValidGrid(g3), false, 'tanınmayan string hücre olamaz');
 });
 
 test('dock tam olarak 3 yuva içermeli', () => {
@@ -75,6 +80,9 @@ test('bozuk şekiller reddedilir', () => {
     assert.equal(isValidShape({ matrix: [[1, 1], [1]], color: 'blue' }), false, 'düzensiz satır genişliği');
     assert.equal(isValidShape({ matrix: [[1, 2]], color: 'blue' }), false, '0/1 dışı değer');
     assert.equal(isValidShape({ matrix: [[1]] }), false, 'renk yok');
+    assert.equal(isValidShape({ matrix: [[1]], color: 'bilinmeyen' }), false, 'tanınmayan renk');
+    assert.equal(isValidShape({ matrix: [[1]], color: 'blue', bombCell: { r: 2, c: 0 } }), false, 'bomba matris dışında');
+    assert.equal(isValidShape({ matrix: [[1, 0]], color: 'blue', bombCell: { r: 0, c: 1 } }), false, 'bomba boş hücrede');
 });
 
 test('geçerli şekil kabul edilir', () => {
@@ -86,10 +94,37 @@ test('geçersiz skor reddedilir', () => {
     assert.equal(isValidSave(gecerliKayit({ score: NaN })), false);
     assert.equal(isValidSave(gecerliKayit({ score: Infinity })), false);
     assert.equal(isValidSave(gecerliKayit({ score: '100' })), false, 'string skor');
+    assert.equal(isValidSave(gecerliKayit({ score: 1.5 })), false, 'ondalıklı skor');
     assert.equal(isValidSave(gecerliKayit({ score: 0 })), true, '0 geçerli bir skor');
 });
 
 test('timeBombs dizi olmalı', () => {
     assert.equal(isValidSave(gecerliKayit({ timeBombs: undefined })), false);
     assert.equal(isValidSave(gecerliKayit({ timeBombs: {} })), false);
+});
+
+test('saatli bomba koordinat ve sayaçları doğrulanır', () => {
+    assert.equal(isValidTimeBomb({ r: 0, c: 7, timer: 4 }), true);
+    assert.equal(isValidTimeBomb({ r: -1, c: 0, timer: 4 }), false);
+    assert.equal(isValidTimeBomb({ r: 0, c: 8, timer: 4 }), false);
+    assert.equal(isValidTimeBomb({ r: 0, c: 0, timer: -1 }), false);
+    assert.equal(isValidTimeBomb({ r: 0, c: 0, timer: '4' }), false);
+    assert.equal(isValidSave(gecerliKayit({ timeBombs: [{ r: 99, c: 0, timer: 4 }] })), false);
+});
+
+test('kayıt sayaçları negatif veya ondalıklı olamaz', () => {
+    for (const field of ['comboCount', 'rotationRights', 'missionMoves', 'movesSinceClear', 'consecutiveClears', 'usedRotationsInMission']) {
+        assert.equal(isValidSave(gecerliKayit({ [field]: -1 })), false, `${field} negatif`);
+        assert.equal(isValidSave(gecerliKayit({ [field]: 1.5 })), false, `${field} ondalıklı`);
+    }
+});
+
+test('skor gönderim kimliği varsa geçerli uzunlukta olmalı', () => {
+    assert.equal(isValidSave(gecerliKayit({ scoreSubmissionId: 'kisa' })), false);
+    assert.equal(isValidSave(gecerliKayit({ scoreSubmissionId: 42 })), false);
+    assert.equal(isValidSave(gecerliKayit({ scoreSubmissionId: 'x'.repeat(129) })), false);
+});
+
+test('alan eklenmeden önceki şema 1 kayıtları geriye dönük kabul edilir', () => {
+    assert.equal(isValidSave(gecerliKayit({ scoreSubmissionId: undefined })), true);
 });

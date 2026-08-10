@@ -6,15 +6,24 @@ import { saveRun, clearRun } from './run-save.js';
 import { AudioFX } from './audio.js';
 import { spawnParticles } from './particles.js';
 import { initGrid, redrawDock, generateRandomShape, getCellElement } from './grid.js';
-import { getRotatedMatrix, checkColorMatch, detectFullLines, canMatrixFit, canMatrixFitWithinTurns } from './rules.js';
+import { checkColorMatch, detectFullLines, canMatrixFit, canMatrixFitWithinTurns } from './rules.js';
 import { updateMissionProgress, updateMissionUI, checkMissionConstraints } from './missions.js';
 import { Leaderboard } from './leaderboard.js';
-import { selectBlock, deselectBlock, openGameOverDialog, closeGameOverDialog } from './main.js';
 import { Haptics } from './haptics.js';
 import { Achievements } from './achievements.js';
 
 let shakeTimeoutId = null;
 let activePopups = 0;
+let uiCallbacks = {
+    selectBlock: () => {},
+    deselectBlock: () => {},
+    openGameOverDialog: () => {},
+    closeGameOverDialog: () => {}
+};
+
+export function registerMechanicsCallbacks(callbacks) {
+    uiCallbacks = { ...uiCallbacks, ...callbacks };
+}
 
 export function activateFeverMode() {
     if (!state.isFeverActive) {
@@ -654,8 +663,6 @@ export function endTurn() {
     saveRun();
 }
 
-export { getRotatedMatrix };
-
 export function canShapeFit(shape) {
     if (!shape) return false;
     return canMatrixFit(state.grid, shape.matrix);
@@ -683,6 +690,8 @@ export function checkGameOver() {
     const anyBlockFits = activeBlocks.some(shape => canShapeFitWithRotation(shape));
 
     if (!anyBlockFits) {
+        const gameOverRunId = state.runId;
+        const gameOverScore = state.score;
         state.isGameOver = true;
         deactivateFeverMode();
         // Biten tur geri yüklenmemeli; yenile tuşuna basınca game-over ekranına dönülmesin.
@@ -695,8 +704,10 @@ export function checkGameOver() {
 
         // Show Game Over UI after a small delay
         setTimeout(() => {
-            finalScoreEl.textContent = state.score;
-            openGameOverDialog();
+            // Oyuncu 600 ms dolmadan yeni oyun başlatmışsa eski turun penceresini açma.
+            if (gameOverRunId !== state.runId || !state.isGameOver) return;
+            finalScoreEl.textContent = gameOverScore;
+            uiCallbacks.openGameOverDialog();
             if (typeof Leaderboard !== 'undefined' && Leaderboard.prepareGameOverUI) {
                 Leaderboard.prepareGameOverUI();
             }
@@ -847,13 +858,13 @@ export function performUndo() {
     // If was game over, cancel it
     if (state.isGameOver) {
         state.isGameOver = false;
-        closeGameOverDialog();
+        uiCallbacks.closeGameOverDialog();
     }
 
     state.previousState = null;
 
     // Re-draw everything
-    deselectBlock();
+    uiCallbacks.deselectBlock();
     initGrid();
     redrawDock();
     updateScoreUI();
@@ -880,7 +891,7 @@ export function rerollDockBlocks() {
     });
 
     // Re-draw dock
-    deselectBlock();
+    uiCallbacks.deselectBlock();
     redrawDock();
 
     // If was game over, check if new blocks fit
@@ -889,7 +900,7 @@ export function rerollDockBlocks() {
         const anyFits = activeBlocks.some(s => canShapeFitWithRotation(s));
         if (anyFits) {
             state.isGameOver = false;
-            closeGameOverDialog();
+            uiCallbacks.closeGameOverDialog();
         }
     }
 
@@ -904,16 +915,16 @@ export function animateAndRotateBlock(slotIndex, shape) {
         blockEl.classList.add('rotating-smooth');
         blockEl.addEventListener('transitionend', () => {
             blockEl.classList.remove('rotating-smooth');
-            deselectBlock();
+            uiCallbacks.deselectBlock();
             redrawDock();
-            selectBlock(slotIndex);
+            uiCallbacks.selectBlock(slotIndex);
             checkGameOver();
             updateJokerButtonsUI();
         }, { once: true });
     } else {
-        deselectBlock();
+        uiCallbacks.deselectBlock();
         redrawDock();
-        selectBlock(slotIndex);
+        uiCallbacks.selectBlock(slotIndex);
         checkGameOver();
         updateJokerButtonsUI();
     }

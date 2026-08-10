@@ -5,6 +5,7 @@
     <!-- maximum-scale / user-scalable=no BİLEREK kaldırıldı: yakınlaştırmayı engellemek
          WCAG 1.4.4 ihlali. Tarayıcı jestleri zaten oyun alanında touch-action ile kapalı. -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.supabase.co; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
     <title>BomBlok — Bombalı Blok Bulmaca Oyunu</title>
     <meta name="description" content="BomBlok: bomba blokları, buz engelleri, görevler ve haftalık liderlik tablosu olan ücretsiz 8x8 blok bulmaca oyunu. Kurulum yok, doğrudan tarayıcıda oyna.">
     <link rel="canonical" href="https://alp3rol.github.io/BomBlok/">
@@ -40,7 +41,7 @@
     <div id="pwa-install-banner" class="pwa-install-banner hidden">
         <span class="pwa-text">📱 BomBlok'u Ana Ekrana Ekle!</span>
         <button id="pwa-install-btn" class="pwa-install-btn" type="button">Yükle</button>
-        <button id="pwa-close-btn" class="pwa-close-btn" type="button">&times;</button>
+        <button id="pwa-close-btn" class="pwa-close-btn" type="button" aria-label="Yükleme önerisini kapat">&times;</button>
     </div>
 
     <!-- Klavye/ekran okuyucu geri bildirimi (seçim, yerleştirme, döndürme sonucu) -->
@@ -51,8 +52,8 @@
         <header class="game-header">
             <h1 class="game-title">B<span class="title-bomb"></span>M <span class="accent-text">BL<span class="title-bomb"></span>K</span></h1>
             <div class="header-controls">
-                <button id="leaderboard-btn" class="help-button" title="Leaderboard">🏆</button>
-                <button id="help-btn" class="help-button" title="Nasıl Oynanır?">?</button>
+                <button id="leaderboard-btn" class="help-button" type="button" title="Leaderboard" aria-label="Liderlik tablosunu aç">🏆</button>
+                <button id="help-btn" class="help-button" type="button" title="Nasıl Oynanır?" aria-label="Nasıl oynanır yardımını aç">?</button>
                 <div id="theme-dropdown" class="theme-dropdown" title="Tema Değiştir">
                     <button id="theme-btn" class="theme-btn" type="button" aria-haspopup="listbox" aria-expanded="false">🌙 Karanlık</button>
                     <div id="theme-menu" class="theme-menu hidden" role="listbox" aria-label="Tema Seç">
@@ -171,7 +172,7 @@
     </div>
 
     <!-- Game Over Screen -->
-    <div id="game-over-screen" class="game-over-overlay hidden">
+    <div id="game-over-screen" class="game-over-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="game-over-title">
         <div class="game-over-card">
             <h2 class="game-over-title" id="game-over-title">OYUN BİTTİ</h2>
             <div class="final-score-container">
@@ -241,9 +242,9 @@
     </div>
 
     <!-- Help / How to Play Modal -->
-    <div id="help-modal" class="modal-overlay hidden">
+    <div id="help-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="help-title">
         <div class="modal-card">
-            <button class="modal-close-btn" id="help-close-btn">&times;</button>
+            <button class="modal-close-btn" id="help-close-btn" type="button" aria-label="Yardımı kapat">&times;</button>
             <h2 class="modal-title" id="help-title">Nasıl Oynanır?</h2>
             <div class="modal-content">
                 <div class="rule-item">
@@ -306,9 +307,9 @@
     </div>
 
     <!-- Leaderboard Modal -->
-    <div id="leaderboard-modal" class="modal-overlay hidden">
+    <div id="leaderboard-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="leaderboard-title">
         <div class="modal-card">
-            <button class="modal-close-btn" id="leaderboard-close-btn">&times;</button>
+            <button class="modal-close-btn" id="leaderboard-close-btn" type="button" aria-label="Liderlik tablosunu kapat">&times;</button>
             <h2 class="modal-title" id="leaderboard-title">Leaderboard</h2>
             <div class="modal-content">
                 <div class="leaderboard-tabs">
@@ -337,14 +338,5 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-config.js"></script>
     <script type="module" src="js/main.js"></script>
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js').catch(err => {
-                    console.warn('Service worker kaydı başarısız:', err);
-                });
-            });
-        }
-    </script>
 </body>
 </html>

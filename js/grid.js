@@ -1,14 +1,15 @@
 import { state, gridBoard } from './state.js';
 import { SHAPES, getDifficultyParams } from './config.js';
 import { GRID } from './constants.js';
-import { updateScoreUI } from './mechanics.js';
 
 let _showPreview = null;
 let _tryPlace = null;
+let _updateScoreUI = null;
 
-export function registerGridCallbacks(showPreview, tryPlace) {
+export function registerGridCallbacks(showPreview, tryPlace, updateScoreUI) {
     _showPreview = showPreview;
     _tryPlace = tryPlace;
+    _updateScoreUI = updateScoreUI;
 }
 
 // Cache of grid cell DOM elements, indexed [row][col], rebuilt each time initGrid() runs.
@@ -69,7 +70,7 @@ export function initGrid() {
         }
     }
     bindGridEvents();
-    updateScoreUI();
+    if (_updateScoreUI) _updateScoreUI();
 }
 
 // Event delegation: three listeners on gridBoard instead of three per cell (192 total),

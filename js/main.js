@@ -5,16 +5,19 @@ import { ThemeManager } from './theme.js';
 import { resizeCanvas, spawnParticlesAtScreen } from './particles.js';
 import { initGrid, clearGridHighlights, spawnIceBlocks, renderBlockInSlot, generateDockBlocks, redrawDock, registerGridCallbacks, getCellElement, trackHighlight } from './grid.js';
 import { saveRun, clearRun, restoreRun } from './run-save.js';
-import { initMission, updateMissionProgress, updateMissionUI } from './missions.js';
+import { initMission, updateMissionProgress, updateMissionUI, registerMissionCallbacks } from './missions.js';
 import { Leaderboard } from './leaderboard.js';
-import { updateScoreUI, addXp, syncProgressionUI, deactivateFeverMode, checkAndClearLines, saveStateSnapshot, performUndo, rerollDockBlocks, updateJokerButtonsUI, getRotatedMatrix, saveJokers } from './mechanics.js';
+import { updateScoreUI, addXp, syncProgressionUI, deactivateFeverMode, checkAndClearLines, saveStateSnapshot, performUndo, rerollDockBlocks, updateJokerButtonsUI, saveJokers, showFloatingText, spawnTimeBomb, registerMechanicsCallbacks } from './mechanics.js';
 import { Storage, KEYS } from './storage.js';
 import { GRID, inBounds } from './constants.js';
+import { getRotatedShape } from './rules.js';
 import { Settings } from './settings.js';
 import { Keyboard } from './keyboard.js';
 import { createModal } from './modal.js';
 import { Haptics } from './haptics.js';
 import { Achievements } from './achievements.js';
+import { createSubmissionId } from './score-submission.js';
+import './sw-register.js';
 
 let dragRAF = null;
 let currentDragX = 0;
@@ -238,31 +241,15 @@ export function onPointerUp(e) {
     clearGridHighlights();
 
     if (!isDragging) {
-        if (state.rotationRights > 0) {
-            state.rotationRights--;
-            state.usedRotationsInMission++;
-            updateScoreUI();
-            AudioFX.playRotate();
-
-            const rCount = shape.matrix.length;
-            shape.matrix = getRotatedMatrix(shape.matrix);
-
-            if (shape.bombCell) {
-                const oldR = shape.bombCell.r;
-                const oldC = shape.bombCell.c;
-                shape.bombCell.r = oldC;
-                shape.bombCell.c = rCount - 1 - oldR;
-            }
-
-            state.dockedBlocks[slotIndex] = shape;
-
+        if (rotateDockBlock(slotIndex, { render: false })) {
             if (originalSlot) {
                 blockEl.style.transition = 'transform 0.2s ease-in-out';
                 blockEl.style.transform = 'rotate(90deg)';
                 
                 setTimeout(() => {
                     originalSlot.innerHTML = '';
-                    renderBlockInSlot(shape, originalSlot, slotIndex);
+                    const rotatedShape = state.dockedBlocks[slotIndex];
+                    if (rotatedShape) renderBlockInSlot(rotatedShape, originalSlot, slotIndex);
                 }, 200);
             }
         } else {
@@ -303,7 +290,7 @@ export function onPointerUp(e) {
  * Sürükleme yolundaki satır içi kopyadan çıkarıldı ki klavye de aynı kuralı kullansın.
  * @returns {boolean} döndürme gerçekleştiyse true (hak yoksa false)
  */
-export function rotateDockBlock(slotIndex) {
+export function rotateDockBlock(slotIndex, { render = true } = {}) {
     const shape = state.dockedBlocks[slotIndex];
     if (!shape || state.rotationRights <= 0) return false;
 
@@ -312,22 +299,15 @@ export function rotateDockBlock(slotIndex) {
     updateScoreUI();
     AudioFX.playRotate();
 
-    const rCount = shape.matrix.length;
-    shape.matrix = getRotatedMatrix(shape.matrix);
+    const rotatedShape = getRotatedShape(shape);
+    state.dockedBlocks[slotIndex] = rotatedShape;
 
-    if (shape.bombCell) {
-        const oldR = shape.bombCell.r;
-        const oldC = shape.bombCell.c;
-        shape.bombCell.r = oldC;
-        shape.bombCell.c = rCount - 1 - oldR;
-    }
-
-    state.dockedBlocks[slotIndex] = shape;
-
-    const slot = document.querySelectorAll('.dock-slot')[slotIndex];
-    if (slot) {
-        slot.innerHTML = '';
-        renderBlockInSlot(shape, slot, slotIndex);
+    if (render) {
+        const slot = document.querySelectorAll('.dock-slot')[slotIndex];
+        if (slot) {
+            slot.innerHTML = '';
+            renderBlockInSlot(rotatedShape, slot, slotIndex);
+        }
     }
     return true;
 }
@@ -516,6 +496,7 @@ function commitPlacement(shape, cells, offsetR, offsetC, slotIndex) {
 export function resetGame() {
     clearRun();
     state.runId++;
+    state.scoreSubmissionId = createSubmissionId();
     state.grid = Array(GRID).fill(null).map(() => Array(GRID).fill(0));
     state.timeBombs = [];
     state.score = 0;
@@ -540,7 +521,9 @@ export function resetGame() {
 }
 
 // Event Listeners
-registerGridCallbacks(showPreviewForSelectedBlock, tryPlaceSelectedBlock);
+registerGridCallbacks(showPreviewForSelectedBlock, tryPlaceSelectedBlock, updateScoreUI);
+registerMissionCallbacks({ updateJokerButtonsUI, showFloatingText, spawnTimeBomb, saveJokers });
+registerMechanicsCallbacks({ selectBlock, deselectBlock, openGameOverDialog, closeGameOverDialog });
 
 if (restartBtn) {
     restartBtn.addEventListener('click', () => {
@@ -747,7 +730,10 @@ if (shareBtn) {
             try {
                 await navigator.clipboard.writeText(shareText);
                 Achievements.showToast('🚀 Skor Kartı Panoya Kopyalandı!');
-            } catch (err) {}
+            } catch (err) {
+                Achievements.showToast('Skor panoya kopyalanamadı. Tarayıcı iznini kontrol et.');
+                console.warn('Clipboard share failed:', err);
+            }
         }
     });
 }

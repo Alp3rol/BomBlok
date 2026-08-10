@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { getRotatedMatrix, checkColorMatch, detectFullLines, canMatrixFitWithinTurns } from '../js/rules.js';
+import { getRotatedMatrix, getRotatedShape, checkColorMatch, detectFullLines, canMatrixFitWithinTurns } from '../js/rules.js';
 import { GRID } from '../js/constants.js';
 
 function emptyGrid() {
@@ -21,6 +21,15 @@ test('getRotatedMatrix rotating four times returns the original matrix', () => {
         current = getRotatedMatrix(current);
     }
     assert.deepEqual(current, lShape);
+});
+
+test('getRotatedShape matrisi ve bomba hücresini birlikte, girdiyi değiştirmeden döndürür', () => {
+    const shape = { matrix: [[1, 1, 1], [1, 0, 0]], color: 'blue', bombCell: { r: 0, c: 2 } };
+    const rotated = getRotatedShape(shape);
+
+    assert.deepEqual(rotated.matrix, [[1, 1], [0, 1], [0, 1]]);
+    assert.deepEqual(rotated.bombCell, { r: 2, c: 1 });
+    assert.deepEqual(shape.bombCell, { r: 0, c: 2 });
 });
 
 test('rotation fit check requires enough rights for the reachable orientation', () => {

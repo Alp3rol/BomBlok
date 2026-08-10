@@ -37,8 +37,17 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Test
-        run: npm test
+      - name: Test with coverage thresholds
+        run: npm run test:coverage
+
+      - name: Secret leak check
+        run: npm run security:secrets
+
+      - name: Build minimal Pages artifact
+        run: npm run build
+
+      - name: Dependency audit
+        run: npm audit --audit-level=high
 
   deploy:
     # Kalite kapısı geçmeden deploy yok.
@@ -68,12 +77,15 @@ jobs:
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: node scripts/write-supabase-config.js
 
+      - name: Build minimal Pages artifact
+        run: node scripts/build-dist.js
+
       - name: Setup Pages
         uses: actions/configure-pages@v6
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v5
         with:
-          path: '.'
+          path: 'dist'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5

@@ -16,7 +16,7 @@
 // negligible for a project this size, and nothing when offline. Consistency wins.
 // Bump VERSION to force every client to drop its old cache on activate.
 
-const VERSION = 'v20';
+const VERSION = 'v22';
 const CACHE_NAME = `bomblok-${VERSION}`;
 
 const CORE_ASSETS = [
@@ -47,7 +47,9 @@ const CORE_ASSETS = [
   './js/leaderboard.js',
   './js/rules.js',
   './js/haptics.js',
-  './js/achievements.js'
+  './js/achievements.js',
+  './js/score-submission.js',
+  './js/sw-register.js'
 ];
 
 // Pre-cache the app shell. `cache: 'reload'` bypasses the browser HTTP cache so we never

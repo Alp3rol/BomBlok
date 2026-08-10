@@ -2,6 +2,7 @@ import { state, leaderboardBtn, leaderboardModal, leaderboardCloseBtn, leaderboa
 import { Achievements } from './achievements.js';
 import { createModal } from './modal.js';
 import { Storage, KEYS } from './storage.js';
+import { isDuplicateSubmissionError } from './score-submission.js';
 
 export function getISOWeekKey(date = new Date()) {
     const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
@@ -25,6 +26,8 @@ export const Leaderboard = {
     client: null,
     enabled: false,
     view: 'weekly', // weekly | global
+    submitInFlight: false,
+    submittedRunIds: new Set(),
 
     init() {
         const url = window.SUPABASE_URL;
@@ -188,8 +191,8 @@ export const Leaderboard = {
 
     async refresh() {
         if (!this.enabled || !this.client) {
-            this.setStatus('Supabase ayarlı değil. `supabase-config.js` dosyasını doldur.', 'modal');
-            this.setStatus('Online skor kapalı. Supabase ayarı gerekli.', 'gameover');
+            this.setStatus('Çevrim içi liderlik tablosu şu anda kullanılamıyor.', 'modal');
+            this.setStatus('Skorun cihazında kaldı; çevrim içi kayıt şu anda kullanılamıyor.', 'gameover');
             if (leaderboardListEl) leaderboardListEl.innerHTML = '';
             this.setSubmitEnabled(false);
             return;
@@ -220,7 +223,8 @@ export const Leaderboard = {
             const deduplicatedData = Array.from(uniqueUsers.values()).slice(0, 20);
             this.render(deduplicatedData);
         } catch (err) {
-            this.setStatus('Yüklenemedi. İnternet / RLS ayarlarını kontrol et.', 'modal');
+            this.setStatus('Liderlik tablosu yüklenemedi. İnternet bağlantını kontrol edip tekrar dene.', 'modal');
+            console.warn('Leaderboard refresh failed:', err);
             if (leaderboardListEl) leaderboardListEl.innerHTML = '';
         }
     },
@@ -287,7 +291,7 @@ export const Leaderboard = {
         this.updateNicknameUI();
         if (!this.enabled || !this.client) {
             this.setSubmitEnabled(false);
-            this.setStatus('Online skor kapalı. Supabase ayarı gerekli.', 'gameover');
+            this.setStatus('Skorun cihazında kaldı; çevrim içi kayıt şu anda kullanılamıyor.', 'gameover');
             return;
         }
         this.setSubmitEnabled(true);
@@ -295,8 +299,13 @@ export const Leaderboard = {
     },
 
     async submitCurrentScore(source = 'modal') {
+        if (this.submitInFlight) {
+            this.setStatus('Skor zaten gönderiliyor…', source);
+            return;
+        }
+
         if (!this.enabled || !this.client) {
-            this.setStatus('Supabase ayarlı değil. Önce `supabase-config.js` doldur.', source);
+            this.setStatus('Çevrim içi skor kaydı şu anda kullanılamıyor.', source);
             return;
         }
 
@@ -312,19 +321,38 @@ export const Leaderboard = {
             return;
         }
 
+        const submissionId = state.scoreSubmissionId;
+        if (!submissionId || this.submittedRunIds.has(submissionId)) {
+            this.setStatus('Bu turun skoru daha önce gönderildi.', source);
+            return;
+        }
+
         this.setStatus('Gönderiliyor...', source);
+        this.submitInFlight = true;
+        this.setSubmitEnabled(false);
         try {
             const payload = {
                 nickname: nick,
                 score,
-                week_key: getISOWeekKey()
+                week_key: getISOWeekKey(),
+                submission_id: submissionId
             };
             const { error } = await this.client.from('scores').insert(payload);
             if (error) throw error;
+            this.submittedRunIds.add(submissionId);
             await this.refresh();
             this.setStatus('Skor gönderildi!', source);
         } catch (err) {
-            this.setStatus('Gönderilemedi. RLS/policy veya interneti kontrol et.', source);
+            if (isDuplicateSubmissionError(err)) {
+                this.submittedRunIds.add(submissionId);
+                this.setStatus('Bu turun skoru daha önce gönderildi.', source);
+            } else {
+                this.setStatus('Skor gönderilemedi. İnternet bağlantını kontrol edip tekrar dene.', source);
+                console.warn('Leaderboard score submission failed:', err);
+            }
+        } finally {
+            this.submitInFlight = false;
+            this.setSubmitEnabled(true);
         }
     }
 };

@@ -1,7 +1,18 @@
 import { state } from './state.js';
 import { LAST } from './constants.js';
 import { AudioFX } from './audio.js';
-import { updateJokerButtonsUI, showFloatingText, spawnTimeBomb, saveJokers } from './mechanics.js';
+import { Achievements } from './achievements.js';
+
+let callbacks = {
+    updateJokerButtonsUI: () => {},
+    showFloatingText: () => {},
+    spawnTimeBomb: () => {},
+    saveJokers: () => {}
+};
+
+export function registerMissionCallbacks(nextCallbacks) {
+    callbacks = { ...callbacks, ...nextCallbacks };
+}
 
 export const MISSION_POOL = [
     { type: 'lines', text: 'Satır/Sütun Temizle', target: () => Math.floor(Math.random() * 8) + 5, icon: '📏' }, // 5-12
@@ -39,6 +50,10 @@ export function initMission() {
         clearInterval(state.missionTimerId);
         state.missionTimerId = null;
     }
+    if (state.missionCompletionTimeoutId) {
+        clearTimeout(state.missionCompletionTimeoutId);
+        state.missionCompletionTimeoutId = null;
+    }
 
     const randomMissionTemplate = MISSION_POOL[Math.floor(Math.random() * MISSION_POOL.length)];
     state.currentMission = {
@@ -62,7 +77,7 @@ export function initMission() {
                 updateMissionUI();
                 if (state.missionTimeLeft <= 0) {
                     try { AudioFX.playBuzzer(); } catch(e) {}
-                    showFloatingText('Zaman Doldu! Yeni Görev', '#ff3333');
+                    callbacks.showFloatingText('Zaman Doldu! Yeni Görev', '#ff3333');
                     initMission(); // Restart with new mission
                 }
             }
@@ -70,7 +85,7 @@ export function initMission() {
     }
 
     if (state.currentMission.type === 'saatlibombapanigi') {
-        for(let i=0; i<3; i++) spawnTimeBomb(true);
+        for(let i=0; i<3; i++) callbacks.spawnTimeBomb(true);
     }
 
     updateMissionUI();
@@ -115,13 +130,11 @@ export function updateMissionUI() {
     }
 }
 
-import { Achievements } from './achievements.js';
-
 export function completeMission() {
     state.currentMission.completed = true;
     state.jokers++;
-    updateJokerButtonsUI();
-    saveJokers();
+    callbacks.updateJokerButtonsUI();
+    callbacks.saveJokers();
     Achievements.recordStat('missions', 1);
 
     // Play victory chime
@@ -134,7 +147,8 @@ export function completeMission() {
     }
 
     // Hide after 2.5s and start a new mission
-    setTimeout(() => {
+    state.missionCompletionTimeoutId = setTimeout(() => {
+        state.missionCompletionTimeoutId = null;
         if (banner) {
             banner.classList.remove('show');
         }
@@ -147,12 +161,12 @@ export function checkMissionConstraints() {
     const mType = state.currentMission.type;
 
     if (mType === 'meydanokuma' && state.missionMoves >= 5) {
-        showFloatingText('Hamle Bitti! Görev Sıfırlandı', '#ff3333');
+        callbacks.showFloatingText('Hamle Bitti! Görev Sıfırlandı', '#ff3333');
         initMission();
     }
     
     if (mType === 'saatlibombapanigi' && state.missionMoves >= 15) {
-        showFloatingText('Hamle Bitti! Görev Sıfırlandı', '#ff3333');
+        callbacks.showFloatingText('Hamle Bitti! Görev Sıfırlandı', '#ff3333');
         initMission();
     }
 
@@ -160,7 +174,7 @@ export function checkMissionConstraints() {
         if (state.currentMission.current > 0) {
             state.currentMission.current = 0;
             updateMissionUI();
-            showFloatingText('Kırım Yaptın! Seri Sıfırlandı', '#ffaa00');
+            callbacks.showFloatingText('Kırım Yaptın! Seri Sıfırlandı', '#ffaa00');
         }
     }
 
