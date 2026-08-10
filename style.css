@@ -360,6 +360,50 @@ button.control-card:disabled {
     text-shadow: 0 0 8px rgba(255, 255, 255, 0.1);
 }
 
+.new-game-card {
+    max-width: 390px;
+    text-align: center;
+}
+
+.new-game-message {
+    margin: 8px 0 22px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+.new-game-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.new-game-actions .modal-start-btn {
+    flex: 1;
+    margin: 0;
+}
+
+.secondary-button {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.danger-button {
+    background: linear-gradient(135deg, #ff3b5c, #d8173f);
+}
+
+@media (max-width: 420px) {
+    .controls-row {
+        gap: 5px;
+    }
+
+    .control-card {
+        padding-inline: 5px;
+    }
+
+    .control-label {
+        font-size: 8px;
+        letter-spacing: 0.5px;
+    }
+}
+
 /* Grid Board */
 .grid-board-container {
     width: 100%;

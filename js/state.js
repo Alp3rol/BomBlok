@@ -12,6 +12,7 @@ export const state = {
     nickname: Storage.get(KEYS.nickname, ''),
     dockedBlocks: [null, null, null], // Holds current shapes on dock
     isGameOver: false,
+    runId: 0, // Yeni oyun başlayınca eski turun gecikmiş animasyon callback'lerini geçersiz kılar.
     comboCount: 0, // Track consecutive clears!
     rotationRights: 0, // Rotation rights per game!
     selectedBlockIndex: null, // Track selected block for click-to-place

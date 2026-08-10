@@ -515,6 +515,7 @@ function commitPlacement(shape, cells, offsetR, offsetC, slotIndex) {
 
 export function resetGame() {
     clearRun();
+    state.runId++;
     state.grid = Array(GRID).fill(null).map(() => Array(GRID).fill(0));
     state.timeBombs = [];
     state.score = 0;
@@ -543,6 +544,35 @@ registerGridCallbacks(showPreviewForSelectedBlock, tryPlaceSelectedBlock);
 
 if (restartBtn) {
     restartBtn.addEventListener('click', () => {
+        resetGame();
+    });
+}
+
+const newGameBtn = document.getElementById('new-game-btn');
+const newGameModal = document.getElementById('new-game-modal');
+const newGameCancelBtn = document.getElementById('new-game-cancel-btn');
+const newGameConfirmBtn = document.getElementById('new-game-confirm-btn');
+const newGameDialog = createModal(newGameModal, {
+    labelledBy: 'new-game-title',
+    initialFocus: () => newGameCancelBtn
+});
+
+if (newGameBtn && newGameDialog) {
+    newGameBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        AudioFX.init();
+        AudioFX.playGrab();
+        newGameDialog.open(newGameBtn);
+    });
+}
+
+if (newGameCancelBtn && newGameDialog) {
+    newGameCancelBtn.addEventListener('click', () => newGameDialog.close());
+}
+
+if (newGameConfirmBtn && newGameDialog) {
+    newGameConfirmBtn.addEventListener('click', () => {
+        newGameDialog.close();
         resetGame();
     });
 }

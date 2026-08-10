@@ -108,6 +108,10 @@
                 <span class="control-label">YENİLE</span>
                 <span class="control-value">🔄</span>
             </button>
+            <button id="new-game-btn" class="control-card" title="Mevcut turu bırakıp yeni oyun başlat">
+                <span class="control-label">YENİ OYUN</span>
+                <span class="control-value">↻</span>
+            </button>
         </section>
 
         <!-- Current Mission Panel -->
@@ -151,6 +155,18 @@
                     <div class="dock-slot" data-slot="2"></div>
                 </div>
             </footer>
+        </div>
+    </div>
+
+    <!-- New Game Confirmation -->
+    <div id="new-game-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="new-game-title">
+        <div class="modal-card new-game-card">
+            <h2 class="modal-title" id="new-game-title">Yeni Oyun Başlat?</h2>
+            <p class="new-game-message">Mevcut skorun ve bu turdaki ilerlemen silinecek.</p>
+            <div class="new-game-actions">
+                <button id="new-game-cancel-btn" class="modal-start-btn secondary-button" type="button">Vazgeç</button>
+                <button id="new-game-confirm-btn" class="modal-start-btn danger-button" type="button">Yeni Oyun</button>
+            </div>
         </div>
     </div>
 

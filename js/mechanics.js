@@ -270,6 +270,7 @@ export function explodeTimeBomb(bombR, bombC) {
 }
 
 export function checkAndClearLines() {
+    const runId = state.runId;
     state.missionMoves++;
     let iceBrokenThisMove = 0;
     let bombsExplodedThisMove = 0;
@@ -510,6 +511,10 @@ export function checkAndClearLines() {
 
         // Clean classes and styles from DOM after animation completes (400ms)
         setTimeout(() => {
+            // Oyuncu animasyon sürerken yeni oyun başlattıysa eski turun temizleme/buz/bomba
+            // işlemleri yeni tahtaya sızmamalı.
+            if (runId !== state.runId) return;
+
             cellsToClear.forEach(cell => {
                 const cellEl = getCellElement(cell.r, cell.c);
                 if (cellEl) {
