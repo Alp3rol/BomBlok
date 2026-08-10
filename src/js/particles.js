@@ -8,6 +8,7 @@ const ctx = canvas.getContext('2d');
 
 const particles = [];
 let isLoopRunning = false;
+let feverFlameEdgeCursor = 0;
 
 // Upper bound on live particles. A fever-mode cross-clear (multiplier 2.5, ~15 particles/cell
 // over a dozen-plus cleared cells) can otherwise push 500+ shadow-blurred particles in a single
@@ -240,11 +241,37 @@ class FeverEmber {
 }
 
 class FeverFlame {
-    constructor() {
-        this.x = Math.random() * canvas.width;
-        this.y = canvas.height + 10;
-        this.vx = (Math.random() - 0.5) * 0.7;
-        this.vy = -(1.4 + Math.random() * 1.8);
+    constructor(edge) {
+        const speed = 1.4 + Math.random() * 1.8;
+        if (edge === 0) {
+            this.x = Math.random() * canvas.width;
+            this.y = canvas.height + 10;
+            this.dx = 0;
+            this.dy = -1;
+            this.rotation = 0;
+        } else if (edge === 1) {
+            this.x = Math.random() * canvas.width;
+            this.y = -10;
+            this.dx = 0;
+            this.dy = 1;
+            this.rotation = Math.PI;
+        } else if (edge === 2) {
+            this.x = -10;
+            this.y = Math.random() * canvas.height;
+            this.dx = 1;
+            this.dy = 0;
+            this.rotation = Math.PI / 2;
+        } else {
+            this.x = canvas.width + 10;
+            this.y = Math.random() * canvas.height;
+            this.dx = -1;
+            this.dy = 0;
+            this.rotation = -Math.PI / 2;
+        }
+        this.vx = this.dx * speed;
+        this.vy = this.dy * speed;
+        this.perpendicularX = -this.dy;
+        this.perpendicularY = this.dx;
         this.radius = 7 + Math.random() * 11;
         this.alpha = 0.5 + Math.random() * 0.32;
         this.decay = 0.018 + Math.random() * 0.012;
@@ -253,8 +280,9 @@ class FeverFlame {
 
     update() {
         this.time += 0.16;
-        this.x += this.vx + Math.sin(this.time) * 0.65;
-        this.y += this.vy;
+        const sway = Math.sin(this.time) * 0.65;
+        this.x += this.vx + this.perpendicularX * sway;
+        this.y += this.vy + this.perpendicularY * sway;
         this.radius *= 0.985;
         this.alpha -= this.decay;
     }
@@ -267,6 +295,7 @@ class FeverFlame {
         c.globalCompositeOperation = 'lighter';
         c.globalAlpha = Math.max(0, this.alpha);
         c.translate(this.x, this.y);
+        c.rotate(this.rotation);
 
         const outer = c.createLinearGradient(0, height * 0.45, 0, -height);
         outer.addColorStop(0, '#ff2d00');
@@ -342,7 +371,8 @@ export function spawnFeverFlames(requestedCount = 4) {
 
     const count = window.innerWidth <= 768 ? Math.ceil(requestedCount * 0.6) : requestedCount;
     for (let i = 0; i < count && particles.length < MAX_PARTICLES; i++) {
-        particles.push(new FeverFlame());
+        particles.push(new FeverFlame(feverFlameEdgeCursor % 4));
+        feverFlameEdgeCursor++;
     }
 
     if (!isLoopRunning) {

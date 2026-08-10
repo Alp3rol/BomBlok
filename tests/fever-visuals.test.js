@@ -32,6 +32,10 @@ test('Fever ekran vinyeti ve yükselen kor parçacıkları kullanıyor', () => {
     assert.match(css, /@keyframes\s+fever-screen-heat/);
     assert.match(particles, /class\s+FeverEmber/);
     assert.match(particles, /class\s+FeverFlame/);
+    assert.match(particles, /edge\s*===\s*0/);
+    assert.match(particles, /edge\s*===\s*1/);
+    assert.match(particles, /edge\s*===\s*2/);
+    assert.match(particles, /feverFlameEdgeCursor\s*%\s*4/);
     assert.match(mechanics, /spawnFeverEmbers\(36\)/);
     assert.match(mechanics, /spawnFeverFlames\(22\)/);
 });
