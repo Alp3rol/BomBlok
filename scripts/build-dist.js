@@ -2,7 +2,7 @@ import { cpSync, existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } fro
 import { join } from 'node:path';
 
 const output = 'dist';
-const files = ['index.html', 'style.css', 'themes.css', 'manifest.json', 'sw.js', '.nojekyll'];
+const publicFiles = ['index.html', 'manifest.json', 'sw.js', '.nojekyll'];
 const assets = [
     'apple-touch-icon.png',
     'favicon-32.png',
@@ -15,9 +15,11 @@ const assets = [
 rmSync(output, { recursive: true, force: true });
 mkdirSync(join(output, 'assets'), { recursive: true });
 
-for (const file of files) cpSync(file, join(output, file));
-cpSync('js', join(output, 'js'), { recursive: true });
-for (const asset of assets) cpSync(join('assets', asset), join(output, 'assets', asset));
+for (const file of publicFiles) cpSync(join('public', file), join(output, file));
+cpSync(join('src', 'css', 'style.css'), join(output, 'style.css'));
+cpSync(join('src', 'css', 'themes.css'), join(output, 'themes.css'));
+cpSync(join('src', 'js'), join(output, 'js'), { recursive: true });
+for (const asset of assets) cpSync(join('src', 'assets', asset), join(output, 'assets', asset));
 
 if (existsSync('supabase-config.js')) {
     cpSync('supabase-config.js', join(output, 'supabase-config.js'));

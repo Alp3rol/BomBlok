@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createSubmissionId, isDuplicateSubmissionError } from '../js/score-submission.js';
+import { createSubmissionId, isDuplicateSubmissionError } from '../src/js/score-submission.js';
 
 test('tarayıcı UUID sağlayıcısı varsa onu kullanır', () => {
     const expected = '12345678-1234-1234-1234-123456789012';

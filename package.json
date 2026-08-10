@@ -6,7 +6,7 @@
   "description": "BomBlok - block puzzle oyunu",
   "scripts": {
     "test": "node --test tests/*.test.js",
-    "test:coverage": "node --test --experimental-test-coverage --test-coverage-lines=90 --test-coverage-branches=85 --test-coverage-functions=85 --test-coverage-include=js/constants.js --test-coverage-include=js/config.js --test-coverage-include=js/rules.js --test-coverage-include=js/run-save-schema.js --test-coverage-include=js/score-submission.js --test-coverage-include=js/storage.js tests/*.test.js",
+    "test:coverage": "node --test --experimental-test-coverage --test-coverage-lines=90 --test-coverage-branches=85 --test-coverage-functions=85 --test-coverage-include=src/js/constants.js --test-coverage-include=src/js/config.js --test-coverage-include=src/js/rules.js --test-coverage-include=src/js/run-save-schema.js --test-coverage-include=src/js/score-submission.js --test-coverage-include=src/js/storage.js tests/*.test.js",
     "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --fix",
     "security:secrets": "node scripts/check-secrets.js",

@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join, normalize } from 'node:path';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-const jsDir = join(root, 'js');
+const jsDir = join(root, 'src', 'js');
 
 function dependencyGraph() {
     const graph = new Map();

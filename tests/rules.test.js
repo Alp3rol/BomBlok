@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { getRotatedMatrix, getRotatedShape, checkColorMatch, detectFullLines, canMatrixFitWithinTurns } from '../js/rules.js';
-import { GRID } from '../js/constants.js';
+import { getRotatedMatrix, getRotatedShape, checkColorMatch, detectFullLines, canMatrixFitWithinTurns } from '../src/js/rules.js';
+import { GRID } from '../src/js/constants.js';
 
 function emptyGrid() {
     return Array.from({ length: GRID }, () => Array(GRID).fill(0));

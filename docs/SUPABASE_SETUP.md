@@ -46,7 +46,7 @@ Deploy iş akışı `supabase-config.js` dosyasını otomatik üretir. Bu değer
 
 #### Yerel geliştirme
 
-1. `supabase-config.example.js` dosyasını `supabase-config.js` adıyla kopyala.
+1. `config/supabase-config.example.js` dosyasını proje köküne `supabase-config.js` adıyla kopyala.
 2. `window.SUPABASE_URL` ve `window.SUPABASE_ANON_KEY` değerlerini doldur.
 
 ### Güvenlik sınırı

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { SCHEMA, isValidSave, isValidGrid, isValidShape, isValidTimeBomb } from '../js/run-save-schema.js';
+import { SCHEMA, isValidSave, isValidGrid, isValidShape, isValidTimeBomb } from '../src/js/run-save-schema.js';
 
 // Kabul edilen bozuk bir kayıt oyunu AÇILIŞTA kilitler — kullanıcının kurtulma yolu yok.
 // Bu yüzden doğrulama varsayılan olarak reddetmeli.

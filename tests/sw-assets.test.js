@@ -9,7 +9,7 @@ import { dirname, join } from 'node:path';
 // gerçek dosya sistemine bağlar, böylece sapma CI'da yakalanır.
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-const swSource = readFileSync(join(root, 'sw.js'), 'utf8');
+const swSource = readFileSync(join(root, 'public', 'sw.js'), 'utf8');
 
 function coreAssets() {
     const block = swSource.match(/const CORE_ASSETS = \[([\s\S]*?)\];/);
@@ -18,7 +18,7 @@ function coreAssets() {
 }
 
 test('CORE_ASSETS js/ altındaki her modülü içeriyor', () => {
-    const onDisk = readdirSync(join(root, 'js')).filter((f) => f.endsWith('.js')).sort();
+    const onDisk = readdirSync(join(root, 'src', 'js')).filter((f) => f.endsWith('.js')).sort();
     const listed = coreAssets()
         .filter((p) => p.startsWith('./js/'))
         .map((p) => p.replace('./js/', ''))
@@ -31,7 +31,16 @@ test('CORE_ASSETS js/ altındaki her modülü içeriyor', () => {
 test('CORE_ASSETS içindeki her yol gerçekten var olan bir dosyaya işaret ediyor', () => {
     const eksik = coreAssets()
         .filter((p) => p !== './')          // kök gezinme girişi, dosya değil
-        .filter((p) => !existsSync(join(root, p.replace('./', ''))));
+        .filter((p) => {
+            const relativePath = p.replace('./', '');
+            if (relativePath.startsWith('js/') || relativePath.startsWith('assets/')) {
+                return !existsSync(join(root, 'src', relativePath));
+            }
+            if (relativePath === 'style.css' || relativePath === 'themes.css') {
+                return !existsSync(join(root, 'src', 'css', relativePath));
+            }
+            return !existsSync(join(root, 'public', relativePath));
+        });
 
     assert.deepEqual(eksik, [], `sw.js var olmayan dosyaları önbelleğe almaya çalışıyor: ${eksik.join(', ')}`);
 });

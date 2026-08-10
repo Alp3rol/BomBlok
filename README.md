@@ -13,7 +13,7 @@
 ![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)
 ![GitHub Pages](https://img.shields.io/badge/GitHub_Pages-121013?style=for-the-badge&logo=github&logoColor=white)
 
-**[🎯 Hemen Oyna](https://alp3rol.github.io/BomBlok/)** • **[📦 Repoyu Aç](https://github.com/Alp3rol/BomBlok)** • **[🏆 Supabase Kurulumu](./SUPABASE_SETUP.md)**
+**[🎯 Hemen Oyna](https://alp3rol.github.io/BomBlok/)** • **[📦 Repoyu Aç](https://github.com/Alp3rol/BomBlok)** • **[🏆 Supabase Kurulumu](./docs/SUPABASE_SETUP.md)**
 
 </div>
 
@@ -22,7 +22,7 @@ BomBlok, klasik blok yerleştirme mantığını alıp onu daha dinamik bir oyun 
 ## 🖼️ Oyun görünümü
 
 <div align="center">
-  <img src="./assets/bomblok-readme-preview.png" alt="BomBlok oyun ekranı önizlemesi" width="420" />
+  <img src="./docs/assets/bomblok-readme-preview.png" alt="BomBlok oyun ekranı önizlemesi" width="420" />
 </div>
 
 
@@ -89,46 +89,40 @@ Belirli koşullarda devreye giren `Fever Mode`, kısa süreli yüksek tempolu bi
 
 ```text
 .
-├── index.html
-├── style.css
-├── themes.css
-├── manifest.json
-├── sw.js
-├── js/
-│   ├── main.js          # Girdi (pointer/drag-drop) ve yerleştirme akışı
-│   ├── state.js         # Merkezi oyun durumu
-│   ├── grid.js          # Tahta ve dock render/üretim mantığı
-│   ├── mechanics.js     # Temizleme, bomba, fever, XP, joker mantığı
-│   ├── missions.js      # Görev havuzu ve takibi
-│   ├── config.js        # Şekiller ve zorluk eğrisi
-│   ├── audio.js         # Web Audio API tabanlı prosedürel ses
-│   ├── particles.js     # Canvas parçacık efektleri
-│   ├── theme.js         # Tema seçimi ve kalıcılığı
-│   └── leaderboard.js   # Supabase online skor tablosu
-├── supabase-config.example.js
-├── SUPABASE_SETUP.md
-└── .github/workflows/deploy.yml
+├── src/
+│   ├── js/              # Oyun mantığı ve tarayıcı modülleri
+│   ├── css/             # Ana stiller ve temalar
+│   └── assets/          # Oyunda kullanılan görseller
+├── public/              # HTML, manifest ve service worker
+├── docs/                # Kurulum ve denetim belgeleri
+├── config/              # Örnek yerel yapılandırmalar
+├── supabase/migrations/ # Veritabanı değişiklikleri
+├── tests/               # Otomatik testler
+├── scripts/             # Derleme ve güvenlik araçları
+└── .github/workflows/   # GitHub Pages otomasyonu
 ```
 
 ## 🚀 Lokal çalıştırma
 
-Projeyi doğrudan tarayıcıda açmak mümkün olsa da, geliştirme sırasında basit bir local server kullanmak daha sağlıklıdır.
+Bağımlılıkları kurup doğrulanmış dağıtım paketini oluştur:
 
 ```bash
 git clone https://github.com/Alp3rol/BomBlok.git
 cd BomBlok
-python -m http.server 8000
+npm install
+npm run build
+npm run preview
 ```
 
-Sonrasında tarayıcıda `http://localhost:8000` adresini açman yeterlidir.
+Sonrasında terminalde gösterilen yerel adresi açman yeterlidir.
 
 ## 🏆 Supabase kurulumu
 
-Leaderboard özelliğini kullanmak için bir Supabase projesi oluşturup gerekli tablo ve politikaları tanımlaman gerekir. Ayrıntılı kurulum adımları `SUPABASE_SETUP.md` dosyasında yer alır.
+Leaderboard özelliğini kullanmak için bir Supabase projesi oluşturup gerekli tablo ve politikaları tanımlaman gerekir. Ayrıntılı kurulum adımları `docs/SUPABASE_SETUP.md` dosyasında yer alır.
 
 Lokal geliştirme için:
 
-1. `supabase-config.example.js` dosyasını kopyalayıp `supabase-config.js` olarak oluştur.
+1. `config/supabase-config.example.js` dosyasını kopyalayıp kökte `supabase-config.js` olarak oluştur.
 2. İçine yalnızca `Supabase URL` ve `anon public key` bilgilerini gir.
 
 ## 🌍 Deploy

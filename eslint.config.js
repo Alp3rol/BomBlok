@@ -35,7 +35,7 @@ const browserGlobals = {
 export default [
     {
         // Bağımlılıklar, asset'ler ve üretilen/yerel config dosyası denetlenmez.
-        ignores: ['node_modules/**', 'dist/**', 'assets/**', 'supabase-config.js', 'supabase-config.example.js']
+        ignores: ['node_modules/**', 'dist/**', 'docs/assets/**', 'supabase-config.js', 'config/supabase-config.example.js']
     },
     {
         // Build/CI yardımcı script'leri Node ortamında çalışıyor.
@@ -53,7 +53,7 @@ export default [
         }
     },
     {
-        files: ['js/**/*.js'],
+        files: ['src/js/**/*.js'],
         languageOptions: {
             ecmaVersion: 2023,
             sourceType: 'module',
@@ -71,7 +71,7 @@ export default [
     },
     {
         // Service worker: ayrı global ortam, modül değil.
-        files: ['sw.js'],
+        files: ['public/sw.js'],
         languageOptions: {
             ecmaVersion: 2023,
             sourceType: 'script',

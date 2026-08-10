@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { SHAPES, getDifficultyParams } from '../js/config.js';
+import { SHAPES, getDifficultyParams } from '../src/js/config.js';
 
 test('getDifficultyParams defaults to level 1 for missing/invalid input', () => {
     const noArg = getDifficultyParams();

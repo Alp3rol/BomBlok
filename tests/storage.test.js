@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { Storage, KEYS } from '../js/storage.js';
+import { Storage, KEYS } from '../src/js/storage.js';
 
 // Node'da localStorage yok, dolayısıyla bu testler modülün bellek yedeği yolunu çalıştırıyor —
 // yani tarayıcıda depolama engellendiğinde/kota dolduğunda devreye giren yolu. Asıl garanti

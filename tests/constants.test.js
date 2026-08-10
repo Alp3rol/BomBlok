@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { GRID, LAST, inBounds } from '../js/constants.js';
+import { GRID, LAST, inBounds } from '../src/js/constants.js';
 
 test('GRID pozitif bir tam sayı ve LAST onunla tutarlı', () => {
     assert.ok(Number.isInteger(GRID) && GRID > 0);
@@ -27,7 +27,7 @@ test('inBounds kenarın bir adım dışını reddeder', () => {
 test('kaydedilmiş tur doğrulaması aynı GRID değerini kullanıyor', async () => {
     // run-save-schema.js kendi `const GRID = 8` kopyasını taşıyordu; ikisi ayrışırsa
     // geçerli kayıtlar reddedilmeye (veya bozuk kayıtlar kabul edilmeye) başlar.
-    const { isValidGrid } = await import('../js/run-save-schema.js');
+    const { isValidGrid } = await import('../src/js/run-save-schema.js');
     const dogruBoyut = Array.from({ length: GRID }, () => Array(GRID).fill(0));
     const yanlisBoyut = Array.from({ length: GRID + 1 }, () => Array(GRID).fill(0));
     assert.equal(isValidGrid(dogruBoyut), true);
@@ -35,7 +35,7 @@ test('kaydedilmiş tur doğrulaması aynı GRID değerini kullanıyor', async ()
 });
 
 test('renk eşleşme eşiği GRID ile ölçekleniyor', async () => {
-    const { checkColorMatch } = await import('../js/rules.js');
+    const { checkColorMatch } = await import('../src/js/rules.js');
     // Tam GRID-2 tane aynı renk: eşiği karşılar.
     const yeterli = Array(GRID).fill(0);
     for (let i = 0; i < GRID - 2; i++) yeterli[i] = 'blue';
