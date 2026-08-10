@@ -4,7 +4,7 @@ import { Storage, KEYS } from './storage.js';
 import { GRID, inBounds } from './constants.js';
 import { saveRun, clearRun } from './run-save.js';
 import { AudioFX } from './audio.js';
-import { spawnParticles } from './particles.js';
+import { spawnFeverEmbers, spawnParticles } from './particles.js';
 import { initGrid, redrawDock, generateRandomShape, getCellElement } from './grid.js';
 import { checkColorMatch, detectFullLines, canMatrixFit, canMatrixFitWithinTurns } from './rules.js';
 import { updateMissionProgress, updateMissionUI, checkMissionConstraints } from './missions.js';
@@ -14,6 +14,7 @@ import { Achievements } from './achievements.js';
 
 let shakeTimeoutId = null;
 let feverBurstTimeoutId = null;
+let feverEmberTick = 0;
 let activePopups = 0;
 let uiCallbacks = {
     selectBlock: () => {},
@@ -33,10 +34,12 @@ export function activateFeverMode() {
     }
     state.isFeverActive = true;
     state.feverTimeLeft = 10.0; // 10 seconds
+    feverEmberTick = 0;
 
     document.body.classList.add('fever-active');
     document.body.classList.remove('fever-critical', 'fever-burst');
     requestAnimationFrame(() => document.body.classList.add('fever-burst'));
+    spawnFeverEmbers(36);
     if (feverBurstTimeoutId) clearTimeout(feverBurstTimeoutId);
     feverBurstTimeoutId = setTimeout(() => {
         document.body.classList.remove('fever-burst');
@@ -59,6 +62,8 @@ export function activateFeverMode() {
 
     state.feverIntervalId = setInterval(() => {
         state.feverTimeLeft -= 0.1;
+        feverEmberTick++;
+        if (feverEmberTick % 5 === 0) spawnFeverEmbers(state.feverTimeLeft <= 3 ? 8 : 4);
         if (state.feverTimeLeft <= 0) {
             deactivateFeverMode();
         } else {
@@ -73,6 +78,7 @@ export function activateFeverMode() {
 export function deactivateFeverMode() {
     state.isFeverActive = false;
     state.feverTimeLeft = 0;
+    feverEmberTick = 0;
     if (state.feverIntervalId) {
         clearInterval(state.feverIntervalId);
         state.feverIntervalId = null;

@@ -204,6 +204,41 @@ class Particle {
     }
 }
 
+class FeverEmber {
+    constructor() {
+        this.x = Math.random() * canvas.width;
+        this.y = canvas.height + Math.random() * 12;
+        this.vx = (Math.random() - 0.5) * 1.2;
+        this.vy = -(1.8 + Math.random() * 3.2);
+        this.radius = 1.2 + Math.random() * 2.4;
+        this.alpha = 0.75 + Math.random() * 0.25;
+        this.decay = 0.009 + Math.random() * 0.012;
+        this.time = Math.random() * Math.PI * 2;
+        this.color = Math.random() < 0.45 ? '#ffd000' : (Math.random() < 0.7 ? '#ff7a00' : '#ff2d00');
+    }
+
+    update() {
+        this.time += 0.12;
+        this.x += this.vx + Math.sin(this.time) * 0.45;
+        this.y += this.vy;
+        this.vy *= 0.992;
+        this.alpha -= this.decay;
+    }
+
+    draw(c) {
+        c.save();
+        c.globalCompositeOperation = 'lighter';
+        c.globalAlpha = Math.max(0, this.alpha);
+        c.fillStyle = this.color;
+        c.shadowColor = this.color;
+        c.shadowBlur = 8;
+        c.beginPath();
+        c.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        c.fill();
+        c.restore();
+    }
+}
+
 export function resizeCanvas() {
     if (!canvas || !gridBoard) return;
     const rect = gridBoard.getBoundingClientRect();
@@ -223,6 +258,21 @@ export function spawnParticles(gridR, gridC, colorName, multiplier = 1) {
     const count = Math.floor(10 * multiplier);
     for (let i = 0; i < count && particles.length < MAX_PARTICLES; i++) {
         particles.push(new Particle(startX, startY, colorName));
+    }
+
+    if (!isLoopRunning) {
+        isLoopRunning = true;
+        requestAnimationFrame(particleTick);
+    }
+}
+
+export function spawnFeverEmbers(requestedCount = 8) {
+    if (!canvas || canvas.width === 0) return;
+    if (document.body.classList.contains('reduce-motion') || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const count = window.innerWidth <= 768 ? Math.ceil(requestedCount * 0.5) : requestedCount;
+    for (let i = 0; i < count && particles.length < MAX_PARTICLES; i++) {
+        particles.push(new FeverEmber());
     }
 
     if (!isLoopRunning) {

@@ -1470,6 +1470,44 @@ body.theme-retro .modal-close-btn:hover {
 }
 
 /* Fever Mode Border Glow */
+.game-container::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 20px;
+    pointer-events: none;
+    z-index: 90;
+    opacity: 0;
+    background:
+        radial-gradient(ellipse at center, transparent 42%, rgba(139, 0, 0, 0.12) 66%, rgba(255, 45, 0, 0.42) 100%),
+        radial-gradient(circle, #ffd000 0 1.5px, transparent 2.5px),
+        radial-gradient(circle, #ff7a00 0 1px, transparent 2px),
+        radial-gradient(circle, #ff2d00 0 1.3px, transparent 2.3px);
+    background-size: 100% 100%, 74px 96px, 91px 118px, 63px 84px;
+    background-position: center, 8% 115%, 67% 120%, 38% 110%;
+    transition: opacity 0.22s ease;
+}
+
+body.fever-active .game-container::before {
+    opacity: 0.9;
+    animation: fever-screen-heat 1.4s infinite linear;
+}
+
+body.fever-burst .game-container::before {
+    animation: fever-screen-ignition 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes fever-screen-heat {
+    0% { background-position: center, 8% 115%, 67% 120%, 38% 110%; }
+    100% { background-position: center, 12% -15%, 62% -20%, 43% -10%; }
+}
+
+@keyframes fever-screen-ignition {
+    0% { opacity: 0; background-color: rgba(255, 208, 0, 0); }
+    32% { opacity: 1; background-color: rgba(255, 122, 0, 0.34); }
+    100% { opacity: 0.9; background-color: rgba(255, 45, 0, 0); }
+}
+
 .game-container::after {
     content: '';
     position: absolute;
@@ -1595,6 +1633,21 @@ body.fever-critical .grid-board-container::before {
 body.fever-critical .grid-board-container::after {
     animation-duration: 0.34s;
     opacity: 0.94;
+}
+
+body.fever-active .grid-cell.filled {
+    box-shadow: var(--block-shadow), 0 0 8px rgba(255, 122, 0, 0.72), 0 0 14px rgba(255, 45, 0, 0.32);
+}
+
+body.fever-active #current-score {
+    color: #ffd000;
+    text-shadow: 0 0 8px #ff2d00, 0 0 18px #ff7a00;
+    animation: fever-score-pulse 0.55s infinite alternate ease-in-out;
+}
+
+@keyframes fever-score-pulse {
+    from { transform: scale(1); }
+    to { transform: scale(1.12); }
 }
 
 @keyframes fever-board-shake {
@@ -1968,7 +2021,8 @@ body.theme-wood .fever-bar-fill {
        static fever glow (from the base rules) but stop the per-frame box-shadow animation.
        The small flame layer behind the cells remains active. */
     body.fever-active .grid-board-container,
-    body.fever-active .game-container::after {
+    body.fever-active .game-container::after,
+    body.fever-active .game-container::before {
         animation: none !important;
     }
 
