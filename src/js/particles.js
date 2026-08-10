@@ -239,6 +239,61 @@ class FeverEmber {
     }
 }
 
+class FeverFlame {
+    constructor() {
+        this.x = Math.random() * canvas.width;
+        this.y = canvas.height + 10;
+        this.vx = (Math.random() - 0.5) * 0.7;
+        this.vy = -(1.4 + Math.random() * 1.8);
+        this.radius = 7 + Math.random() * 11;
+        this.alpha = 0.5 + Math.random() * 0.32;
+        this.decay = 0.018 + Math.random() * 0.012;
+        this.time = Math.random() * Math.PI * 2;
+    }
+
+    update() {
+        this.time += 0.16;
+        this.x += this.vx + Math.sin(this.time) * 0.65;
+        this.y += this.vy;
+        this.radius *= 0.985;
+        this.alpha -= this.decay;
+    }
+
+    draw(c) {
+        const width = this.radius * 0.72;
+        const height = this.radius * 2.1;
+
+        c.save();
+        c.globalCompositeOperation = 'lighter';
+        c.globalAlpha = Math.max(0, this.alpha);
+        c.translate(this.x, this.y);
+
+        const outer = c.createLinearGradient(0, height * 0.45, 0, -height);
+        outer.addColorStop(0, '#ff2d00');
+        outer.addColorStop(0.48, '#ff7a00');
+        outer.addColorStop(1, 'rgba(255, 208, 0, 0)');
+        c.fillStyle = outer;
+        c.shadowColor = '#ff2d00';
+        c.shadowBlur = 12;
+        c.beginPath();
+        c.moveTo(0, -height);
+        c.bezierCurveTo(width * 0.25, -height * 0.58, width, -height * 0.15, width * 0.72, height * 0.28);
+        c.bezierCurveTo(width * 0.35, height * 0.62, -width * 0.35, height * 0.62, -width * 0.72, height * 0.28);
+        c.bezierCurveTo(-width, -height * 0.15, -width * 0.2, -height * 0.55, 0, -height);
+        c.fill();
+
+        c.globalAlpha *= 0.82;
+        c.fillStyle = '#ffd000';
+        c.shadowBlur = 5;
+        c.beginPath();
+        c.moveTo(0, -height * 0.48);
+        c.quadraticCurveTo(width * 0.48, height * 0.08, 0, height * 0.36);
+        c.quadraticCurveTo(-width * 0.48, height * 0.08, 0, -height * 0.48);
+        c.fill();
+        c.restore();
+    }
+}
+
 export function resizeCanvas() {
     if (!canvas || !gridBoard) return;
     const rect = gridBoard.getBoundingClientRect();
@@ -273,6 +328,21 @@ export function spawnFeverEmbers(requestedCount = 8) {
     const count = window.innerWidth <= 768 ? Math.ceil(requestedCount * 0.5) : requestedCount;
     for (let i = 0; i < count && particles.length < MAX_PARTICLES; i++) {
         particles.push(new FeverEmber());
+    }
+
+    if (!isLoopRunning) {
+        isLoopRunning = true;
+        requestAnimationFrame(particleTick);
+    }
+}
+
+export function spawnFeverFlames(requestedCount = 4) {
+    if (!canvas || canvas.width === 0) return;
+    if (document.body.classList.contains('reduce-motion') || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const count = window.innerWidth <= 768 ? Math.ceil(requestedCount * 0.6) : requestedCount;
+    for (let i = 0; i < count && particles.length < MAX_PARTICLES; i++) {
+        particles.push(new FeverFlame());
     }
 
     if (!isLoopRunning) {

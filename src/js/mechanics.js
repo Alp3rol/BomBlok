@@ -4,7 +4,7 @@ import { Storage, KEYS } from './storage.js';
 import { GRID, inBounds } from './constants.js';
 import { saveRun, clearRun } from './run-save.js';
 import { AudioFX } from './audio.js';
-import { spawnFeverEmbers, spawnParticles } from './particles.js';
+import { spawnFeverEmbers, spawnFeverFlames, spawnParticles } from './particles.js';
 import { initGrid, redrawDock, generateRandomShape, getCellElement } from './grid.js';
 import { checkColorMatch, detectFullLines, canMatrixFit, canMatrixFitWithinTurns } from './rules.js';
 import { updateMissionProgress, updateMissionUI, checkMissionConstraints } from './missions.js';
@@ -40,6 +40,7 @@ export function activateFeverMode() {
     document.body.classList.remove('fever-critical', 'fever-burst');
     requestAnimationFrame(() => document.body.classList.add('fever-burst'));
     spawnFeverEmbers(36);
+    spawnFeverFlames(22);
     if (feverBurstTimeoutId) clearTimeout(feverBurstTimeoutId);
     feverBurstTimeoutId = setTimeout(() => {
         document.body.classList.remove('fever-burst');
@@ -63,6 +64,7 @@ export function activateFeverMode() {
     state.feverIntervalId = setInterval(() => {
         state.feverTimeLeft -= 0.1;
         feverEmberTick++;
+        if (feverEmberTick % 2 === 0) spawnFeverFlames(state.feverTimeLeft <= 3 ? 5 : 3);
         if (feverEmberTick % 5 === 0) spawnFeverEmbers(state.feverTimeLeft <= 3 ? 8 : 4);
         if (state.feverTimeLeft <= 0) {
             deactivateFeverMode();

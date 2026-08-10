@@ -1534,60 +1534,14 @@ body.fever-burst .game-container::before {
     transition: opacity 0.25s ease;
 }
 
-.grid-board-container::after {
-    content: '';
-    position: absolute;
-    left: 8px;
-    right: 8px;
-    bottom: 8px;
-    height: 42%;
-    border-radius: 0 0 10px 10px;
-    pointer-events: none;
-    z-index: 0;
-    opacity: 0;
-    transform: scaleY(0.78);
-    transform-origin: center bottom;
-    clip-path: polygon(
-        0 100%, 0 72%, 5% 46%, 10% 76%, 16% 24%, 22% 70%,
-        29% 43%, 35% 78%, 42% 16%, 49% 72%, 56% 38%, 63% 76%,
-        70% 27%, 77% 70%, 84% 42%, 90% 77%, 96% 34%, 100% 70%, 100% 100%
-    );
-    background: linear-gradient(to top, #8b0000 0%, #ff2d00 38%, #ff7a00 68%, #ffd000 100%);
-    transition: opacity 0.25s ease;
-}
-
 body.fever-active .grid-board-container::before {
     opacity: 0.86;
     animation: fever-heat-breathe 1.2s infinite alternate ease-in-out;
 }
 
-body.fever-active .grid-board-container::after {
-    opacity: 0.82;
-    animation: fever-flame-tongues 0.62s infinite alternate ease-in-out;
-}
-
 @keyframes fever-heat-breathe {
     from { opacity: 0.68; }
     to { opacity: 0.95; }
-}
-
-@keyframes fever-flame-tongues {
-    0% {
-        transform: scaleY(0.78) skewX(-1deg);
-        clip-path: polygon(
-            0 100%, 0 72%, 5% 46%, 10% 76%, 16% 24%, 22% 70%,
-            29% 43%, 35% 78%, 42% 16%, 49% 72%, 56% 38%, 63% 76%,
-            70% 27%, 77% 70%, 84% 42%, 90% 77%, 96% 34%, 100% 70%, 100% 100%
-        );
-    }
-    100% {
-        transform: scaleY(1) skewX(1deg);
-        clip-path: polygon(
-            0 100%, 0 76%, 6% 32%, 11% 72%, 17% 43%, 23% 78%,
-            30% 20%, 36% 70%, 43% 39%, 50% 77%, 57% 18%, 64% 71%,
-            71% 45%, 78% 76%, 85% 25%, 91% 70%, 97% 48%, 100% 73%, 100% 100%
-        );
-    }
 }
 
 body.fever-burst .grid-board-container {
@@ -1628,11 +1582,6 @@ body.fever-critical .grid-board-container {
 body.fever-critical .grid-board-container::before {
     animation-duration: 0.5s;
     opacity: 1;
-}
-
-body.fever-critical .grid-board-container::after {
-    animation-duration: 0.34s;
-    opacity: 0.94;
 }
 
 body.fever-active .grid-cell.filled {
@@ -2026,14 +1975,6 @@ body.theme-wood .fever-bar-fill {
         animation: none !important;
     }
 
-    body.fever-active .grid-board-container::after {
-        animation: fever-flame-mobile 0.7s infinite alternate ease-in-out;
-    }
-}
-
-@keyframes fever-flame-mobile {
-    from { transform: scaleY(0.82); opacity: 0.74; }
-    to { transform: scaleY(0.96); opacity: 0.9; }
 }
 
 @media (max-width: 480px) {
