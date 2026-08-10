@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { getRotatedMatrix, checkColorMatch, detectFullLines } from '../js/rules.js';
+import { getRotatedMatrix, checkColorMatch, detectFullLines, canMatrixFitWithinTurns } from '../js/rules.js';
 import { GRID } from '../js/constants.js';
 
 function emptyGrid() {
@@ -21,6 +21,18 @@ test('getRotatedMatrix rotating four times returns the original matrix', () => {
         current = getRotatedMatrix(current);
     }
     assert.deepEqual(current, lShape);
+});
+
+test('rotation fit check requires enough rights for the reachable orientation', () => {
+    const grid = Array.from({ length: GRID }, () => Array(GRID).fill('stone'));
+    // This pocket accepts [[0, 1], [1, 1]], the 180-degree orientation only.
+    grid[0][1] = 0;
+    grid[1][0] = 0;
+    grid[1][1] = 0;
+    const shape = [[1, 1], [1, 0]];
+
+    assert.equal(canMatrixFitWithinTurns(grid, shape, 1), false);
+    assert.equal(canMatrixFitWithinTurns(grid, shape, 2), true);
 });
 
 test('checkColorMatch is true when 6+ of 8 cells share a base color', () => {

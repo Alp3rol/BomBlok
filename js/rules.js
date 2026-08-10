@@ -17,6 +17,43 @@ export function getRotatedMatrix(matrix) {
     return rotated;
 }
 
+// Returns whether a shape matrix can be placed anywhere on the supplied grid.
+// Keeping this rule independent from UI state lets game-over checks use exactly
+// the same occupied-cell semantics as placement and makes edge cases testable.
+export function canMatrixFit(grid, matrix) {
+    if (!Array.isArray(matrix) || matrix.length === 0 || !Array.isArray(matrix[0])) return false;
+
+    const rows = matrix.length;
+    const cols = matrix[0].length;
+    for (let startR = 0; startR <= GRID - rows; startR++) {
+        for (let startC = 0; startC <= GRID - cols; startC++) {
+            let fits = true;
+            for (let r = 0; r < rows && fits; r++) {
+                for (let c = 0; c < cols; c++) {
+                    if (matrix[r][c] === 1 && grid[startR + r][startC + c] !== 0) {
+                        fits = false;
+                        break;
+                    }
+                }
+            }
+            if (fits) return true;
+        }
+    }
+    return false;
+}
+
+// Rotation is clockwise and each quarter-turn consumes one right. Do not treat
+// a 180/270-degree fit as playable when the player can only afford one turn.
+export function canMatrixFitWithinTurns(grid, matrix, availableTurns = 0) {
+    let candidate = matrix;
+    const turnsToTry = Math.min(3, Math.max(0, Math.floor(availableTurns)));
+    for (let turns = 0; turns <= turnsToTry; turns++) {
+        if (canMatrixFit(grid, candidate)) return true;
+        candidate = getRotatedMatrix(candidate);
+    }
+    return false;
+}
+
 // A line (row or column) counts as a "color match" when at least 6 of its 8 cells
 // share the same base color (bomb-suffixed colors like 'blue-bomb' count as 'blue').
 export function checkColorMatch(lineCells) {

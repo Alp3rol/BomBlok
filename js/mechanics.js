@@ -6,7 +6,7 @@ import { saveRun, clearRun } from './run-save.js';
 import { AudioFX } from './audio.js';
 import { spawnParticles } from './particles.js';
 import { initGrid, redrawDock, generateRandomShape, getCellElement } from './grid.js';
-import { getRotatedMatrix, checkColorMatch, detectFullLines } from './rules.js';
+import { getRotatedMatrix, checkColorMatch, detectFullLines, canMatrixFit, canMatrixFitWithinTurns } from './rules.js';
 import { updateMissionProgress, updateMissionUI, checkMissionConstraints } from './missions.js';
 import { Leaderboard } from './leaderboard.js';
 import { selectBlock, deselectBlock, openGameOverDialog, closeGameOverDialog } from './main.js';
@@ -653,62 +653,18 @@ export { getRotatedMatrix };
 
 export function canShapeFit(shape) {
     if (!shape) return false;
-    const matrix = shape.matrix;
-    const rows = matrix.length;
-    const cols = matrix[0].length;
-
-    // Scan all possible offsets on the 8x8 grid
-    for (let startR = 0; startR <= GRID - rows; startR++) {
-        for (let startC = 0; startC <= GRID - cols; startC++) {
-            let canPlace = true;
-
-            // Check if all cells of the shape can be placed at this offset
-            for (let r = 0; r < rows; r++) {
-                for (let c = 0; c < cols; c++) {
-                    if (matrix[r][c] === 1) {
-                        const targetR = startR + r;
-                        const targetC = startC + c;
-
-                        // If cell is occupied, it cannot be placed here
-                        if (state.grid[targetR][targetC] !== 0) {
-                            canPlace = false;
-                            break;
-                        }
-                    }
-                }
-                if (!canPlace) break;
-            }
-
-            if (canPlace) {
-                return true; // Found at least one valid position!
-            }
-        }
-    }
-    return false; // Fits nowhere
+    return canMatrixFit(state.grid, shape.matrix);
 }
 
 export function canShapeFitWithRotation(shape) {
     if (!shape) return false;
-
-    // 1. Check current orientation
-    if (canShapeFit(shape)) return true;
-
-    // 2. Döndürme hakkı yoksa döndüremeyiz — ama oyuncu 1 joker karşılığında +1 hak satın
-    //    alabiliyor (main.js'teki rotation-rights-btn). Sadece mevcut hakka bakmak, elinde
-    //    joker olan oyuncuyu haksız yere game-over'a düşürüyordu.
-    if (state.rotationRights + state.jokers <= 0) return false;
-
-    // 3. Check 90, 180, 270 degree rotated states
-    let tempMatrix = shape.matrix;
-    for (let i = 0; i < 3; i++) {
-        tempMatrix = getRotatedMatrix(tempMatrix);
-        const tempShape = { matrix: tempMatrix };
-        if (canShapeFit(tempShape)) {
-            return true;
-        }
-    }
-
-    return false;
+    // Her saat yönü çeyrek dönüş bir hak tüketir. Jokerler birer hak satın alabildiği
+    // için mevcut haklarla birlikte sayılır; fakat 180° için 2, 270° için 3 hak gerekir.
+    return canMatrixFitWithinTurns(
+        state.grid,
+        shape.matrix,
+        state.rotationRights + state.jokers
+    );
 }
 
 export function checkGameOver() {
