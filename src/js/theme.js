@@ -4,6 +4,7 @@ import { Storage, KEYS } from './storage.js';
 
 // --- THEME MANAGER ---
 export const THEME_LABELS = {
+    standard: { icon: '🎮', name: 'Standart' },
     dark: { icon: '🌙', name: 'Karanlık' },
     neon: { icon: '⚡', name: 'Neon' },
     wood: { icon: '🪵', name: 'Ahşap' },
@@ -54,7 +55,7 @@ function toggleThemeMenu() {
 }
 
 export const ThemeManager = {
-    current: Storage.get(KEYS.theme, 'dark'),
+    current: Storage.get(KEYS.theme, 'standard'),
 
     init() {
         this.setTheme(this.current);
@@ -89,7 +90,7 @@ export const ThemeManager = {
         Storage.set(KEYS.theme, themeName);
 
         // Remove existing theme classes
-        document.body.classList.remove('theme-dark', 'theme-neon', 'theme-wood', 'theme-candy', 'theme-cosmos', 'theme-retro', 'theme-seasons');
+        document.body.classList.remove('theme-standard', 'theme-dark', 'theme-neon', 'theme-wood', 'theme-candy', 'theme-cosmos', 'theme-retro', 'theme-seasons');
 
         // Add new theme class
         document.body.classList.add(`theme-${themeName}`);

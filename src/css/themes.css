@@ -1,5 +1,42 @@
 /* 🌟 BOMBLOK THEME SYSTEM 🌟 */
 
+/* 0. STANDARD (İlk açılış teması) */
+body.theme-standard {
+    --bg-gradient: linear-gradient(145deg, #14213d 0%, #1f3a5f 48%, #256b78 100%);
+    --panel-bg: rgba(15, 35, 61, 0.72);
+    --card-bg: rgba(18, 43, 72, 0.9);
+    --panel-border: rgba(130, 220, 255, 0.24);
+    --panel-glow: 0 12px 32px rgba(3, 16, 32, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    --text-primary: #f7fbff;
+    --text-secondary: #b8d8e8;
+    --accent: #35d0ba;
+    --accent-glow: rgba(53, 208, 186, 0.42);
+
+    --cell-bg: rgba(7, 24, 47, 0.58);
+    --cell-border: rgba(151, 219, 255, 0.12);
+    --cell-active-shadow: inset 0 0 10px rgba(2, 12, 28, 0.52);
+    --cell-radius: 6px;
+
+    --block-radius: 7px;
+    --block-border: 1px solid rgba(255, 255, 255, 0.14);
+    --block-shadow: 0 3px 7px rgba(2, 15, 30, 0.34), inset 0 2px 3px rgba(255, 255, 255, 0.26);
+
+    --bomb-bg: radial-gradient(circle at 35% 35%, #596579 10%, #263445 52%, #101821 90%);
+    --bomb-border: 2px solid #ff6b57;
+    --bomb-shadow: inset -3px -3px 8px rgba(0, 0, 0, 0.72), inset 3px 3px 8px rgba(255, 255, 255, 0.18), 0 0 12px rgba(255, 107, 87, 0.48);
+
+    --ice-bg: rgba(143, 220, 255, 0.32);
+    --ice-border: 2px solid rgba(225, 248, 255, 0.72);
+
+    --color-orange: linear-gradient(135deg, #ffb347 0%, #ff7043 100%);
+    --color-blue: linear-gradient(135deg, #39c6f0 0%, #2187d5 100%);
+    --color-green: linear-gradient(135deg, #58d68d 0%, #20a779 100%);
+    --color-yellow: linear-gradient(135deg, #ffe066 0%, #f5ad32 100%);
+    --color-purple: linear-gradient(135deg, #a98bff 0%, #7457d9 100%);
+    --color-pink: linear-gradient(135deg, #ff8fcf 0%, #e85aa5 100%);
+    --color-cyan: linear-gradient(135deg, #58e0df 0%, #20aeb8 100%);
+}
+
 /* 1. WOODCRAFT (Ahşap Zanaat) */
 body.theme-wood {
     --bg-gradient: linear-gradient(135deg, #2b170c 0%, #3e2723 100%);

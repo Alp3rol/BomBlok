@@ -36,7 +36,7 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#2d2d2d">
 </head>
-<body>
+<body class="theme-standard">
     <!-- PWA Install Banner -->
     <div id="pwa-install-banner" class="pwa-install-banner hidden">
         <span class="pwa-text">📱 BomBlok'u Ana Ekrana Ekle!</span>
@@ -55,8 +55,9 @@
                 <button id="leaderboard-btn" class="help-button" type="button" title="Leaderboard" aria-label="Liderlik tablosunu aç">🏆</button>
                 <button id="help-btn" class="help-button" type="button" title="Nasıl Oynanır?" aria-label="Nasıl oynanır yardımını aç">?</button>
                 <div id="theme-dropdown" class="theme-dropdown" title="Tema Değiştir">
-                    <button id="theme-btn" class="theme-btn" type="button" aria-haspopup="listbox" aria-expanded="false">🌙 Karanlık</button>
+                    <button id="theme-btn" class="theme-btn" type="button" aria-haspopup="listbox" aria-expanded="false">🎮 Standart</button>
                     <div id="theme-menu" class="theme-menu hidden" role="listbox" aria-label="Tema Seç">
+                        <button class="theme-item" type="button" data-theme="standard">🎮 Standart</button>
                         <button class="theme-item" type="button" data-theme="dark">🌙 Karanlık</button>
                         <button class="theme-item" type="button" data-theme="neon">⚡ Neon</button>
                         <button class="theme-item" type="button" data-theme="wood">🪵 Ahşap</button>
