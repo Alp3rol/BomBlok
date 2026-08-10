@@ -15,8 +15,11 @@ test('Fever efekti blok renklerini hue-rotate ile değiştirmiyor', () => {
 
 test('Fever ateşi hücrelerden ayrı arka katmanda çalışıyor', () => {
     assert.match(css, /\.grid-board-container::before\s*\{/);
-    assert.match(css, /@keyframes\s+fever-flames/);
-    assert.match(css, /body\.fever-active\s+\.grid-board-container::before/);
+    assert.match(css, /\.grid-board-container::after\s*\{/);
+    assert.match(css, /@keyframes\s+fever-flame-tongues/);
+    assert.match(css, /body\.fever-active\s+\.grid-board-container::after/);
+    const flameAnimation = css.split('@keyframes fever-flame-tongues')[1]?.split('body.fever-burst')[0] ?? '';
+    assert.doesNotMatch(flameAnimation, /background-position/);
 });
 
 test('Fever başlangıç ve son üç saniye durumları yönetiliyor', () => {
