@@ -28,9 +28,11 @@ export function registerMechanicsCallbacks(callbacks) {
 }
 
 export function activateFeverMode() {
-    if (!state.isFeverActive) {
+    const isFreshFever = !state.isFeverActive;
+    if (isFreshFever) {
         updateMissionProgress('fever', 1);
         Achievements.recordStat('feverCount', 1);
+        AudioFX.playFeverStart();
     }
     state.isFeverActive = true;
     state.feverTimeLeft = 10.0; // 10 seconds

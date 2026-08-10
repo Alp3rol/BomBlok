@@ -436,6 +436,62 @@ button.control-card:disabled {
     z-index: 1;
 }
 
+/* BomBlok'a özel enerji ikonları */
+.icon-library {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+}
+
+.game-icon {
+    width: 22px;
+    height: 22px;
+    overflow: visible;
+    fill: url(#icon-energy);
+    filter: url(#icon-glow) drop-shadow(0 2px 2px rgba(3, 12, 35, 0.6));
+    transition: transform 180ms cubic-bezier(.2, .9, .25, 1.4), filter 180ms ease;
+}
+
+.game-icon .icon-core { fill: #fff4a8; }
+.game-icon .icon-cut { fill: rgba(12, 34, 58, .85); }
+.game-icon .icon-stroke { fill: none; stroke: #8aeaff; stroke-width: 2.6; stroke-linecap: round; }
+
+.control-action {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    height: 28px;
+    padding: 2px 7px;
+    border: 1px solid rgba(125, 226, 255, .3);
+    border-radius: 9px;
+    background: linear-gradient(145deg, rgba(98, 224, 255, .2), rgba(83, 54, 177, .24));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.28), inset 0 -4px 8px rgba(5,14,40,.3), 0 3px 8px rgba(0,0,0,.2);
+}
+
+.control-action::after {
+    content: '';
+    position: absolute;
+    inset: 2px 4px auto;
+    height: 35%;
+    border-radius: 6px;
+    background: linear-gradient(rgba(255,255,255,.22), transparent);
+    pointer-events: none;
+}
+
+.control-action .control-value { margin-left: 4px; font-size: 13px; }
+button.control-card:hover:not(:disabled) .game-icon { transform: scale(1.13) rotate(-4deg); filter: url(#icon-glow) drop-shadow(0 0 5px rgba(83,221,255,.8)); }
+button.control-card:active:not(:disabled) .control-action { transform: translateY(2px); box-shadow: inset 0 3px 7px rgba(3,10,30,.45); }
+button.control-card:disabled .control-action { filter: grayscale(.8); opacity: .55; }
+
+.game-icon-button .game-icon { width: 20px; height: 20px; }
+.game-icon-button:hover .game-icon { transform: scale(1.12) rotate(-5deg); }
+.sound-off-icon { display: none; }
+.sound-button.muted .sound-on-icon { display: none; }
+.sound-button.muted .sound-off-icon { display: block; }
+
 .grid-cell {
     background-color: var(--cell-bg);
     border: 1px solid var(--cell-border);

@@ -33,12 +33,29 @@ export const AudioFX = {
     updateButtonUI() {
         if (!soundBtn) return;
         if (this.muted) {
-            soundBtn.textContent = '🔇';
             soundBtn.classList.add('muted');
+            soundBtn.setAttribute('aria-label', 'Sesi aç');
         } else {
-            soundBtn.textContent = '🔊';
             soundBtn.classList.remove('muted');
+            soundBtn.setAttribute('aria-label', 'Sesi kapat');
         }
+    },
+
+    playButton() {
+        this.play((ctx) => {
+            const now = ctx.currentTime;
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(520, now);
+            osc.frequency.exponentialRampToValueAtTime(760, now + 0.045);
+            gain.gain.setValueAtTime(0.035, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.055);
+            osc.start(now);
+            osc.stop(now + 0.055);
+        });
     },
 
     autoDisconnect(osc, ...nodes) {
@@ -396,6 +413,35 @@ export const AudioFX = {
         });
     },
 
+    playFeverStart() {
+        this.play((ctx) => {
+            const now = ctx.currentTime;
+            const filter = ctx.createBiquadFilter();
+            const master = ctx.createGain();
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(280, now);
+            filter.frequency.exponentialRampToValueAtTime(2400, now + 0.48);
+            filter.connect(master);
+            master.connect(ctx.destination);
+            master.gain.setValueAtTime(0.16, now);
+            master.gain.exponentialRampToValueAtTime(0.001, now + 0.7);
+
+            [110, 220, 440].forEach((frequency, index) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = index === 0 ? 'sawtooth' : 'triangle';
+                osc.frequency.setValueAtTime(frequency, now + index * 0.055);
+                osc.frequency.exponentialRampToValueAtTime(frequency * 2.5, now + 0.5);
+                gain.gain.setValueAtTime(index === 0 ? 0.22 : 0.09, now + index * 0.055);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.62);
+                osc.connect(gain);
+                gain.connect(filter);
+                osc.start(now + index * 0.055);
+                osc.stop(now + 0.65);
+            });
+        });
+    },
+
     bgMusicInterval: null,
     bgMusicStep: 0,
     bgMusicTempo: 500, // ms per beat
@@ -509,6 +555,10 @@ window.addEventListener('pointerdown', () => {
     AudioFX.init();
     AudioFX.startBgMusic();
 }, { once: true });
+document.addEventListener('click', (event) => {
+    const button = event.target.closest('button:not(:disabled)');
+    if (button && button.id !== 'sound-btn') AudioFX.playButton();
+});
 if (soundBtn) {
     soundBtn.addEventListener('click', () => {
         AudioFX.toggleMute();
