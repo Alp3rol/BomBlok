@@ -432,6 +432,8 @@ button.control-card:disabled {
     gap: 6px;
     width: 100%;
     height: 100%;
+    position: relative;
+    z-index: 1;
 }
 
 .grid-cell {
@@ -1479,20 +1481,53 @@ body.theme-retro .modal-close-btn:hover {
     transition: box-shadow 0.3s ease;
 }
 
-/* Aurora hue-rotate is scoped to the board grid itself — NOT <body>.
-   An animated `filter` on an ancestor forces every descendant `backdrop-filter` panel
-   (score cards, mission panel, dock, header…) to re-composite each frame, and makes the
-   browser re-rasterize the whole page every frame of the 8s loop. That filter↔backdrop-filter
-   combo is the core Fever-mode stutter. On the board grid it's a small, isolated GPU layer
-   with no blurred descendants, so the combo disappears and only the play area is filtered. */
-body.fever-active:not(.theme-retro) .grid-board {
-    animation: fever-bg-aurora 8s infinite linear;
-    will-change: filter;
+/* Ateş katmanı hücrelerin arkasında kalır; blok, bomba ve engel renklerini değiştirmez. */
+.grid-board-container::before {
+    content: '';
+    position: absolute;
+    inset: 8px;
+    border-radius: 10px;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0;
+    background:
+        radial-gradient(ellipse at 8% 105%, rgba(255, 208, 0, 0.95) 0 7%, rgba(255, 122, 0, 0.78) 8% 15%, transparent 31%),
+        radial-gradient(ellipse at 28% 110%, rgba(255, 45, 0, 0.92) 0 12%, transparent 34%),
+        radial-gradient(ellipse at 52% 108%, rgba(255, 208, 0, 0.92) 0 8%, rgba(255, 45, 0, 0.72) 10% 22%, transparent 38%),
+        radial-gradient(ellipse at 76% 112%, rgba(255, 122, 0, 0.9) 0 13%, transparent 35%),
+        radial-gradient(ellipse at 96% 106%, rgba(255, 208, 0, 0.9) 0 7%, rgba(139, 0, 0, 0.75) 12% 27%, transparent 40%),
+        linear-gradient(to top, rgba(139, 0, 0, 0.82), rgba(255, 45, 0, 0.22) 42%, transparent 72%);
+    background-size: 115% 115%, 125% 120%, 120% 125%, 130% 118%, 115% 122%, 100% 100%;
+    transform-origin: center bottom;
+    transition: opacity 0.25s ease;
 }
 
-@keyframes fever-bg-aurora {
-    0% { filter: hue-rotate(0deg); }
-    100% { filter: hue-rotate(360deg); }
+body.fever-active .grid-board-container::before {
+    opacity: 0.9;
+    animation: fever-flames 0.75s infinite alternate ease-in-out;
+}
+
+@keyframes fever-flames {
+    0% {
+        transform: translate3d(-1%, 2%, 0) scaleY(0.9);
+        background-position: 0 8px, 12px 14px, -8px 10px, 6px 16px, -4px 8px, 0 0;
+        filter: brightness(0.92);
+    }
+    100% {
+        transform: translate3d(1%, -2%, 0) scaleY(1.08);
+        background-position: 8px -10px, -10px -16px, 10px -12px, -6px -18px, 8px -9px, 0 0;
+        filter: brightness(1.18);
+    }
+}
+
+body.fever-burst .grid-board-container::before {
+    animation: fever-ignition 0.65s cubic-bezier(0.16, 1, 0.3, 1), fever-flames 0.75s 0.65s infinite alternate ease-in-out;
+}
+
+@keyframes fever-ignition {
+    0% { opacity: 0; transform: scale(0.75); filter: brightness(2.2); }
+    45% { opacity: 1; transform: scale(1.08); filter: brightness(1.7); }
+    100% { opacity: 0.9; transform: scale(1); filter: brightness(1); }
 }
 
 body.fever-active .game-container::after {
@@ -1515,6 +1550,16 @@ body.fever-active .grid-board-container {
     border-color: #ff9800;
 }
 
+body.fever-critical .grid-board-container {
+    animation-duration: 0.22s;
+    border-color: #ffd000;
+}
+
+body.fever-critical .grid-board-container::before {
+    animation-duration: 0.34s;
+    opacity: 1;
+}
+
 @keyframes fever-board-shake {
     0% {
         box-shadow: 0 0 20px #ff5722, 0 0 30px #ff9800, 0 0 40px #ffeb3b, inset 0 0 10px rgba(255, 87, 34, 0.5);
@@ -1525,17 +1570,8 @@ body.fever-active .grid-board-container {
 }
 
 body.theme-retro.fever-active .game-container::after {
-    box-shadow: inset 0 0 20px rgba(0, 255, 0, 0.8), inset 0 0 0 4px #00ff00;
-    animation: fever-border-glow-retro 1.5s infinite alternate;
-}
-
-@keyframes fever-border-glow-retro {
-    0% {
-        box-shadow: inset 0 0 10px rgba(0, 170, 0, 0.6), inset 0 0 0 4px #00aa00;
-    }
-    100% {
-        box-shadow: inset 0 0 30px rgba(0, 255, 0, 0.9), inset 0 0 0 4px #00ff00;
-    }
+    box-shadow: inset 0 0 20px rgba(255, 45, 0, 0.8), inset 0 0 0 4px #ff7a00;
+    animation: fever-border-glow 1.5s infinite alternate;
 }
 
 /* Embedded Fever Banner */
@@ -1550,12 +1586,12 @@ body.theme-retro.fever-active .game-container::after {
     align-items: center;
     justify-content: center;
     gap: 6px;
-    background: rgba(45, 17, 22, 0.95); /* reddish dark background */
+    background: linear-gradient(135deg, rgba(55, 8, 0, 0.96), rgba(20, 5, 0, 0.96));
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
-    border: 2px solid #ff007f;
+    border: 2px solid #ff7a00;
     border-radius: inherit;
-    box-shadow: 0 0 15px rgba(255, 0, 127, 0.4), inset 0 0 20px rgba(255, 0, 127, 0.2);
+    box-shadow: 0 0 18px rgba(255, 45, 0, 0.55), inset 0 0 24px rgba(255, 122, 0, 0.25);
     box-sizing: border-box;
     z-index: 9; /* Slightly below mission-complete-banner */
     
@@ -1574,10 +1610,16 @@ body.theme-retro.fever-active .game-container::after {
 .fever-title {
     font-size: 14px;
     font-weight: 800;
-    color: #ff007f;
-    text-shadow: 0 0 10px rgba(255, 0, 127, 0.6);
+    color: #ff7a00;
+    text-shadow: 0 0 10px rgba(255, 45, 0, 0.9), 0 0 18px rgba(255, 208, 0, 0.45);
     letter-spacing: 1.5px;
     animation: pulse-fever 1s infinite alternate;
+}
+
+body.fever-critical .fever-title {
+    color: #ffd000;
+    animation-duration: 0.28s;
+    text-shadow: 0 0 10px #ff2d00, 0 0 22px #ff7a00;
 }
 
 @keyframes pulse-fever {
@@ -1589,7 +1631,7 @@ body.theme-retro.fever-active .game-container::after {
     width: 80%;
     height: 6px;
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 0, 127, 0.2);
+    border: 1px solid rgba(255, 122, 0, 0.45);
     border-radius: 3px;
     overflow: hidden;
     box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
@@ -1598,22 +1640,22 @@ body.theme-retro.fever-active .game-container::after {
 .fever-bar-fill {
     width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, #ff007f, #ff00ff);
-    box-shadow: 0 0 8px #ff007f;
+    background: linear-gradient(90deg, #ff2d00, #ff7a00 58%, #ffd000);
+    box-shadow: 0 0 8px #ff2d00;
     transition: width 0.1s linear;
 }
 
 /* Retro theme overrides for Fever banner */
 body.theme-retro .fever-title {
-    color: #00ff00;
+    color: #ff7a00;
     text-shadow: none;
 }
 body.theme-retro .fever-bar-bg {
-    border-color: #00ff00;
+    border-color: #ff7a00;
     background: #000;
 }
 body.theme-retro .fever-bar-fill {
-    background: #00ff00;
+    background: linear-gradient(90deg, #ff2d00, #ffd000);
     box-shadow: none;
 }
 
@@ -1887,7 +1929,7 @@ body.theme-wood .fever-bar-fill {
     /* Fever mode: animating large box-shadows (up to 80px blur) repaints the whole shadow
        every frame and cannot be GPU-composited — a real paint cost on phones. Keep the
        static fever glow (from the base rules) but stop the per-frame box-shadow animation.
-       The board's hue-rotate (an isolated layer, cheap) is intentionally left running. */
+       The small flame layer behind the cells remains active. */
     body.fever-active .grid-board-container,
     body.fever-active .game-container::after {
         animation: none !important;

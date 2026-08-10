@@ -13,6 +13,7 @@ import { Haptics } from './haptics.js';
 import { Achievements } from './achievements.js';
 
 let shakeTimeoutId = null;
+let feverBurstTimeoutId = null;
 let activePopups = 0;
 let uiCallbacks = {
     selectBlock: () => {},
@@ -34,6 +35,13 @@ export function activateFeverMode() {
     state.feverTimeLeft = 10.0; // 10 seconds
 
     document.body.classList.add('fever-active');
+    document.body.classList.remove('fever-critical', 'fever-burst');
+    requestAnimationFrame(() => document.body.classList.add('fever-burst'));
+    if (feverBurstTimeoutId) clearTimeout(feverBurstTimeoutId);
+    feverBurstTimeoutId = setTimeout(() => {
+        document.body.classList.remove('fever-burst');
+        feverBurstTimeoutId = null;
+    }, 700);
     if (feverBanner) {
         feverBanner.classList.remove('hidden');
     }
@@ -54,6 +62,7 @@ export function activateFeverMode() {
         if (state.feverTimeLeft <= 0) {
             deactivateFeverMode();
         } else {
+            document.body.classList.toggle('fever-critical', state.feverTimeLeft <= 3);
             if (feverBarFill) {
                 feverBarFill.style.width = `${(state.feverTimeLeft / 10.0) * 100}%`;
             }
@@ -69,7 +78,11 @@ export function deactivateFeverMode() {
         state.feverIntervalId = null;
     }
 
-    document.body.classList.remove('fever-active');
+    document.body.classList.remove('fever-active', 'fever-critical', 'fever-burst');
+    if (feverBurstTimeoutId) {
+        clearTimeout(feverBurstTimeoutId);
+        feverBurstTimeoutId = null;
+    }
     if (feverBanner) {
         feverBanner.classList.add('hidden');
     }
